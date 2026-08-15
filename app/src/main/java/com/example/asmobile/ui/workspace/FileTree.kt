@@ -184,11 +184,49 @@ private fun FileRow(
             )
             Text(
                 text = item.file.name,
-                modifier = Modifier.padding(start = 12.dp),
+                modifier = Modifier.padding(start = 12.dp).weight(1f),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = if (item.file.isDirectory) FontWeight.SemiBold else FontWeight.Normal
+                fontWeight = if (item.file.isDirectory) FontWeight.SemiBold else FontWeight.Normal,
+                maxLines = 1
             )
+            
+            var showMenu by remember { mutableStateOf(false) }
+            Box {
+                IconButton(
+                    onClick = { showMenu = true },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        Icons.Rounded.MoreVert,
+                        contentDescription = "Options",
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    )
+                }
+                
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Rename") },
+                        onClick = { showMenu = false },
+                        leadingIcon = { Icon(Icons.Rounded.Edit, null, Modifier.size(18.dp)) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Delete") },
+                        onClick = { showMenu = false },
+                        leadingIcon = { Icon(Icons.Rounded.Delete, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error) }
+                    )
+                    HorizontalDivider()
+                    DropdownMenuItem(
+                        text = { Text("Copy Path") },
+                        onClick = { showMenu = false },
+                        leadingIcon = { Icon(Icons.Rounded.ContentCopy, null, Modifier.size(18.dp)) }
+                    )
+                }
+            }
         }
     }
 }

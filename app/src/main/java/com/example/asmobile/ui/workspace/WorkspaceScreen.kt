@@ -52,379 +52,262 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
 import kotlinx.coroutines.launch
+import java.io.File
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun WorkspaceScreen(modifier: Modifier = Modifier) {
-    val backStack = rememberNavBackStack(FileListKey)
-
-    val windowAdaptiveInfo = currentWindowAdaptiveInfo()
-    val directive = remember(windowAdaptiveInfo) {
-        calculatePaneScaffoldDirective(windowAdaptiveInfo)
-            .copy(horizontalPartitionSpacerSize = 0.dp)
-    }
-    val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>(directive = directive)
     val context = LocalContext.current
     val rootDir = remember { context.filesDir }
-    var currentTool by remember { mutableStateOf("Git") }
-    var isToolsVisible by remember { mutableStateOf(true) }
-    var leftPanelTab by remember { mutableStateOf("Project") }
-    var rightPanelTab by remember { mutableStateOf<String?>(null) }
+    
+    var selectedDestination by remember { mutableStateOf(MobileDestination.Dashboard) }
+    var showProjectWizard by remember { mutableStateOf(false) }
+    var showSearchEverywhere by remember { mutableStateOf(false) }
+    var buildVariant by remember { mutableStateOf("debug") }
     
     val openFiles = remember { mutableStateListOf<String>() }
     var activeFilePath by remember { mutableStateOf<String?>(null) }
     
     val buildViewModel: BuildLogViewModel = viewModel()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
-    Scaffold(
-        topBar = {
-            Column {
-                TopAppBar(
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(
+                drawerContainerColor = MaterialTheme.colorScheme.surface,
+                drawerShape = RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp)
+            ) {
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    "ASMobile Tools", 
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold
+                )
+                NavigationDrawerItem(
+                    label = { Text("Search Project") },
+                    selected = false,
+                    onClick = { },
+                    icon = { Icon(Icons.Rounded.Search, null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                NavigationDrawerItem(
+                    label = { Text("Device Manager") },
+                    selected = false,
+                    onClick = { },
+                    icon = { Icon(Icons.Rounded.Smartphone, null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                NavigationDrawerItem(
+                    label = { Text("Resource Explorer") },
+                    selected = false,
+                    onClick = { },
+                    icon = { Icon(Icons.Rounded.Category, null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                NavigationDrawerItem(
+                    label = { Text("Dependency Manager") },
+                    selected = false,
+                    onClick = { },
+                    icon = { Icon(Icons.Rounded.Layers, null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                NavigationDrawerItem(
+                    label = { Text("Settings") },
+                    selected = false,
+                    onClick = { },
+                    icon = { Icon(Icons.Rounded.Settings, null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                Spacer(Modifier.weight(1f))
+                Text("Version 1.4-Mobile", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    ) {
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
                     title = {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .background(
-                                            Brush.linearGradient(
-                                                colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
-                                            ),
-                                            CircleShape
-                                        )
-                                        .padding(6.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.Source,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onPrimary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                Spacer(Modifier.width(12.dp))
-                                Text(
-                                    stringResource(R.string.app_name),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    letterSpacing = 1.sp
-                                )
-                            }
-                            
-                            // IDE Toolbar
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(end = 8.dp)
-                            ) {
-                                ToolbarButton(Icons.Rounded.Sync, "Sync Project")
-                                Spacer(Modifier.width(8.dp))
-                                
-                                var showRunConfig by remember { mutableStateOf(false) }
-                                Box {
-                                    Surface(
-                                        onClick = { showRunConfig = true },
-                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                        shape = RoundedCornerShape(4.dp),
-                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                                        modifier = Modifier.padding(horizontal = 4.dp)
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Icon(Icons.Rounded.Android, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
-                                            Spacer(Modifier.width(8.dp))
-                                            Text("app", style = MaterialTheme.typography.labelLarge)
-                                            Icon(Icons.Rounded.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
-                                        }
-                                    }
-                                    
-                                    DropdownMenu(
-                                        expanded = showRunConfig,
-                                        onDismissRequest = { showRunConfig = false }
-                                    ) {
-                                        DropdownMenuItem(
-                                            text = { Text("app") },
-                                            onClick = { showRunConfig = false },
-                                            leadingIcon = { Icon(Icons.Rounded.Android, contentDescription = null, modifier = Modifier.size(18.dp)) }
-                                        )
-                                        HorizontalDivider()
-                                        DropdownMenuItem(
-                                            text = { Text("Edit Configurations...") },
-                                            onClick = { showRunConfig = false }
-                                        )
-                                    }
-                                }
-
-                                Spacer(Modifier.width(8.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
-                                        .clickable { 
-                                            buildViewModel.startBuild()
-                                            currentTool = "Build"
-                                            isToolsVisible = true
-                                        },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.PlayArrow, 
-                                        contentDescription = "Run",
-                                        tint = Color(0xFF4CAF50),
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                                Spacer(Modifier.width(8.dp))
-                                ToolbarButton(Icons.Rounded.BugReport, "Debug", tint = Color(0xFF4CAF50))
-                                ToolbarButton(Icons.Rounded.Search, "Search")
-                            }
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background,
-                    ),
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            }
-        },
-        bottomBar = {
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp,
-                shadowElevation = 8.dp
-            ) {
-                Column {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            ToolTab(
-                                label = "Git",
-                                icon = Icons.Rounded.Source,
-                                isSelected = currentTool == "Git" && isToolsVisible,
-                                onClick = {
-                                    if (currentTool == "Git") isToolsVisible = !isToolsVisible
-                                    else {
-                                        currentTool = "Git"
-                                        isToolsVisible = true
-                                    }
-                                }
-                            )
-                            ToolTab(
-                                label = "Build",
-                                icon = Icons.Rounded.Build,
-                                isSelected = currentTool == "Build" && isToolsVisible,
-                                onClick = {
-                                    if (currentTool == "Build") isToolsVisible = !isToolsVisible
-                                    else {
-                                        currentTool = "Build"
-                                        isToolsVisible = true
-                                    }
-                                }
-                            )
-                            ToolTab(
-                                label = "Logcat",
-                                icon = Icons.AutoMirrored.Rounded.ViewList,
-                                isSelected = currentTool == "Logcat" && isToolsVisible,
-                                onClick = {
-                                    if (currentTool == "Logcat") isToolsVisible = !isToolsVisible
-                                    else {
-                                        currentTool = "Logcat"
-                                        isToolsVisible = true
-                                    }
-                                }
-                            )
-                            ToolTab(
-                                label = "Terminal",
-                                icon = Icons.Rounded.Terminal,
-                                isSelected = currentTool == "Terminal" && isToolsVisible,
-                                onClick = {
-                                    if (currentTool == "Terminal") isToolsVisible = !isToolsVisible
-                                    else {
-                                        currentTool = "Terminal"
-                                        isToolsVisible = true
-                                    }
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        modifier = modifier.systemBarsPadding()
-    ) { padding ->
-        Row(modifier = Modifier.padding(padding)) {
-            // Left Side Navigation Rail
-            NavigationRail(
-                modifier = Modifier.fillMaxHeight(),
-                containerColor = MaterialTheme.colorScheme.background,
-                header = {
-                    Spacer(Modifier.height(16.dp))
-                }
-            ) {
-                NavigationRailItem(
-                    selected = leftPanelTab == "Project",
-                    onClick = { leftPanelTab = "Project" },
-                    icon = { Icon(Icons.Rounded.Folder, contentDescription = "Project") },
-                    label = { Text("Project", style = MaterialTheme.typography.labelSmall) },
-                    colors = NavigationRailItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                        selectedTextColor = MaterialTheme.colorScheme.primary,
-                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                    )
-                )
-                NavigationRailItem(
-                    selected = leftPanelTab == "Resource",
-                    onClick = { leftPanelTab = "Resource" },
-                    icon = { Icon(Icons.Rounded.Image, contentDescription = "Resource Manager") },
-                    label = { Text("Resource", style = MaterialTheme.typography.labelSmall) },
-                    colors = NavigationRailItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                    )
-                )
-                NavigationRailItem(
-                    selected = leftPanelTab == "Structure",
-                    onClick = { leftPanelTab = "Structure" },
-                    icon = { Icon(Icons.AutoMirrored.Rounded.List, contentDescription = "Structure") },
-                    label = { Text("Structure", style = MaterialTheme.typography.labelSmall) },
-                    colors = NavigationRailItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                    )
-                )
-            }
-            
-            VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Box(modifier = Modifier.weight(1f)) {
-                    Row(modifier = Modifier.fillMaxSize()) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            NavDisplay(
-                                backStack = backStack,
-                                onBack = { backStack.removeLastOrNull() },
-                                sceneStrategy = listDetailStrategy,
-                                entryProvider = entryProvider {
-                                    entry<FileListKey>(
-                                        metadata = ListDetailSceneStrategy.listPane(
-                                            detailPlaceholder = {
-                                                TabbedEditor(
-                                                    openFiles = openFiles,
-                                                    activeFilePath = activeFilePath,
-                                                    onFileSelected = { activeFilePath = it },
-                                                    onFileClosed = { path ->
-                                                        openFiles.remove(path)
-                                                        if (activeFilePath == path) {
-                                                            activeFilePath = openFiles.lastOrNull()
-                                                        }
-                                                    }
-                                                )
-                                            }
-                                        )
-                                    ) { _: FileListKey ->
-                                        when (leftPanelTab) {
-                                            "Project" -> FileTree(
-                                                rootDir = rootDir,
-                                                onFileSelected = { file ->
-                                                    if (!openFiles.contains(file.absolutePath)) {
-                                                        openFiles.add(file.absolutePath)
-                                                    }
-                                                    activeFilePath = file.absolutePath
-                                                    backStack.add(FileDetailKey(file.absolutePath))
-                                                }
-                                            )
-                                            "Resource" -> ResourceManager(modifier = Modifier.fillMaxSize())
-                                            "Structure" -> StructureView(modifier = Modifier.fillMaxSize())
-                                        }
-                                    }
-                                    entry<FileDetailKey>(
-                                        metadata = ListDetailSceneStrategy.detailPane()
-                                    ) { _: FileDetailKey ->
-                                        TabbedEditor(
-                                            openFiles = openFiles,
-                                            activeFilePath = activeFilePath,
-                                            onFileSelected = { activeFilePath = it },
-                                            onFileClosed = { path ->
-                                                openFiles.remove(path)
-                                                if (activeFilePath == path) {
-                                                    activeFilePath = openFiles.lastOrNull()
-                                                }
-                                            }
-                                        )
-                                    }
-                                }
-                            )
-                        }
-                        
-                        if (rightPanelTab != null) {
-                            VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .width(250.dp)
-                                    .fillMaxHeight()
-                                    .background(MaterialTheme.colorScheme.surface)
+                                    .size(28.dp)
+                                    .background(
+                                        Brush.linearGradient(colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)),
+                                        CircleShape
+                                    )
+                                    .padding(4.dp),
+                                contentAlignment = Alignment.Center
                             ) {
-                                when (rightPanelTab) {
-                                    "Device" -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                        Text("Device Manager")
-                                    }
-                                    "Gradle" -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                        Text("Gradle Tool Window")
-                                    }
-                                }
+                                Icon(Icons.Rounded.Source, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
+                            }
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "ASMobile",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(Icons.Rounded.Menu, contentDescription = "Menu")
+                        }
+                    },
+                    actions = {
+                        var showVariantMenu by remember { mutableStateOf(false) }
+                        Box {
+                            TextButton(onClick = { showVariantMenu = true }) {
+                                Text(buildVariant, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                            }
+                            DropdownMenu(expanded = showVariantMenu, onDismissRequest = { showVariantMenu = false }) {
+                                DropdownMenuItem(text = { Text("debug") }, onClick = { buildVariant = "debug"; showVariantMenu = false })
+                                DropdownMenuItem(text = { Text("release") }, onClick = { buildVariant = "release"; showVariantMenu = false })
                             }
                         }
+                        IconButton(onClick = { showSearchEverywhere = true }) {
+                            Icon(Icons.Rounded.Search, contentDescription = "Search")
+                        }
+                        IconButton(onClick = { /* User Profile */ }) {
+                            Icon(Icons.Rounded.AccountCircle, contentDescription = "Profile")
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
+                )
+            },
+            bottomBar = {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 4.dp
+                ) {
+                    MobileDestination.entries.forEach { destination ->
+                        NavigationBarItem(
+                            selected = selectedDestination == destination,
+                            onClick = { selectedDestination = destination },
+                            icon = { Icon(destination.icon, contentDescription = destination.label) },
+                            label = { Text(destination.label) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                            )
+                        )
                     }
                 }
-                    if (isToolsVisible) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .fillMaxHeight(0.35f)
-                                .background(MaterialTheme.colorScheme.surface)
-                        ) {
-                            when (currentTool) {
-                                "Git" -> GitPanel(rootDir = rootDir, modifier = Modifier.fillMaxSize())
-                                "Build" -> BuildLogPanel(selectedTab = 1, modifier = Modifier.fillMaxSize())
-                                "Logcat" -> BuildLogPanel(selectedTab = 0, modifier = Modifier.fillMaxSize())
-                                "Terminal" -> BuildLogPanel(selectedTab = 2, modifier = Modifier.fillMaxSize())
-                                "Inspect" -> AppInspectionPanel(modifier = Modifier.fillMaxSize())
-                            }
-                        }
+            },
+            floatingActionButton = {
+                if (selectedDestination == MobileDestination.Editor || selectedDestination == MobileDestination.Dashboard) {
+                    FloatingActionButton(
+                        onClick = {
+                            buildViewModel.startBuild()
+                        },
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        shape = CircleShape
+                    ) {
+                        Icon(Icons.Rounded.PlayArrow, contentDescription = "Run Build")
                     }
+                }
+            },
+            modifier = modifier.systemBarsPadding()
+        ) { padding ->
+            Box(modifier = Modifier.padding(padding)) {
+                when (selectedDestination) {
+                    MobileDestination.Dashboard -> Dashboard(
+                        rootDir = rootDir,
+                        onFileSelected = { file ->
+                            if (!openFiles.contains(file.absolutePath)) openFiles.add(file.absolutePath)
+                            activeFilePath = file.absolutePath
+                            selectedDestination = MobileDestination.Editor
+                        },
+                        onNewProjectClick = { showProjectWizard = true }
+                    )
+                    MobileDestination.Project -> FileTree(
+                        rootDir = rootDir,
+                        onFileSelected = { file ->
+                            if (!openFiles.contains(file.absolutePath)) openFiles.add(file.absolutePath)
+                            activeFilePath = file.absolutePath
+                            selectedDestination = MobileDestination.Editor
+                        }
+                    )
+                    MobileDestination.Editor -> {
+                        TabbedEditor(
+                            openFiles = openFiles,
+                            activeFilePath = activeFilePath,
+                            onFileSelected = { activeFilePath = it },
+                            onFileClosed = { path ->
+                                openFiles.remove(path)
+                                if (activeFilePath == path) activeFilePath = openFiles.lastOrNull()
+                            }
+                        )
+                    }
+                    MobileDestination.Git -> GitPanel(rootDir = rootDir, modifier = Modifier.fillMaxSize())
+                    MobileDestination.Ai -> AiAssistantPanel(modifier = Modifier.fillMaxSize())
+                    MobileDestination.Tools -> MobileToolsTabs(buildViewModel)
+                }
             }
-            
-            VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            
-            // Right Side Navigation Rail
-            NavigationRail(
-                modifier = Modifier.fillMaxHeight(),
-                containerColor = MaterialTheme.colorScheme.surface,
-            ) {
-                NavigationRailItem(
-                    selected = rightPanelTab == "Device",
-                    onClick = { rightPanelTab = if (rightPanelTab == "Device") null else "Device" },
-                    icon = { Icon(Icons.Rounded.Smartphone, contentDescription = "Device Manager") },
-                    label = { Text("Device") }
-                )
-                NavigationRailItem(
-                    selected = rightPanelTab == "Gradle",
-                    onClick = { rightPanelTab = if (rightPanelTab == "Gradle") null else "Gradle" },
-                    icon = { Icon(Icons.Rounded.Build, contentDescription = "Gradle") },
-                    label = { Text("Gradle") }
-                )
+        }
+
+        if (showProjectWizard) {
+            NewProjectWizard(
+                baseDir = rootDir,
+                onDismiss = { showProjectWizard = false },
+                onProjectCreated = { 
+                    // Refresh or notify
+                }
+            )
+        }
+
+        if (showSearchEverywhere) {
+            SearchEverywhere(
+                rootDir = rootDir,
+                onDismiss = { showSearchEverywhere = false },
+                onFileSelected = { file ->
+                    if (!openFiles.contains(file.absolutePath)) openFiles.add(file.absolutePath)
+                    activeFilePath = file.absolutePath
+                    selectedDestination = MobileDestination.Editor
+                }
+            )
+        }
+    }
+}
+
+enum class MobileDestination(val label: String, val icon: Vector) {
+    Dashboard("Home", Icons.Rounded.Dashboard),
+    Project("Project", Icons.Rounded.Folder),
+    Ai("AI", Icons.Rounded.AutoAwesome),
+    Editor("Editor", Icons.Rounded.Code),
+    Git("Git", Icons.Rounded.History),
+    Tools("Tools", Icons.Rounded.Build)
+}
+
+@Composable
+private fun MobileToolsTabs(buildViewModel: BuildLogViewModel) {
+    var selectedTab by remember { mutableIntStateOf(0) }
+    Column(modifier = Modifier.fillMaxSize()) {
+        TabRow(selectedTabIndex = selectedTab) {
+            Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }) {
+                Text("Build", modifier = Modifier.padding(12.dp))
+            }
+            Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) {
+                Text("Logcat", modifier = Modifier.padding(12.dp))
+            }
+            Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }) {
+                Text("Terminal", modifier = Modifier.padding(12.dp))
+            }
+            Tab(selected = selectedTab == 3, onClick = { selectedTab = 3 }) {
+                Text("Inspection", modifier = Modifier.padding(12.dp))
+            }
+        }
+        Box(modifier = Modifier.weight(1f)) {
+            when (selectedTab) {
+                0 -> BuildLogPanel(selectedTab = 1, modifier = Modifier.fillMaxSize())
+                1 -> BuildLogPanel(selectedTab = 0, modifier = Modifier.fillMaxSize())
+                2 -> BuildLogPanel(selectedTab = 2, modifier = Modifier.fillMaxSize())
+                3 -> AppInspectionPanel(modifier = Modifier.fillMaxSize())
             }
         }
     }
@@ -573,12 +456,36 @@ private fun AppInspectionPanel(modifier: Modifier = Modifier) {
         }
         Spacer(Modifier.height(16.dp))
         TabRow(selectedTabIndex = 0, containerColor = Color.Transparent) {
-            Tab(selected = true, onClick = {}) { Text("Database Inspector", modifier = Modifier.padding(8.dp)) }
-            Tab(selected = false, onClick = {}) { Text("Background Task Inspector", modifier = Modifier.padding(8.dp)) }
-            Tab(selected = false, onClick = {}) { Text("Network Inspector", modifier = Modifier.padding(8.dp)) }
+            Tab(selected = true, onClick = {}) { Text("Database", modifier = Modifier.padding(8.dp)) }
+            Tab(selected = false, onClick = {}) { Text("Background", modifier = Modifier.padding(8.dp)) }
+            Tab(selected = false, onClick = {}) { Text("Network", modifier = Modifier.padding(8.dp)) }
         }
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Select a database to inspect", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+        
+        Spacer(Modifier.height(16.dp))
+        
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Rounded.Storage, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("app_database.db", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                }
+                Spacer(Modifier.height(8.dp))
+                val tables = listOf("Users", "Notes", "Settings")
+                tables.forEach { table ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(table, style = MaterialTheme.typography.bodySmall)
+                        Text("24 entries", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                    }
+                }
+            }
         }
     }
 }

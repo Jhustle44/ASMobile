@@ -1,6 +1,5 @@
 package com.example.asmobile.ui.workspace
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -16,6 +15,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.BorderStroke
 import java.io.File
 
 @Composable
@@ -29,11 +30,13 @@ fun TabbedEditor(
     Column(modifier = modifier.fillMaxSize()) {
         if (openFiles.isNotEmpty()) {
             Surface(
-                color = MaterialTheme.colorScheme.background,
-                shadowElevation = 2.dp
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 2.dp
             ) {
                 LazyRow(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     items(openFiles) { filePath ->
                         val fileName = File(filePath).name
@@ -63,34 +66,38 @@ private fun EditorTab(
     onClick: () -> Unit,
     onClose: () -> Unit
 ) {
-    val backgroundColor = if (isActive) MaterialTheme.colorScheme.surface else Color.Transparent
-    val contentColor = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+    val backgroundColor = if (isActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent
+    val contentColor = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
     
-    Row(
-        modifier = Modifier
-            .background(backgroundColor)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-            .height(24.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        onClick = onClick,
+        color = backgroundColor,
+        shape = RoundedCornerShape(8.dp),
+        border = if (isActive) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)) else null
     ) {
-        Text(
-            text = fileName,
-            style = MaterialTheme.typography.labelMedium,
-            color = contentColor,
-            fontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.Medium
-        )
-        if (isActive) {
-            Spacer(Modifier.width(12.dp))
-            Icon(
-                Icons.Rounded.Close,
-                contentDescription = "Close",
-                modifier = Modifier
-                    .size(14.dp)
-                    .clip(CircleShape)
-                    .clickable { onClose() },
-                tint = contentColor.copy(alpha = 0.5f)
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = fileName,
+                style = MaterialTheme.typography.labelMedium,
+                color = contentColor,
+                fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium
             )
+            if (isActive) {
+                Spacer(Modifier.width(8.dp))
+                Icon(
+                    Icons.Rounded.Close,
+                    contentDescription = "Close",
+                    modifier = Modifier
+                        .size(14.dp)
+                        .clip(CircleShape)
+                        .clickable { onClose() },
+                    tint = contentColor.copy(alpha = 0.6f)
+                )
+            }
         }
     }
 }

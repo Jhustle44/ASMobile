@@ -6,9 +6,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ClearAll
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Stop
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -155,9 +154,36 @@ fun LogcatView(logs: List<String>, onStart: () -> Unit, onStop: () -> Unit, onCl
             )
             
             Spacer(Modifier.width(8.dp))
-            Text("Level: Verbose", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(end = 8.dp))
+            var showLevelMenu by remember { mutableStateOf(false) }
+            Box {
+                AssistChip(
+                    onClick = { showLevelMenu = true },
+                    label = { Text("Verbose") },
+                    trailingIcon = { Icon(Icons.Rounded.ArrowDropDown, null, Modifier.size(16.dp)) },
+                    shape = RoundedCornerShape(8.dp)
+                )
+                DropdownMenu(expanded = showLevelMenu, onDismissRequest = { showLevelMenu = false }) {
+                    DropdownMenuItem(text = { Text("Verbose") }, onClick = { showLevelMenu = false })
+                    DropdownMenuItem(text = { Text("Debug") }, onClick = { showLevelMenu = false })
+                    DropdownMenuItem(text = { Text("Info") }, onClick = { showLevelMenu = false })
+                    DropdownMenuItem(text = { Text("Warn") }, onClick = { showLevelMenu = false })
+                    DropdownMenuItem(text = { Text("Error") }, onClick = { showLevelMenu = false })
+                }
+            }
+            Spacer(Modifier.width(8.dp))
         }
         
+        // Filter Chips
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterChip(selected = true, onClick = {}, label = { Text("All", style = MaterialTheme.typography.labelSmall) })
+            FilterChip(selected = false, onClick = {}, label = { Text("Firebase", style = MaterialTheme.typography.labelSmall) })
+            FilterChip(selected = false, onClick = {}, label = { Text("Compose", style = MaterialTheme.typography.labelSmall) })
+            FilterChip(selected = false, onClick = {}, label = { Text("System", style = MaterialTheme.typography.labelSmall) })
+        }
+
         LazyColumn(
             state = listState,
             modifier = Modifier
