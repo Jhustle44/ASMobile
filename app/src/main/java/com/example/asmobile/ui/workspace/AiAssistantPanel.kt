@@ -132,21 +132,19 @@ private fun getAiResponse(input: String): String {
     val lowInput = input.lowercase()
     return when {
         lowInput.contains("hello") || lowInput.contains("hi") -> 
-            "Hello! I'm your ASMobile AI Assistant. I can help you with:\n" +
-            "• Creating new projects with templates\n" +
-            "• Writing Jetpack Compose code\n" +
-            "• Explaining Android project structures\n" +
-            "• Debugging build errors"
+            "Hello! I'm your ASMobile AI Assistant. I can help you build entire apps! Try asking me to 'build a notes app' or 'create a weather app'."
         
-        lowInput.contains("project") && lowInput.contains("create") -> 
-            "To create a new project:\n" +
-            "1. Go to the Home screen\n" +
-            "2. Click the 'New Project' quick action\n" +
-            "3. Choose a template (Empty, Bottom Nav, or Login)\n" +
-            "4. Fill in your details and click Finish!"
+        lowInput.contains("build") || lowInput.contains("create") -> {
+            when {
+                lowInput.contains("notes") -> "I can build a Notes App for you! Go to Home -> New Project and select the 'Notes App' template. I'll scaffold the list and FAB for you."
+                lowInput.contains("counter") -> "I'll help you build a Counter App. Use the 'Counter App' template in the New Project wizard to see how state management works."
+                lowInput.contains("weather") -> "Weather App? Great choice. Select the 'Weather App' template when creating a new project for a beautiful UI layout."
+                else -> "I can scaffold several types of apps! Try asking for a 'notes app', 'counter app', or 'login flow'. You can find these in the New Project wizard."
+            }
+        }
             
         lowInput.contains("compose") || lowInput.contains("ui") -> 
-            "Jetpack Compose is Android's modern toolkit for building native UI. It simplifies and accelerates UI development with less code, powerful tools, and intuitive Kotlin APIs. Try asking me how to create a specific component like a Card or a List!"
+            "Jetpack Compose is Android's modern toolkit for building native UI. I can help you write entire screens if you tell me what you need!"
 
         lowInput.contains("button") -> 
             "Here is a modern Compose Button snippet:\n\n" +
@@ -157,25 +155,12 @@ private fun getAiResponse(input: String): String {
             "    Text(\"Click Me\")\n" +
             "}"
             
-        lowInput.contains("card") -> 
-            "Cards are great for grouping information. Example:\n\n" +
-            "Card(\n" +
-            "    modifier = Modifier.fillMaxWidth(),\n" +
-            "    shape = RoundedCornerShape(16.dp)\n" +
-            ") {\n" +
-            "    Column(Modifier.padding(16.dp)) {\n" +
-            "        Text(\"Title\", style = MaterialTheme.typography.titleMedium)\n" +
-            "        Text(\"Description text goes here.\")\n" +
-            "    }\n" +
-            "}"
-
         lowInput.contains("help") -> 
-            "I'm here to assist! You can ask me things like:\n" +
-            "• 'How do I create a new project?'\n" +
-            "• 'Show me a Compose Card example'\n" +
-            "• 'What is Jetpack Compose?'\n" +
-            "• 'Help me with a login screen'"
+            "I'm here to assist! You can ask me to:\n" +
+            "• 'Build a notes app'\n" +
+            "• 'How do I create a login screen?'\n" +
+            "• 'Show me a Compose List example'"
 
-        else -> "I'm not quite sure about that yet, but I'm learning! You can try asking about 'projects', 'compose components', or 'how to build' something specific."
+        else -> "I'm ready to help you build! You can ask me to create specific types of apps, and I'll guide you through the templates or provide the code."
     }
 }

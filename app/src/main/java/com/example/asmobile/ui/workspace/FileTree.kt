@@ -192,6 +192,8 @@ private fun FileRow(
             )
             
             var showMenu by remember { mutableStateOf(false) }
+            val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+            
             Box {
                 IconButton(
                     onClick = { showMenu = true },
@@ -211,18 +213,30 @@ private fun FileRow(
                 ) {
                     DropdownMenuItem(
                         text = { Text("Rename") },
-                        onClick = { showMenu = false },
+                        onClick = { 
+                            // Simple rename simulation
+                            showMenu = false 
+                        },
                         leadingIcon = { Icon(Icons.Rounded.Edit, null, Modifier.size(18.dp)) }
                     )
                     DropdownMenuItem(
                         text = { Text("Delete") },
-                        onClick = { showMenu = false },
+                        onClick = { 
+                            if (item.file.delete()) {
+                                // Trigger refresh by modifying state
+                                onClick() // Force close parent if deleted
+                            }
+                            showMenu = false 
+                        },
                         leadingIcon = { Icon(Icons.Rounded.Delete, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error) }
                     )
                     HorizontalDivider()
                     DropdownMenuItem(
                         text = { Text("Copy Path") },
-                        onClick = { showMenu = false },
+                        onClick = { 
+                            clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(item.file.absolutePath))
+                            showMenu = false 
+                        },
                         leadingIcon = { Icon(Icons.Rounded.ContentCopy, null, Modifier.size(18.dp)) }
                     )
                 }

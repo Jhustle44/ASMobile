@@ -67,6 +67,9 @@ fun Editor(
             }
         )
     }
+    
+    val undoStack = remember(filePath) { mutableStateListOf<String>() }
+    val redoStack = remember(filePath) { mutableStateListOf<String>() }
 
     val extension = file.extension
     val colorScheme = MaterialTheme.colorScheme
@@ -109,9 +112,9 @@ fun Editor(
                 Column(
                     modifier = Modifier
                         .fillMaxHeight()
-                        .background(MaterialTheme.colorScheme.background)
+                        .background(MaterialTheme.colorScheme.background.copy(alpha = 0.5f))
                         .padding(top = 16.dp, bottom = 16.dp, start = 12.dp, end = 12.dp)
-                        .width(48.dp),
+                        .width(52.dp),
                     horizontalAlignment = Alignment.End
                 ) {
                     for (i in 1..lines) {
@@ -120,27 +123,38 @@ fun Editor(
                             style = TextStyle(
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                                lineHeight = 22.sp
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                                lineHeight = 24.sp
                             ),
                             maxLines = 1
                         )
                     }
                 }
                 
-                VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                VerticalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), modifier = Modifier.width(1.dp))
                 
                 BasicTextField(
                     value = text,
-                    onValueChange = { text = it },
+                    onValueChange = { 
+                        if (it != text) {
+                            undoStack.add(text)
+                            redoStack.clear()
+                            text = it 
+                            try {
+                                file.writeText(it)
+                            } catch (e: Exception) {
+                                // Handle write error
+                            }
+                        }
+                    },
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
                     textStyle = TextStyle(
                         fontFamily = FontFamily.Monospace,
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurface,
-                        lineHeight = 22.sp
+                        lineHeight = 24.sp
                     ),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     visualTransformation = remember(extension, colorScheme) { 
@@ -161,8 +175,20 @@ fun Editor(
                     modifier = Modifier.padding(bottom = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    EditorSmallButton(Icons.AutoMirrored.Rounded.Undo, "Undo")
-                    EditorSmallButton(Icons.AutoMirrored.Rounded.Redo, "Redo")
+                    EditorSmallButton(Icons.AutoMirrored.Rounded.Undo, "Undo") {
+                        if (undoStack.isNotEmpty()) {
+                            redoStack.add(text)
+                            text = undoStack.removeAt(undoStack.size - 1)
+                            file.writeText(text)
+                        }
+                    }
+                    EditorSmallButton(Icons.AutoMirrored.Rounded.Redo, "Redo") {
+                        if (redoStack.isNotEmpty()) {
+                            undoStack.add(text)
+                            text = redoStack.removeAt(redoStack.size - 1)
+                            file.writeText(text)
+                        }
+                    }
                 }
 
                 // Floating Status Indicator
@@ -182,6 +208,12 @@ fun Editor(
 
             // Suggestion Bar (Simulated IntelliSense)
             SuggestionBar(
+                onInsert = { suggestion ->
+                    undoStack.add(text)
+                    redoStack.clear()
+                    text += suggestion
+                    file.writeText(text)
+                },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
@@ -193,21 +225,28 @@ fun Editor(
 }
 
 @Composable
-private fun EditorSmallButton(icon: androidx.compose.ui.graphics.vector.ImageVector, description: String) {
+private fun EditorSmallButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    description: String,
+    onClick: () -> Unit = {}
+) {
     Surface(
         modifier = Modifier.size(36.dp),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
         shape = CircleShape,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.clickable { }) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.clickable(onClick = onClick)) {
             Icon(icon, description, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
-private fun SuggestionBar(modifier: Modifier = Modifier) {
+private fun SuggestionBar(
+    onInsert: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val suggestions = listOf("composable", "modifier", "val", "var", "Modifier.fillMaxSize()", "println")
     LazyRow(
         modifier = modifier,
@@ -215,15 +254,15 @@ private fun SuggestionBar(modifier: Modifier = Modifier) {
         contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
         items(suggestions) { suggestion ->
-            SuggestionChip(suggestion)
+            SuggestionChip(suggestion) { onInsert(suggestion) }
         }
     }
 }
 
 @Composable
-private fun SuggestionChip(text: String) {
+private fun SuggestionChip(text: String, onClick: () -> Unit) {
     Surface(
-        onClick = { /* Insert text */ },
+        onClick = onClick,
         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))

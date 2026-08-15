@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -128,88 +129,113 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
     ) {
         Scaffold(
             topBar = {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
+                Surface(
+                    color = MaterialTheme.colorScheme.background.copy(alpha = 0.9f),
+                    modifier = Modifier.statusBarsPadding()
+                ) {
+                    CenterAlignedTopAppBar(
+                        title = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
-                                    .size(28.dp)
-                                    .background(
-                                        Brush.linearGradient(colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)),
-                                        CircleShape
-                                    )
-                                    .padding(4.dp),
-                                contentAlignment = Alignment.Center
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
                             ) {
-                                Icon(Icons.Rounded.Source, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .background(
+                                            Brush.linearGradient(colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)),
+                                            CircleShape
+                                        )
+                                        .padding(4.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Rounded.Source, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(14.dp))
+                                }
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    "ASMobile",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    letterSpacing = 0.5.sp
+                                )
                             }
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                "ASMobile",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold
-                            )
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Rounded.Menu, contentDescription = "Menu")
-                        }
-                    },
-                    actions = {
-                        var showVariantMenu by remember { mutableStateOf(false) }
-                        Box {
-                            TextButton(onClick = { showVariantMenu = true }) {
-                                Text(buildVariant, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                        },
+                        navigationIcon = {
+                            IconButton(
+                                onClick = { scope.launch { drawerState.open() } },
+                                modifier = Modifier.padding(start = 8.dp)
+                            ) {
+                                Icon(Icons.Rounded.Menu, contentDescription = "Menu", tint = MaterialTheme.colorScheme.primary)
                             }
-                            DropdownMenu(expanded = showVariantMenu, onDismissRequest = { showVariantMenu = false }) {
-                                DropdownMenuItem(text = { Text("debug") }, onClick = { buildVariant = "debug"; showVariantMenu = false })
-                                DropdownMenuItem(text = { Text("release") }, onClick = { buildVariant = "release"; showVariantMenu = false })
+                        },
+                        actions = {
+                            IconButton(onClick = { showSearchEverywhere = true }) {
+                                Icon(Icons.Rounded.Search, contentDescription = "Search", modifier = Modifier.size(22.dp))
                             }
-                        }
-                        IconButton(onClick = { showSearchEverywhere = true }) {
-                            Icon(Icons.Rounded.Search, contentDescription = "Search")
-                        }
-                        IconButton(onClick = { /* User Profile */ }) {
-                            Icon(Icons.Rounded.AccountCircle, contentDescription = "Profile")
-                        }
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background
+                            Spacer(Modifier.width(4.dp))
+                        },
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                            containerColor = Color.Transparent
+                        )
                     )
-                )
+                }
             },
             bottomBar = {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 4.dp
+                Surface(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .shadow(12.dp, RoundedCornerShape(24.dp)),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                    shape = RoundedCornerShape(24.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
-                    MobileDestination.entries.forEach { destination ->
-                        NavigationBarItem(
-                            selected = selectedDestination == destination,
-                            onClick = { selectedDestination = destination },
-                            icon = { Icon(destination.icon, contentDescription = destination.label) },
-                            label = { Text(destination.label) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.primary,
-                                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    NavigationBar(
+                        containerColor = Color.Transparent,
+                        tonalElevation = 0.dp,
+                        modifier = Modifier.height(64.dp)
+                    ) {
+                        MobileDestination.entries.forEach { destination ->
+                            NavigationBarItem(
+                                selected = selectedDestination == destination,
+                                onClick = { selectedDestination = destination },
+                                icon = { 
+                                    Icon(
+                                        destination.icon, 
+                                        contentDescription = destination.label,
+                                        modifier = Modifier.size(22.dp)
+                                    ) 
+                                },
+                                label = { 
+                                    Text(
+                                        destination.label, 
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = if (selectedDestination == destination) FontWeight.Bold else FontWeight.Normal
+                                    ) 
+                                },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                )
                             )
-                        )
+                        }
                     }
                 }
             },
             floatingActionButton = {
                 if (selectedDestination == MobileDestination.Editor || selectedDestination == MobileDestination.Dashboard) {
-                    FloatingActionButton(
-                        onClick = {
-                            buildViewModel.startBuild()
-                        },
+                    ExtendedFloatingActionButton(
+                        onClick = { buildViewModel.startBuild() },
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
-                        shape = CircleShape
-                    ) {
-                        Icon(Icons.Rounded.PlayArrow, contentDescription = "Run Build")
-                    }
+                        shape = RoundedCornerShape(16.dp),
+                        icon = { Icon(Icons.Rounded.PlayArrow, "Run Build", modifier = Modifier.size(20.dp)) },
+                        text = { Text("Run", fontWeight = FontWeight.Bold) },
+                        modifier = Modifier.padding(bottom = 80.dp) // Adjust for floating bottom bar
+                    )
                 }
             },
             modifier = modifier.systemBarsPadding()
@@ -287,19 +313,35 @@ enum class MobileDestination(val label: String, val icon: Vector) {
 @Composable
 private fun MobileToolsTabs(buildViewModel: BuildLogViewModel) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    Column(modifier = Modifier.fillMaxSize()) {
-        TabRow(selectedTabIndex = selectedTab) {
-            Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }) {
-                Text("Build", modifier = Modifier.padding(12.dp))
+    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        ScrollableTabRow(
+            selectedTabIndex = selectedTab,
+            containerColor = MaterialTheme.colorScheme.surface,
+            edgePadding = 16.dp,
+            divider = { HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)) },
+            indicator = { tabPositions ->
+                if (selectedTab < tabPositions.size) {
+                    TabRowDefaults.SecondaryIndicator(
+                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
-            Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) {
-                Text("Logcat", modifier = Modifier.padding(12.dp))
-            }
-            Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }) {
-                Text("Terminal", modifier = Modifier.padding(12.dp))
-            }
-            Tab(selected = selectedTab == 3, onClick = { selectedTab = 3 }) {
-                Text("Inspection", modifier = Modifier.padding(12.dp))
+        ) {
+            val tabs = listOf("Build", "Logcat", "Terminal", "Inspection")
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTab == index,
+                    onClick = { selectedTab = index },
+                    text = { 
+                        Text(
+                            title, 
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
+                            color = if (selectedTab == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        ) 
+                    }
+                )
             }
         }
         Box(modifier = Modifier.weight(1f)) {

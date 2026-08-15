@@ -1,5 +1,6 @@
 package com.example.asmobile.ui.workspace
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -30,13 +31,13 @@ fun TabbedEditor(
     Column(modifier = modifier.fillMaxSize()) {
         if (openFiles.isNotEmpty()) {
             Surface(
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 2.dp
+                color = MaterialTheme.colorScheme.background,
+                tonalElevation = 1.dp
             ) {
                 LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
                 ) {
                     items(openFiles) { filePath ->
                         val fileName = File(filePath).name
@@ -51,6 +52,7 @@ fun TabbedEditor(
                     }
                 }
             }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         }
         
         Box(modifier = Modifier.weight(1f)) {
@@ -66,38 +68,53 @@ private fun EditorTab(
     onClick: () -> Unit,
     onClose: () -> Unit
 ) {
-    val backgroundColor = if (isActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent
-    val contentColor = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    val backgroundColor = if (isActive) MaterialTheme.colorScheme.surface else Color.Transparent
+    val contentColor = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
     
-    Surface(
-        onClick = onClick,
-        color = backgroundColor,
-        shape = RoundedCornerShape(8.dp),
-        border = if (isActive) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)) else null
+    Box(
+        modifier = Modifier
+            .fillMaxHeight()
+            .width(IntrinsicSize.Min)
+            .background(backgroundColor)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.Center
     ) {
         Row(
-            modifier = Modifier
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
             Text(
                 text = fileName,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelLarge,
                 color = contentColor,
-                fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium
+                fontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.Medium,
+                maxLines = 1
             )
             if (isActive) {
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(10.dp))
                 Icon(
                     Icons.Rounded.Close,
                     contentDescription = "Close",
                     modifier = Modifier
-                        .size(14.dp)
+                        .size(16.dp)
                         .clip(CircleShape)
-                        .clickable { onClose() },
+                        .clickable { onClose() }
+                        .padding(2.dp),
                     tint = contentColor.copy(alpha = 0.6f)
                 )
             }
+        }
+        
+        // Active Indicator Line
+        if (isActive) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(2.dp)
+                    .background(MaterialTheme.colorScheme.primary)
+            )
         }
     }
 }

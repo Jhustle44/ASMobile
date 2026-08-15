@@ -13,33 +13,33 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = ObsidianAccent,
-    secondary = ObsidianAccentVariant,
-    tertiary = ObsidianBorder,
-    background = ObsidianDeep,
-    surface = ObsidianBase,
-    surfaceVariant = ObsidianSurface,
+    primary = ElectricViolet,
+    secondary = CyberCyan,
+    tertiary = RoseGold,
+    background = SpaceBlack,
+    surface = SpaceDark,
+    surfaceVariant = SpaceSurface,
     onPrimary = Color.White,
     onSecondary = Color.White,
-    onTertiary = ObsidianTextPrimary,
-    onBackground = ObsidianTextPrimary,
-    onSurface = ObsidianTextPrimary,
-    onSurfaceVariant = ObsidianTextSecondary,
-    outline = ObsidianBorder,
-    outlineVariant = ObsidianBorder.copy(alpha = 0.5f)
+    onTertiary = Color.White,
+    onBackground = PrimaryText,
+    onSurface = PrimaryText,
+    onSurfaceVariant = SecondaryText,
+    outline = SpaceBorder,
+    outlineVariant = SpaceBorder.copy(alpha = 0.5f)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = ObsidianAccent,
-    secondary = ObsidianAccentVariant,
-    tertiary = ObsidianBorder,
-    background = Color(0xFFFFFFFF),
-    surface = Color(0xFFF9F9F9),
+    primary = ElectricViolet,
+    secondary = CyberCyan,
+    tertiary = RoseGold,
+    background = Color(0xFFF1F5F9),
+    surface = Color.White,
     onPrimary = Color.White,
     onSecondary = Color.White,
-    onTertiary = Color.Black,
-    onBackground = Color(0xFF1A1A1A),
-    onSurface = Color(0xFF1A1A1A)
+    onTertiary = Color.White,
+    onBackground = Color(0xFF0F172A),
+    onSurface = Color(0xFF0F172A)
 )
 
 @Composable

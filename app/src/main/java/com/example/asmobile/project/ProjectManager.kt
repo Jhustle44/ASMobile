@@ -48,6 +48,9 @@ object ProjectManager {
             ProjectTemplate.EmptyCompose -> createEmptyCompose(appDir, packageName, projectName)
             ProjectTemplate.BottomNav -> createBottomNav(appDir, packageName, projectName)
             ProjectTemplate.LoginFlow -> createLoginFlow(appDir, packageName, projectName)
+            ProjectTemplate.CounterApp -> createCounterApp(appDir, packageName, projectName)
+            ProjectTemplate.NotesApp -> createNotesApp(appDir, packageName, projectName)
+            ProjectTemplate.WeatherApp -> createWeatherApp(appDir, packageName, projectName)
         }
 
         // Create AndroidManifest.xml
@@ -154,10 +157,130 @@ object ProjectManager {
             }
         """.trimIndent())
     }
+    private fun createCounterApp(appDir: File, packageName: String, projectName: String) {
+        File(appDir, "MainActivity.kt").writeText("""
+            package $packageName
+
+            import android.os.Bundle
+            import androidx.activity.ComponentActivity
+            import androidx.activity.compose.setContent
+            import androidx.compose.foundation.layout.*
+            import androidx.compose.material3.*
+            import androidx.compose.runtime.*
+            import androidx.compose.ui.Alignment
+            import androidx.compose.ui.Modifier
+            import androidx.compose.ui.unit.dp
+
+            class MainActivity : ComponentActivity() {
+                override fun onCreate(savedInstanceState: Bundle?) {
+                    super.onCreate(savedInstanceState)
+                    setContent {
+                        var count by remember { mutableIntStateOf(0) }
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text("Counter: ${'$'}count", style = MaterialTheme.typography.headlineLarge)
+                            Spacer(Modifier.height(24.dp))
+                            Button(onClick = { count++ }) {
+                                Text("Increment")
+                            }
+                        }
+                    }
+                }
+            }
+        """.trimIndent())
+    }
+
+    private fun createNotesApp(appDir: File, packageName: String, projectName: String) {
+        File(appDir, "MainActivity.kt").writeText("""
+            package $packageName
+
+            import android.os.Bundle
+            import androidx.activity.ComponentActivity
+            import androidx.activity.compose.setContent
+            import androidx.compose.foundation.layout.*
+            import androidx.compose.foundation.lazy.LazyColumn
+            import androidx.compose.foundation.lazy.items
+            import androidx.compose.material.icons.Icons
+            import androidx.compose.material.icons.filled.Add
+            import androidx.compose.material3.*
+            import androidx.compose.runtime.*
+            import androidx.compose.ui.Modifier
+            import androidx.compose.ui.unit.dp
+
+            class MainActivity : ComponentActivity() {
+                override fun onCreate(savedInstanceState: Bundle?) {
+                    super.onCreate(savedInstanceState)
+                    setContent {
+                        var notes by remember { mutableStateOf(listOf("Buy groceries", "Finish project", "Call mom")) }
+                        Scaffold(
+                            floatingActionButton = {
+                                FloatingActionButton(onClick = { notes = notes + "New Note" }) {
+                                    Icon(Icons.Default.Add, contentDescription = null)
+                                }
+                            }
+                        ) { padding ->
+                            LazyColumn(modifier = Modifier.padding(padding).fillMaxSize()) {
+                                items(notes) { note ->
+                                    ListItem(
+                                        headlineContent = { Text(note) },
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                    Divider()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        """.trimIndent())
+    }
+
+    private fun createWeatherApp(appDir: File, packageName: String, projectName: String) {
+        File(appDir, "MainActivity.kt").writeText("""
+            package $packageName
+
+            import android.os.Bundle
+            import androidx.activity.ComponentActivity
+            import androidx.activity.compose.setContent
+            import androidx.compose.foundation.layout.*
+            import androidx.compose.material.icons.Icons
+            import androidx.compose.material.icons.filled.WbSunny
+            import androidx.compose.material3.*
+            import androidx.compose.runtime.Composable
+            import androidx.compose.ui.Alignment
+            import androidx.compose.ui.Modifier
+            import androidx.compose.ui.unit.dp
+
+            class MainActivity : ComponentActivity() {
+                override fun onCreate(savedInstanceState: Bundle?) {
+                    super.onCreate(savedInstanceState)
+                    setContent {
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(Icons.Default.WbSunny, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+                            Text("Sunny", style = MaterialTheme.typography.headlineMedium)
+                            Text("24°C", style = MaterialTheme.typography.displayLarge)
+                            Spacer(Modifier.height(16.dp))
+                            Text("New York, USA", style = MaterialTheme.typography.titleMedium)
+                        }
+                    }
+                }
+            }
+        """.trimIndent())
+    }
 }
 
 enum class ProjectTemplate(val label: String, val description: String) {
     EmptyCompose("Empty Compose", "A basic activity with a single Text element."),
     BottomNav("Bottom Navigation", "An app with Home and Profile tabs."),
-    LoginFlow("Login Flow", "A standard login screen layout.")
+    LoginFlow("Login Flow", "A standard login screen layout."),
+    CounterApp("Counter App", "A simple state management example."),
+    NotesApp("Notes App", "A list-based app with a FAB."),
+    WeatherApp("Weather App", "A beautiful weather forecast UI.")
 }
