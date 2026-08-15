@@ -112,5 +112,39 @@ class MainActivity : ComponentActivity() {
             """.trimIndent(),
             )
         }
+        // Sample build.gradle.kts
+        val gradleFile = File(filesDir, "build.gradle.kts")
+        if (!gradleFile.exists()) {
+            gradleFile.writeText(
+                """
+                plugins {
+                    id("com.android.application")
+                    kotlin("android")
+                }
+
+                android {
+                    namespace = "com.example.asmobile"
+                    compileSdk = 34
+                }
+                """.trimIndent(),
+            )
+        }
+
+        // Sample AndroidManifest.xml
+        val manifestFile = File(filesDir, "AndroidManifest.xml")
+        if (!manifestFile.exists()) {
+            manifestFile.writeText(
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+                    <application
+                        android:allowBackup="true"
+                        android:icon="@mipmap/ic_launcher"
+                        android:label="@string/app_name">
+                    </application>
+                </manifest>
+                """.trimIndent(),
+            )
+        }
     }
 }

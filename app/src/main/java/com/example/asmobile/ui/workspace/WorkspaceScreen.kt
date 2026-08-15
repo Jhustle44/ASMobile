@@ -2,7 +2,10 @@ package com.example.asmobile.ui.workspace
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.automirrored.rounded.List
+import androidx.compose.material.icons.automirrored.rounded.ViewList
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
@@ -31,13 +34,14 @@ import androidx.compose.runtime.*
 import com.example.asmobile.ui.tools.BuildLogPanel
 import com.example.asmobile.ui.tools.GitPanel
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.example.asmobile.R
 import androidx.compose.ui.graphics.vector.ImageVector as Vector
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.asmobile.ui.tools.BuildLogViewModel
+import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.ui.text.font.FontFamily
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class)
@@ -53,10 +57,10 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
     val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>(directive = directive)
     val context = LocalContext.current
     val rootDir = remember { context.filesDir }
-    val scaffoldState = rememberBottomSheetScaffoldState()
     var currentTool by remember { mutableStateOf("Git") }
     var isToolsVisible by remember { mutableStateOf(true) }
     var leftPanelTab by remember { mutableStateOf("Project") }
+    var rightPanelTab by remember { mutableStateOf<String?>(null) }
     
     val openFiles = remember { mutableStateListOf<String>() }
     var activeFilePath by remember { mutableStateOf<String?>(null) }
@@ -95,21 +99,43 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                             ) {
                                 ToolbarButton(Icons.Rounded.Sync, "Sync Project")
                                 Spacer(Modifier.width(8.dp))
-                                Surface(
-                                    color = MaterialTheme.colorScheme.surfaceVariant,
-                                    shape = RoundedCornerShape(4.dp),
-                                    modifier = Modifier.padding(horizontal = 8.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                        verticalAlignment = Alignment.CenterVertically
+                                
+                                var showRunConfig by remember { mutableStateOf(false) }
+                                Box {
+                                    Surface(
+                                        onClick = { showRunConfig = true },
+                                        color = MaterialTheme.colorScheme.surfaceVariant,
+                                        shape = RoundedCornerShape(4.dp),
+                                        modifier = Modifier.padding(horizontal = 4.dp)
                                     ) {
-                                        Icon(Icons.Rounded.Android, contentDescription = null, modifier = Modifier.size(16.dp))
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("app", style = MaterialTheme.typography.labelLarge)
-                                        Icon(Icons.Rounded.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(Icons.Rounded.Android, contentDescription = null, modifier = Modifier.size(16.dp))
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("app", style = MaterialTheme.typography.labelLarge)
+                                            Icon(Icons.Rounded.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        }
+                                    }
+                                    
+                                    DropdownMenu(
+                                        expanded = showRunConfig,
+                                        onDismissRequest = { showRunConfig = false }
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { Text("app") },
+                                            onClick = { showRunConfig = false },
+                                            leadingIcon = { Icon(Icons.Rounded.Android, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                                        )
+                                        HorizontalDivider()
+                                        DropdownMenuItem(
+                                            text = { Text("Edit Configurations...") },
+                                            onClick = { showRunConfig = false }
+                                        )
                                     }
                                 }
+
                                 ToolbarButton(
                                     icon = Icons.Rounded.PlayArrow,
                                     contentDescription = "Run app",
@@ -121,6 +147,8 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                                     }
                                 )
                                 ToolbarButton(Icons.Rounded.BugReport, "Debug app", tint = Color(0xFF4CAF50))
+                                ToolbarButton(Icons.Rounded.SettingsBackupRestore, "Attach Debugger")
+                                ToolbarButton(Icons.Rounded.Stop, "Stop app", tint = Color(0xFFF44336))
                                 Spacer(Modifier.width(16.dp))
                                 ToolbarButton(Icons.Rounded.Search, "Search Everywhere")
                             }
@@ -161,13 +189,37 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                                 }
                             )
                             ToolTab(
-                                label = "Build & Logcat",
+                                label = "Build",
                                 icon = Icons.Rounded.Build,
                                 isSelected = currentTool == "Build" && isToolsVisible,
                                 onClick = {
                                     if (currentTool == "Build") isToolsVisible = !isToolsVisible
                                     else {
                                         currentTool = "Build"
+                                        isToolsVisible = true
+                                    }
+                                }
+                            )
+                            ToolTab(
+                                label = "Logcat",
+                                icon = Icons.AutoMirrored.Rounded.ViewList,
+                                isSelected = currentTool == "Logcat" && isToolsVisible,
+                                onClick = {
+                                    if (currentTool == "Logcat") isToolsVisible = !isToolsVisible
+                                    else {
+                                        currentTool = "Logcat"
+                                        isToolsVisible = true
+                                    }
+                                }
+                            )
+                            ToolTab(
+                                label = "Terminal",
+                                icon = Icons.Rounded.Terminal,
+                                isSelected = currentTool == "Terminal" && isToolsVisible,
+                                onClick = {
+                                    if (currentTool == "Terminal") isToolsVisible = !isToolsVisible
+                                    else {
+                                        currentTool = "Terminal"
                                         isToolsVisible = true
                                     }
                                 }
@@ -221,14 +273,48 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
             
             Column(modifier = Modifier.weight(1f)) {
                 Box(modifier = Modifier.weight(1f)) {
-                    NavDisplay(
-                        backStack = backStack,
-                        onBack = { backStack.removeLastOrNull() },
-                        sceneStrategy = listDetailStrategy,
-                        entryProvider = entryProvider {
-                            entry<FileListKey>(
-                                metadata = ListDetailSceneStrategy.listPane(
-                                    detailPlaceholder = {
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            NavDisplay(
+                                backStack = backStack,
+                                onBack = { backStack.removeLastOrNull() },
+                                sceneStrategy = listDetailStrategy,
+                                entryProvider = entryProvider {
+                                    entry<FileListKey>(
+                                        metadata = ListDetailSceneStrategy.listPane(
+                                            detailPlaceholder = {
+                                                TabbedEditor(
+                                                    openFiles = openFiles,
+                                                    activeFilePath = activeFilePath,
+                                                    onFileSelected = { activeFilePath = it },
+                                                    onFileClosed = { path ->
+                                                        openFiles.remove(path)
+                                                        if (activeFilePath == path) {
+                                                            activeFilePath = openFiles.lastOrNull()
+                                                        }
+                                                    }
+                                                )
+                                            }
+                                        )
+                                    ) { _: FileListKey ->
+                                        when (leftPanelTab) {
+                                            "Project" -> FileTree(
+                                                rootDir = rootDir,
+                                                onFileSelected = { file ->
+                                                    if (!openFiles.contains(file.absolutePath)) {
+                                                        openFiles.add(file.absolutePath)
+                                                    }
+                                                    activeFilePath = file.absolutePath
+                                                    backStack.add(FileDetailKey(file.absolutePath))
+                                                }
+                                            )
+                                            "Resource" -> ResourceManager(modifier = Modifier.fillMaxSize())
+                                            "Structure" -> StructureView(modifier = Modifier.fillMaxSize())
+                                        }
+                                    }
+                                    entry<FileDetailKey>(
+                                        metadata = ListDetailSceneStrategy.detailPane()
+                                    ) { _: FileDetailKey ->
                                         TabbedEditor(
                                             openFiles = openFiles,
                                             activeFilePath = activeFilePath,
@@ -241,61 +327,67 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                                             }
                                         )
                                     }
-                                )
-                            ) { _: FileListKey ->
-                                when (leftPanelTab) {
-                                    "Project" -> FileTree(
-                                        rootDir = rootDir,
-                                        onFileSelected = { file ->
-                                            if (!openFiles.contains(file.absolutePath)) {
-                                                openFiles.add(file.absolutePath)
-                                            }
-                                            activeFilePath = file.absolutePath
-                                            backStack.add(FileDetailKey(file.absolutePath))
-                                        }
-                                    )
-                                    "Resource" -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                        Text("Resource Manager")
+                                }
+                            )
+                        }
+                        
+                        if (rightPanelTab != null) {
+                            VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                            Box(
+                                modifier = Modifier
+                                    .width(250.dp)
+                                    .fillMaxHeight()
+                                    .background(MaterialTheme.colorScheme.surface)
+                            ) {
+                                when (rightPanelTab) {
+                                    "Device" -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                        Text("Device Manager")
                                     }
-                                    "Structure" -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                        Text("Structure View")
+                                    "Gradle" -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                        Text("Gradle Tool Window")
                                     }
                                 }
-                            }
-                            entry<FileDetailKey>(
-                                metadata = ListDetailSceneStrategy.detailPane()
-                            ) { _: FileDetailKey ->
-                                TabbedEditor(
-                                    openFiles = openFiles,
-                                    activeFilePath = activeFilePath,
-                                    onFileSelected = { activeFilePath = it },
-                                    onFileClosed = { path ->
-                                        openFiles.remove(path)
-                                        if (activeFilePath == path) {
-                                            activeFilePath = openFiles.lastOrNull()
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                    )
-                }
-                if (isToolsVisible) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(0.4f)
-                            .background(MaterialTheme.colorScheme.surface)
-                    ) {
-                        when (currentTool) {
-                            "Git" -> GitPanel(rootDir = rootDir, modifier = Modifier.fillMaxSize())
-                            "Build" -> BuildLogPanel(modifier = Modifier.fillMaxSize())
-                            "Inspect" -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Text("App Inspection Panel")
                             }
                         }
                     }
                 }
+                    if (isToolsVisible) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight(0.35f)
+                                .background(MaterialTheme.colorScheme.surface)
+                        ) {
+                            when (currentTool) {
+                                "Git" -> GitPanel(rootDir = rootDir, modifier = Modifier.fillMaxSize())
+                                "Build" -> BuildLogPanel(selectedTab = 1, modifier = Modifier.fillMaxSize())
+                                "Logcat" -> BuildLogPanel(selectedTab = 0, modifier = Modifier.fillMaxSize())
+                                "Terminal" -> BuildLogPanel(selectedTab = 2, modifier = Modifier.fillMaxSize())
+                                "Inspect" -> AppInspectionPanel(modifier = Modifier.fillMaxSize())
+                            }
+                        }
+                    }
+            }
+            
+            VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            
+            // Right Side Navigation Rail
+            NavigationRail(
+                modifier = Modifier.fillMaxHeight(),
+                containerColor = MaterialTheme.colorScheme.surface,
+            ) {
+                NavigationRailItem(
+                    selected = rightPanelTab == "Device",
+                    onClick = { rightPanelTab = if (rightPanelTab == "Device") null else "Device" },
+                    icon = { Icon(Icons.Rounded.Smartphone, contentDescription = "Device Manager") },
+                    label = { Text("Device") }
+                )
+                NavigationRailItem(
+                    selected = rightPanelTab == "Gradle",
+                    onClick = { rightPanelTab = if (rightPanelTab == "Gradle") null else "Gradle" },
+                    icon = { Icon(Icons.Rounded.Build, contentDescription = "Gradle") },
+                    label = { Text("Gradle") }
+                )
             }
         }
     }
@@ -339,6 +431,96 @@ private fun ToolTab(
             Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
             Text(label, style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+@Composable
+private fun ResourceManager(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(16.dp)) {
+        Text("Resource Manager", style = MaterialTheme.typography.titleSmall)
+        Spacer(Modifier.height(16.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            AssistChip(onClick = {}, label = { Text("Drawable") }, leadingIcon = { Icon(Icons.Rounded.Image, null, Modifier.size(16.dp)) })
+            AssistChip(onClick = {}, label = { Text("Color") }, leadingIcon = { Icon(Icons.Rounded.Palette, null, Modifier.size(16.dp)) })
+            AssistChip(onClick = {}, label = { Text("Layout") }, leadingIcon = { Icon(Icons.Rounded.Dashboard, null, Modifier.size(16.dp)) })
+        }
+        Spacer(Modifier.height(16.dp))
+        AdaptiveGrid(columns = GridCells.Adaptive(80.dp), spacing = Arrangement.spacedBy(8.dp)) {
+            items(6) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = MaterialTheme.shapes.small,
+                    modifier = Modifier.aspectRatio(1f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Rounded.Image, null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StructureView(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(16.dp)) {
+        Text("Structure", style = MaterialTheme.typography.titleSmall)
+        Spacer(Modifier.height(16.dp))
+        val structure = listOf("class MainActivity", "  fun onCreate()", "  fun seedSampleFiles()", "  fun CustomButton()")
+        LazyColumn {
+            items(structure) { item: String ->
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
+                    Icon(
+                        if (item.contains("class")) Icons.Rounded.Category else Icons.Rounded.Terminal,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = if (item.contains("class")) Color(0xFFE4BC5E) else Color(0xFF4EC9B0)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(item, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AdaptiveGrid(columns: GridCells, spacing: Arrangement.HorizontalOrVertical, content: LazyGridScope.() -> Unit) {
+    LazyVerticalGrid(
+        columns = columns,
+        horizontalArrangement = spacing,
+        verticalArrangement = spacing,
+        content = content
+    )
+}
+
+@Composable
+private fun AppInspectionPanel(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(16.dp)) {
+        Text("App Inspection", style = MaterialTheme.typography.titleSmall)
+        Spacer(Modifier.height(16.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Process: ", style = MaterialTheme.typography.labelMedium)
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(4.dp),
+                modifier = Modifier.padding(horizontal = 8.dp)
+            ) {
+                Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("com.example.asmobile (3124)", style = MaterialTheme.typography.bodySmall)
+                    Icon(Icons.Rounded.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
+                }
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        TabRow(selectedTabIndex = 0, containerColor = Color.Transparent) {
+            Tab(selected = true, onClick = {}) { Text("Database Inspector", modifier = Modifier.padding(8.dp)) }
+            Tab(selected = false, onClick = {}) { Text("Background Task Inspector", modifier = Modifier.padding(8.dp)) }
+            Tab(selected = false, onClick = {}) { Text("Network Inspector", modifier = Modifier.padding(8.dp)) }
+        }
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Select a database to inspect", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
         }
     }
 }

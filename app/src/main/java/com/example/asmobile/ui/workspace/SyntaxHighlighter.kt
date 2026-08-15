@@ -1,6 +1,7 @@
 package com.example.asmobile.ui.workspace
 
 import androidx.compose.material3.ColorScheme
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -40,9 +41,11 @@ object SyntaxHighlighter {
         val stringPattern = "\"[^\"]*\""
         val commentPattern = "//.*|/\\*.*?\\*/"
         val numberPattern = "\\b\\d+\\b"
+        val annotationPattern = "@[a-zA-Z0-9_]+"
+        val typePattern = "\\b[A-Z][a-zA-Z0-9_]+\\b"
 
         val combinedPattern = Pattern.compile(
-            "($keywordPattern)|($stringPattern)|($commentPattern)|($numberPattern)"
+            "($keywordPattern)|($stringPattern)|($commentPattern)|($numberPattern)|($annotationPattern)|($typePattern)"
         )
         val matcher = combinedPattern.matcher(text)
 
@@ -68,6 +71,16 @@ object SyntaxHighlighter {
                 }
                 matcher.group(4) != null -> { // Number
                     withStyle(SpanStyle(color = colorScheme.secondary)) {
+                        append(matcher.group())
+                    }
+                }
+                matcher.group(5) != null -> { // Annotation
+                    withStyle(SpanStyle(color = Color(0xFFE4BC5E))) {
+                        append(matcher.group())
+                    }
+                }
+                matcher.group(6) != null -> { // Type
+                    withStyle(SpanStyle(color = Color(0xFF4EC9B0))) {
                         append(matcher.group())
                     }
                 }

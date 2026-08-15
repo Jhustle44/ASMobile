@@ -31,14 +31,66 @@ fun FileTree(
         list
     }
 
+    var viewMode by remember { mutableStateOf("Android") }
+    var showViewMenu by remember { mutableStateOf(false) }
+
     Column(modifier = modifier.fillMaxSize()) {
-        Text(
-            text = stringResource(R.string.project_explorer),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(16.dp),
-        )
-        HorizontalDivider()
-        LazyColumn {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.surfaceContainerLow
+        ) {
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box {
+                    Row(
+                        modifier = Modifier.clickable { showViewMenu = true },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = viewMode,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Icon(
+                            Icons.Rounded.ArrowDropDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    
+                    DropdownMenu(
+                        expanded = showViewMenu,
+                        onDismissRequest = { showViewMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Android") },
+                            onClick = { viewMode = "Android"; showViewMenu = false },
+                            leadingIcon = { Icon(Icons.Rounded.Android, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Project") },
+                            onClick = { viewMode = "Project"; showViewMenu = false },
+                            leadingIcon = { Icon(Icons.Rounded.Folder, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                        )
+                    }
+                }
+                
+                Row {
+                    Icon(Icons.Rounded.Settings, contentDescription = "Settings", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.width(8.dp))
+                    Icon(Icons.Rounded.UnfoldLess, contentDescription = "Collapse All", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        
+        LazyColumn(modifier = Modifier.weight(1f)) {
             items(fileItems) { item ->
                 FileRow(
                     item = item,
@@ -109,14 +161,24 @@ private fun FileRow(
             Icon(
                 imageVector = when {
                     item.file.isDirectory -> Icons.Rounded.Folder
+                    item.file.name == "AndroidManifest.xml" -> Icons.Rounded.Article
                     item.file.extension == "kt" -> Icons.Rounded.Code
                     item.file.extension == "java" -> Icons.Rounded.Code
+                    item.file.extension == "gradle" || item.file.name.endsWith(".gradle.kts") -> Icons.Rounded.Build
                     item.file.extension == "xml" -> Icons.Rounded.SettingsEthernet
+                    item.file.extension == "json" -> Icons.Rounded.Settings
                     else -> Icons.Rounded.Description
                 },
                 contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = if (item.file.isDirectory) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                modifier = Modifier.size(18.dp),
+                tint = when {
+                    item.file.isDirectory -> MaterialTheme.colorScheme.primary
+                    item.file.name == "AndroidManifest.xml" -> Color(0xFFF44336)
+                    item.file.extension == "kt" -> Color(0xFF7F52FF)
+                    item.file.extension == "java" -> Color(0xFFE76F51)
+                    item.file.extension == "gradle" || item.file.name.endsWith(".gradle.kts") -> Color(0xFF005C97)
+                    else -> MaterialTheme.colorScheme.secondary
+                }
             )
             Text(
                 text = item.file.name,

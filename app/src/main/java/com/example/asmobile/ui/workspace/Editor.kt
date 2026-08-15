@@ -92,14 +92,14 @@ fun Editor(
                     .fillMaxSize()
                     .verticalScroll(scrollState)
             ) {
-                // Line numbers
+                // Line numbers gutter
                 val lines = text.split("\n").size
                 Column(
                     modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                        .padding(top = 16.dp, bottom = 16.dp, start = 8.dp, end = 8.dp)
                         .fillMaxHeight()
-                        .width(40.dp),
+                        .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                        .padding(top = 16.dp, bottom = 16.dp, start = 12.dp, end = 8.dp)
+                        .width(44.dp),
                     horizontalAlignment = Alignment.End
                 ) {
                     for (i in 1..lines) {
@@ -108,25 +108,27 @@ fun Editor(
                             style = TextStyle(
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                                lineHeight = 16.sp
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                                lineHeight = 20.sp
                             ),
                             maxLines = 1
                         )
                     }
                 }
                 
+                VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                
                 BasicTextField(
                     value = text,
                     onValueChange = { text = it },
                     modifier = Modifier
                         .weight(1f)
-                        .padding(16.dp),
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
                     textStyle = TextStyle(
                         fontFamily = FontFamily.Monospace,
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurface,
-                        lineHeight = 16.sp // Match line height for alignment
+                        lineHeight = 20.sp
                     ),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     visualTransformation = remember(extension, colorScheme) { 

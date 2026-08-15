@@ -20,9 +20,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import com.example.asmobile.R
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material.icons.rounded.CheckCircle
 
 @Composable
-fun BuildLogPanel(modifier: Modifier = Modifier) {
+fun BuildLogPanel(
+    selectedTab: Int,
+    modifier: Modifier = Modifier
+) {
     val viewModel: BuildLogViewModel = viewModel()
     
     val logs by viewModel.logs.collectAsState()
@@ -30,21 +35,7 @@ fun BuildLogPanel(modifier: Modifier = Modifier) {
     val buildStatus by viewModel.buildStatus.collectAsState()
     val isBuilding by viewModel.isBuilding.collectAsState()
 
-    var selectedTab by remember { mutableIntStateOf(0) }
-
     Column(modifier = modifier) {
-        TabRow(selectedTabIndex = selectedTab) {
-            Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }) {
-                Text(stringResource(R.string.logcat), modifier = Modifier.padding(16.dp))
-            }
-            Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) {
-                Text(stringResource(R.string.build), modifier = Modifier.padding(16.dp))
-            }
-            Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }) {
-                Text("Terminal", modifier = Modifier.padding(16.dp))
-            }
-        }
-
         when (selectedTab) {
             0 -> LogcatView(
                 logs = logs,
@@ -127,24 +118,51 @@ fun LogcatView(logs: List<String>, onStart: () -> Unit, onStop: () -> Unit, onCl
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp)
+                .background(MaterialTheme.colorScheme.surfaceContainer),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onStart) {
-                Icon(Icons.Rounded.PlayArrow, contentDescription = "Start")
+                Icon(Icons.Rounded.PlayArrow, contentDescription = "Start", tint = Color(0xFF4CAF50), modifier = Modifier.size(18.dp))
             }
             IconButton(onClick = onStop) {
-                Icon(Icons.Rounded.Stop, contentDescription = "Stop")
+                Icon(Icons.Rounded.Stop, contentDescription = "Stop", tint = Color(0xFFF44336), modifier = Modifier.size(18.dp))
             }
             IconButton(onClick = onClear) {
-                Icon(Icons.Rounded.ClearAll, contentDescription = "Clear")
+                Icon(Icons.Rounded.ClearAll, contentDescription = "Clear", modifier = Modifier.size(18.dp))
             }
+            
+            VerticalDivider(modifier = Modifier.height(24.dp).padding(horizontal = 4.dp))
+            
+            var filterText by remember { mutableStateOf("") }
+            androidx.compose.foundation.text.BasicTextField(
+                value = filterText,
+                onValueChange = { filterText = it },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.small)
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                textStyle = MaterialTheme.typography.bodySmall,
+                decorationBox = { innerTextField ->
+                    if (filterText.isEmpty()) {
+                        Text("Filter", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                    }
+                    innerTextField()
+                }
+            )
+            
+            Spacer(Modifier.width(8.dp))
+            Text("Level: Verbose", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(end = 8.dp))
         }
+        
         LazyColumn(
             state = listState,
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black)
+                .background(Color(0xFF000000))
                 .padding(8.dp)
         ) {
             items(logs) { log ->
@@ -161,26 +179,76 @@ fun LogcatView(logs: List<String>, onStart: () -> Unit, onStop: () -> Unit, onCl
 
 @Composable
 fun BuildView(progress: Float, status: String, isBuilding: Boolean, onBuild: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(status, style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(16.dp))
-        LinearProgressIndicator(
-            progress = { progress },
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(Modifier.height(32.dp))
-        Button(
-            onClick = onBuild,
-            enabled = !isBuilding,
-            modifier = Modifier.fillMaxWidth()
+    val tasks = remember(isBuilding) {
+        if (isBuilding) {
+            listOf(
+                ":app:preBuild UP-TO-DATE",
+                ":app:preDebugBuild UP-TO-DATE",
+                ":app:mergeDebugResources",
+                ":app:processDebugMainManifest",
+                ":app:javaPreCompileDebug",
+                ":app:mergeDebugNativeLibs",
+                ":app:compileDebugKotlin",
+                ":app:dexBuilderDebug"
+            )
+        } else listOf("Build finished successfully")
+    }
+
+    Row(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                .padding(8.dp)
         ) {
-            Icon(Icons.Rounded.PlayArrow, contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.start_build), maxLines = 1)
+            Text("Build Output", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            LazyColumn {
+                items(tasks) { task ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            if (task.contains("UP-TO-DATE")) Icons.Rounded.CheckCircle else Icons.Rounded.PlayArrow,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = if (task.contains("UP-TO-DATE")) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(task, style = FontFamily.Monospace.toTextStyle().copy(fontSize = 11.sp))
+                    }
+                }
+            }
+        }
+        
+        VerticalDivider()
+        
+        Column(
+            modifier = Modifier
+                .width(200.dp)
+                .fillMaxHeight()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            Text(status, style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(16.dp))
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(24.dp))
+            Button(
+                onClick = onBuild,
+                enabled = !isBuilding,
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+            ) {
+                Icon(Icons.Rounded.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Build", maxLines = 1, style = MaterialTheme.typography.labelLarge)
+            }
         }
     }
 }
+
+private fun FontFamily.toTextStyle() = androidx.compose.ui.text.TextStyle(fontFamily = this)
