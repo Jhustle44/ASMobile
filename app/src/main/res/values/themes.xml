@@ -1,4 +1,12 @@
 <resources>
+    <style name="Theme.ASMobile" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
 
-    <style name="Theme.ASMobile" parent="Theme.MaterialComponents.Light" />
+    <style name="Theme.ASMobile.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#0F0F0F</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_asmobile_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.ASMobile</item>
+    </style>
 </resources>
