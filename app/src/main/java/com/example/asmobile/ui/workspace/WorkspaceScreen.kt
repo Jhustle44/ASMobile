@@ -2,6 +2,7 @@ package com.example.asmobile.ui.workspace
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.material.icons.automirrored.rounded.List
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
@@ -23,15 +24,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.asmobile.ui.theme.ASMobileTheme
 import androidx.compose.material3.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Build
-import androidx.compose.material.icons.rounded.Source
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.*
 import com.example.asmobile.ui.tools.BuildLogPanel
 import com.example.asmobile.ui.tools.GitPanel
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import com.example.asmobile.R
+import androidx.compose.ui.graphics.vector.ImageVector as Vector
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.asmobile.ui.tools.BuildLogViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -49,29 +56,78 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
     val scaffoldState = rememberBottomSheetScaffoldState()
     var currentTool by remember { mutableStateOf("Git") }
     var isToolsVisible by remember { mutableStateOf(true) }
+    var leftPanelTab by remember { mutableStateOf("Project") }
+    
+    val openFiles = remember { mutableStateListOf<String>() }
+    var activeFilePath by remember { mutableStateOf<String?>(null) }
+    
+    val buildViewModel: BuildLogViewModel = viewModel()
 
     Scaffold(
         topBar = {
             Column {
-                CenterAlignedTopAppBar(
+                TopAppBar(
                     title = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Rounded.Source,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                stringResource(R.string.app_name),
-                                style = MaterialTheme.typography.titleLarge
-                            )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Rounded.Source,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    stringResource(R.string.app_name),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            
+                            // IDE Toolbar
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(end = 8.dp)
+                            ) {
+                                ToolbarButton(Icons.Rounded.Sync, "Sync Project")
+                                Spacer(Modifier.width(8.dp))
+                                Surface(
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    shape = RoundedCornerShape(4.dp),
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(Icons.Rounded.Android, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("app", style = MaterialTheme.typography.labelLarge)
+                                        Icon(Icons.Rounded.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    }
+                                }
+                                ToolbarButton(
+                                    icon = Icons.Rounded.PlayArrow,
+                                    contentDescription = "Run app",
+                                    tint = Color(0xFF4CAF50),
+                                    onClick = {
+                                        buildViewModel.startBuild()
+                                        currentTool = "Build"
+                                        isToolsVisible = true
+                                    }
+                                )
+                                ToolbarButton(Icons.Rounded.BugReport, "Debug app", tint = Color(0xFF4CAF50))
+                                Spacer(Modifier.width(16.dp))
+                                ToolbarButton(Icons.Rounded.Search, "Search Everywhere")
+                            }
                         }
                     },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.primary,
                     ),
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -116,6 +172,18 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                                     }
                                 }
                             )
+                            ToolTab(
+                                label = "App Inspection",
+                                icon = Icons.Rounded.Search,
+                                isSelected = currentTool == "Inspect" && isToolsVisible,
+                                onClick = {
+                                    if (currentTool == "Inspect") isToolsVisible = !isToolsVisible
+                                    else {
+                                        currentTool = "Inspect"
+                                        isToolsVisible = true
+                                    }
+                                }
+                            )
                         }
                     }
                 }
@@ -123,46 +191,109 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
         },
         modifier = modifier.systemBarsPadding()
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            Box(modifier = Modifier.weight(1f)) {
-                NavDisplay(
-                    backStack = backStack,
-                    onBack = { backStack.removeLastOrNull() },
-                    sceneStrategy = listDetailStrategy,
-                    entryProvider = entryProvider {
-                        entry<FileListKey>(
-                            metadata = ListDetailSceneStrategy.listPane(
-                                detailPlaceholder = {
-                                    Editor(filePath = null)
-                                }
-                            )
-                        ) { _: FileListKey ->
-                            FileTree(
-                                rootDir = rootDir,
-                                onFileSelected = { file ->
-                                    backStack.add(FileDetailKey(file.absolutePath))
-                                }
-                            )
-                        }
-                        entry<FileDetailKey>(
-                            metadata = ListDetailSceneStrategy.detailPane()
-                        ) { key: FileDetailKey ->
-                            Editor(filePath = key.filePath)
-                        }
-                    }
+        Row(modifier = Modifier.padding(padding)) {
+            // Left Side Navigation Rail (Tool Windows)
+            NavigationRail(
+                modifier = Modifier.fillMaxHeight(),
+                containerColor = MaterialTheme.colorScheme.surface,
+            ) {
+                NavigationRailItem(
+                    selected = leftPanelTab == "Project",
+                    onClick = { leftPanelTab = "Project" },
+                    icon = { Icon(Icons.Rounded.Folder, contentDescription = "Project") },
+                    label = { Text("Project") }
+                )
+                NavigationRailItem(
+                    selected = leftPanelTab == "Resource",
+                    onClick = { leftPanelTab = "Resource" },
+                    icon = { Icon(Icons.Rounded.Image, contentDescription = "Resource Manager") },
+                    label = { Text("Resource") }
+                )
+                NavigationRailItem(
+                    selected = leftPanelTab == "Structure",
+                    onClick = { leftPanelTab = "Structure" },
+                    icon = { Icon(Icons.AutoMirrored.Rounded.List, contentDescription = "Structure") },
+                    label = { Text("Structure") }
                 )
             }
-            if (isToolsVisible) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.4f)
-                        .background(MaterialTheme.colorScheme.surface)
-                ) {
-                    if (currentTool == "Git") {
-                        GitPanel(rootDir = rootDir, modifier = Modifier.fillMaxSize())
-                    } else {
-                        BuildLogPanel(modifier = Modifier.fillMaxSize())
+            
+            VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Box(modifier = Modifier.weight(1f)) {
+                    NavDisplay(
+                        backStack = backStack,
+                        onBack = { backStack.removeLastOrNull() },
+                        sceneStrategy = listDetailStrategy,
+                        entryProvider = entryProvider {
+                            entry<FileListKey>(
+                                metadata = ListDetailSceneStrategy.listPane(
+                                    detailPlaceholder = {
+                                        TabbedEditor(
+                                            openFiles = openFiles,
+                                            activeFilePath = activeFilePath,
+                                            onFileSelected = { activeFilePath = it },
+                                            onFileClosed = { path ->
+                                                openFiles.remove(path)
+                                                if (activeFilePath == path) {
+                                                    activeFilePath = openFiles.lastOrNull()
+                                                }
+                                            }
+                                        )
+                                    }
+                                )
+                            ) { _: FileListKey ->
+                                when (leftPanelTab) {
+                                    "Project" -> FileTree(
+                                        rootDir = rootDir,
+                                        onFileSelected = { file ->
+                                            if (!openFiles.contains(file.absolutePath)) {
+                                                openFiles.add(file.absolutePath)
+                                            }
+                                            activeFilePath = file.absolutePath
+                                            backStack.add(FileDetailKey(file.absolutePath))
+                                        }
+                                    )
+                                    "Resource" -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                        Text("Resource Manager")
+                                    }
+                                    "Structure" -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                        Text("Structure View")
+                                    }
+                                }
+                            }
+                            entry<FileDetailKey>(
+                                metadata = ListDetailSceneStrategy.detailPane()
+                            ) { _: FileDetailKey ->
+                                TabbedEditor(
+                                    openFiles = openFiles,
+                                    activeFilePath = activeFilePath,
+                                    onFileSelected = { activeFilePath = it },
+                                    onFileClosed = { path ->
+                                        openFiles.remove(path)
+                                        if (activeFilePath == path) {
+                                            activeFilePath = openFiles.lastOrNull()
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    )
+                }
+                if (isToolsVisible) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.4f)
+                            .background(MaterialTheme.colorScheme.surface)
+                    ) {
+                        when (currentTool) {
+                            "Git" -> GitPanel(rootDir = rootDir, modifier = Modifier.fillMaxSize())
+                            "Build" -> BuildLogPanel(modifier = Modifier.fillMaxSize())
+                            "Inspect" -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text("App Inspection Panel")
+                            }
+                        }
                     }
                 }
             }
@@ -171,9 +302,26 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
 }
 
 @Composable
+private fun ToolbarButton(
+    icon: Vector,
+    contentDescription: String,
+    tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    onClick: () -> Unit = {}
+) {
+    IconButton(onClick = onClick) {
+        Icon(
+            icon,
+            contentDescription = contentDescription,
+            modifier = Modifier.size(20.dp),
+            tint = tint
+        )
+    }
+}
+
+@Composable
 private fun ToolTab(
     label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: Vector,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {

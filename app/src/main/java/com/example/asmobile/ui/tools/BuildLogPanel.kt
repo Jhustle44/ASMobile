@@ -40,28 +40,77 @@ fun BuildLogPanel(modifier: Modifier = Modifier) {
             Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) {
                 Text(stringResource(R.string.build), modifier = Modifier.padding(16.dp))
             }
+            Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }) {
+                Text("Terminal", modifier = Modifier.padding(16.dp))
+            }
         }
 
-        if (selectedTab == 0) {
-            LogcatView(
+        when (selectedTab) {
+            0 -> LogcatView(
                 logs = logs,
-                onStart = {
-                    viewModel.startLogcat()
-                },
-                onStop = {
-                    viewModel.stopLogcat()
-                },
-            ) {
-                viewModel.clearLogs()
-            }
-        } else {
-            BuildView(
+                onStart = { viewModel.startLogcat() },
+                onStop = { viewModel.stopLogcat() },
+                onClear = { viewModel.clearLogs() }
+            )
+            1 -> BuildView(
                 progress = buildProgress,
                 status = buildStatus,
                 isBuilding = isBuilding,
-            ) {
-                viewModel.startBuild()
+                onBuild = { viewModel.startBuild() }
+            )
+            2 -> TerminalView()
+        }
+    }
+}
+
+@Composable
+fun TerminalView() {
+    var command by remember { mutableStateOf("") }
+    val history = remember { mutableStateListOf<String>("Welcome to ASMobile Terminal", "$ ls", "app  build.gradle.kts  gradle  gradlew  local.properties  settings.gradle.kts", "$ ") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF1E1E1E))
+            .padding(8.dp)
+    ) {
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            items(history) { line ->
+                Text(
+                    text = line,
+                    color = Color.White,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 12.sp
+                )
             }
+        }
+        
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("$ ", color = Color.White, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+            androidx.compose.foundation.text.BasicTextField(
+                value = command,
+                onValueChange = { command = it },
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = androidx.compose.ui.text.TextStyle(
+                    color = Color.White,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 12.sp
+                ),
+                cursorBrush = androidx.compose.ui.graphics.SolidColor(Color.White),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    imeAction = androidx.compose.ui.text.input.ImeAction.Done
+                ),
+                keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                    onDone = {
+                        if (command.isNotBlank()) {
+                            history.add("$ $command")
+                            history.add("Command executed: $command")
+                            history.add("$ ")
+                            command = ""
+                        }
+                    }
+                )
+            )
         }
     }
 }
