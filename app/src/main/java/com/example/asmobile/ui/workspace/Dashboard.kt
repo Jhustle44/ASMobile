@@ -28,6 +28,8 @@ fun Dashboard(
     rootDir: File,
     onFileSelected: (File) -> Unit,
     onNewProjectClick: () -> Unit,
+    onSyncClick: () -> Unit = {},
+    onCleanClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -117,12 +119,12 @@ fun Dashboard(
                     QuickActionChip(
                         icon = Icons.Rounded.Sync,
                         label = "Sync",
-                        onClick = { }
+                        onClick = onSyncClick
                     )
                     QuickActionChip(
                         icon = Icons.Rounded.Bolt,
                         label = "Clean",
-                        onClick = { }
+                        onClick = onCleanClick
                     )
                 }
             }

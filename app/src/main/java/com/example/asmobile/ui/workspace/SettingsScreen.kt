@@ -87,7 +87,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                         ) {
                             Column(modifier = Modifier.padding(vertical = 12.dp)) {
                                 Text("ASMobile version", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-                                Text("v2.1-ELITE (Build 2026.08.15)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("v2.2-ELITE (Build 2026.08.15)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                     }

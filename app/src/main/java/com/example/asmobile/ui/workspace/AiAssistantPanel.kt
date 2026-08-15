@@ -25,6 +25,7 @@ fun AiAssistantPanel(
     rootDir: File,
     activeFilePath: String?,
     onFileSelected: (File) -> Unit,
+    onProjectCreated: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var message by remember { mutableStateOf("") }
@@ -116,6 +117,7 @@ fun AiAssistantPanel(
                                 onResponse = { response ->
                                     chatHistory.add(ChatMessage(response, false))
                                     isGenerating = false
+                                    onProjectCreated()
                                 }
                             )
                         }

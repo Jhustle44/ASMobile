@@ -105,16 +105,17 @@ private fun DeviceCard(device: DeviceModel) {
             Spacer(Modifier.height(12.dp))
             
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                var isRunning by remember { mutableStateOf(device.isRunning) }
                 IconButton(
-                    onClick = { },
+                    onClick = { isRunning = !isRunning },
                     colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = if (device.isRunning) MaterialTheme.colorScheme.error.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        containerColor = if (isRunning) MaterialTheme.colorScheme.error.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     )
                 ) {
                     Icon(
-                        if (device.isRunning) Icons.Rounded.Stop else Icons.Rounded.PlayArrow,
+                        if (isRunning) Icons.Rounded.Stop else Icons.Rounded.PlayArrow,
                         null,
-                        tint = if (device.isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                        tint = if (isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                     )
                 }
                 IconButton(onClick = { }) {

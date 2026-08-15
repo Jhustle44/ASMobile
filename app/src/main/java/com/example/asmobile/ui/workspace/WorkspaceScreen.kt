@@ -31,6 +31,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.key
 import com.example.asmobile.ui.tools.BuildLogPanel
 import com.example.asmobile.ui.tools.GitPanel
 import androidx.compose.ui.Alignment
@@ -47,6 +48,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -69,6 +71,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
     var showSettings by remember { mutableStateOf(false) }
     
     // Project State
+    var refreshTrigger by remember { mutableIntStateOf(0) }
     val openFiles = remember { mutableStateListOf<String>() }
     var activeFilePath by remember { mutableStateOf<String?>(null) }
     
@@ -95,6 +98,13 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(
+                    label = { Text("Virtual Devices") },
+                    selected = selectedDestination == MobileDestination.Devices,
+                    onClick = { selectedDestination = MobileDestination.Devices; scope.launch { drawerState.close() } },
+                    icon = { Icon(Icons.Rounded.Smartphone, null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                NavigationDrawerItem(
                     label = { Text("Settings") },
                     selected = false,
                     onClick = { showSettings = true; scope.launch { drawerState.close() } },
@@ -106,10 +116,6 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                 
                 Text("Project Tools", modifier = Modifier.padding(start = 28.dp, bottom = 12.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                 
-                DrawerToolItem("Device Manager", Icons.Rounded.Smartphone) { 
-                    selectedDestination = MobileDestination.Devices
-                    scope.launch { drawerState.close() }
-                }
                 DrawerToolItem("Resource Explorer", Icons.Rounded.Category) { 
                     selectedDestination = MobileDestination.Project
                     scope.launch { drawerState.close() }
@@ -126,7 +132,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                 }
                 
                 Spacer(Modifier.weight(1f))
-                Text("v2.1-ELITE", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("v2.2-ELITE", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     ) {
@@ -159,35 +165,40 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
             modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
         ) { padding ->
             Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-                when (selectedDestination) {
-                    MobileDestination.Dashboard -> Dashboard(
-                        rootDir = rootDir,
-                        onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) },
-                        onNewProjectClick = { showProjectWizard = true }
-                    )
-                    MobileDestination.Project -> FileTree(
-                        rootDir = rootDir,
-                        onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) }
-                    )
-                    MobileDestination.Editor -> TabbedEditor(
-                        openFiles = openFiles,
-                        activeFilePath = activeFilePath,
-                        onFileSelected = { activeFilePath = it },
-                        onFileClosed = { path ->
-                            openFiles.remove(path)
-                            if (activeFilePath == path) activeFilePath = openFiles.lastOrNull()
-                            if (openFiles.isEmpty()) selectedDestination = MobileDestination.Dashboard
-                        }
-                    )
-                    MobileDestination.Git -> GitPanel(rootDir = rootDir, modifier = Modifier.fillMaxSize())
-                    MobileDestination.Ai -> AiAssistantPanel(
-                        rootDir = rootDir,
-                        activeFilePath = activeFilePath,
-                        onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                    MobileDestination.Devices -> VirtualDeviceScreen(modifier = Modifier.fillMaxSize())
-                    MobileDestination.Tools -> MobileToolsTabs(buildViewModel)
+                key(refreshTrigger) {
+                    when (selectedDestination) {
+                            MobileDestination.Dashboard -> Dashboard(
+                            rootDir = rootDir,
+                            onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) },
+                            onNewProjectClick = { showProjectWizard = true },
+                            onSyncClick = { buildViewModel.startBuild() },
+                            onCleanClick = { buildViewModel.clearLogs() }
+                        )
+                        MobileDestination.Project -> FileTree(
+                            rootDir = rootDir,
+                            onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) }
+                        )
+                        MobileDestination.Editor -> TabbedEditor(
+                            openFiles = openFiles,
+                            activeFilePath = activeFilePath,
+                            onFileSelected = { activeFilePath = it },
+                            onFileClosed = { path ->
+                                openFiles.remove(path)
+                                if (activeFilePath == path) activeFilePath = openFiles.lastOrNull()
+                                if (openFiles.isEmpty()) selectedDestination = MobileDestination.Dashboard
+                            }
+                        )
+                        MobileDestination.Git -> GitPanel(rootDir = rootDir, modifier = Modifier.fillMaxSize())
+                        MobileDestination.Ai -> AiAssistantPanel(
+                            rootDir = rootDir,
+                            activeFilePath = activeFilePath,
+                            onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) },
+                            onProjectCreated = { refreshTrigger++ },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        MobileDestination.Devices -> VirtualDeviceScreen(modifier = Modifier.fillMaxSize())
+                        MobileDestination.Tools -> MobileToolsTabs(buildViewModel)
+                    }
                 }
             }
         }
@@ -198,6 +209,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                 baseDir = rootDir,
                 onDismiss = { showProjectWizard = false },
                 onProjectCreated = { name ->
+                    refreshTrigger++
                     showProjectWizard = false
                     // Optionally open the new project
                 }
@@ -284,68 +296,68 @@ private fun WorkspaceBottomBar(
         shape = RoundedCornerShape(28.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-        NavigationBar(
-            containerColor = Color.Transparent,
-            tonalElevation = 0.dp,
-            modifier = Modifier.height(68.dp)
-        ) {
-            MobileDestination.entries.forEach { destination ->
-                val isSelected = selectedDestination == destination
-                NavigationBarItem(
-                    selected = isSelected,
-                    onClick = { onDestinationSelected(destination) },
-                    icon = { 
-                        Icon(
-                            destination.icon, 
-                            null,
-                            modifier = Modifier.size(if (isSelected) 24.dp else 22.dp)
-                        ) 
-                    },
-                    label = { 
-                        Text(
-                            destination.label, 
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                        ) 
-                    },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+            NavigationBar(
+                containerColor = Color.Transparent,
+                tonalElevation = 0.dp,
+                modifier = Modifier.height(60.dp)
+            ) {
+                MobileDestination.entries.forEach { destination ->
+                    val isSelected = selectedDestination == destination
+                    NavigationBarItem(
+                        selected = isSelected,
+                        onClick = { onDestinationSelected(destination) },
+                        icon = { 
+                            Icon(
+                                destination.icon, 
+                                null,
+                                modifier = Modifier.size(if (isSelected) 20.dp else 18.dp)
+                            ) 
+                        },
+                        label = { 
+                            Text(
+                                destination.label, 
+                                style = TextStyle(fontSize = 8.sp),
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                            ) 
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                        )
                     )
-                )
+                }
             }
-        }
     }
 }
 
 @Composable
 private fun DrawerHeader() {
-    Column(modifier = Modifier.padding(28.dp)) {
+    Column(modifier = Modifier.padding(24.dp)) {
         Box(
             modifier = Modifier
-                .size(48.dp)
+                .size(40.dp)
                 .background(
                     Brush.linearGradient(colors = listOf(GlowPurple, GlowBlue)),
                     CircleShape
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Rounded.Source, null, tint = Color.White, modifier = Modifier.size(24.dp))
+            Icon(Icons.Rounded.Source, null, tint = Color.White, modifier = Modifier.size(20.dp))
         }
-        Spacer(Modifier.height(16.dp))
-        Text("jhustle44", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
-        Text("Premium Developer", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(12.dp))
+        Text("jhustle44", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+        Text("Premium Developer", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
 private fun DrawerToolItem(label: String, icon: Vector, onClick: () -> Unit) {
     NavigationDrawerItem(
-        label = { Text(label) },
+        label = { Text(label, style = MaterialTheme.typography.labelMedium) },
         selected = false,
         onClick = onClick,
-        icon = { Icon(icon, null, modifier = Modifier.size(20.dp)) },
+        icon = { Icon(icon, null, modifier = Modifier.size(18.dp)) },
         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
     )
 }
