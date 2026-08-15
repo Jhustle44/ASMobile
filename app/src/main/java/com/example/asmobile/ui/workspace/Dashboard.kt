@@ -100,6 +100,32 @@ fun Dashboard(
         item {
             Column {
                 Text(
+                    "Project Overview",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 12.dp, start = 4.dp)
+                )
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(20.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Row(modifier = Modifier.padding(20.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                        ProjectInfoItem(Icons.Rounded.Folder, "Projects", "4")
+                        VerticalDivider(modifier = Modifier.height(40.dp))
+                        ProjectInfoItem(Icons.Rounded.History, "Commits", "28")
+                        VerticalDivider(modifier = Modifier.height(40.dp))
+                        ProjectInfoItem(Icons.Rounded.Schedule, "Uptime", "12h")
+                    }
+                }
+            }
+        }
+        
+        // Quick Actions
+        item {
+            Column {
+                Text(
                     "Quick Workspace Actions",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -151,9 +177,15 @@ fun Dashboard(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(vertical = 4.dp)
                 ) {
-                    val recentFiles = listOf("MainActivity.kt", "build.gradle.kts", "Theme.kt", "Editor.kt")
-                    items(recentFiles) { fileName ->
-                        RecentFileCard(fileName)
+                    val recentFiles = rootDir.walkTopDown().filter { it.isFile && (it.extension == "kt" || it.extension == "xml") }.take(5).toList()
+                    if (recentFiles.isEmpty()) {
+                        items(listOf("MainActivity.kt", "build.gradle.kts")) { name ->
+                            RecentFileCard(name, onClick = { })
+                        }
+                    } else {
+                        items(recentFiles) { file ->
+                            RecentFileCard(file.name, onClick = { onFileSelected(file) })
+                        }
                     }
                 }
             }
@@ -279,9 +311,10 @@ private fun StatusCard(title: String, value: String, icon: androidx.compose.ui.g
 }
 
 @Composable
-private fun RecentFileCard(fileName: String) {
+private fun RecentFileCard(fileName: String, onClick: () -> Unit) {
     Surface(
         modifier = Modifier.width(140.dp),
+        onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)

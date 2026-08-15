@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 @Composable
 fun VirtualDeviceScreen(
@@ -106,20 +107,38 @@ private fun DeviceCard(device: DeviceModel, onToggle: () -> Unit) {
             Spacer(Modifier.height(12.dp))
             
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                var isBooting by remember { mutableStateOf(false) }
+                val scope = rememberCoroutineScope()
+
                 IconButton(
-                    onClick = onToggle,
+                    onClick = { 
+                        if (!device.isRunning) {
+                            isBooting = true
+                            scope.launch {
+                                kotlinx.coroutines.delay(2000)
+                                isBooting = false
+                                onToggle()
+                            }
+                        } else {
+                            onToggle()
+                        }
+                    },
                     colors = IconButtonDefaults.iconButtonColors(
                         containerColor = if (device.isRunning) MaterialTheme.colorScheme.error.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     )
                 ) {
-                    Icon(
-                        if (device.isRunning) Icons.Rounded.Stop else Icons.Rounded.PlayArrow,
-                        null,
-                        tint = if (device.isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                    )
+                    if (isBooting) {
+                        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                    } else {
+                        Icon(
+                            if (device.isRunning) Icons.Rounded.Stop else Icons.Rounded.PlayArrow,
+                            null,
+                            tint = if (device.isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
                 IconButton(onClick = { }) {
-                    Icon(Icons.Rounded.Edit, null, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Rounded.Settings, null, modifier = Modifier.size(20.dp))
                 }
             }
         }

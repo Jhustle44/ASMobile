@@ -84,13 +84,19 @@ fun FileTree(
                 }
                 
                 Row {
-                    IconButton(onClick = { /* Refresh could be triggered here */ }) {
+                    IconButton(onClick = { 
+                        val dummy = expandedPaths.size
+                        expandedPaths.clear()
+                        expandedPaths[rootDir.path] = true
+                    }) {
                         Icon(Icons.Rounded.Refresh, contentDescription = "Refresh", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    IconButton(onClick = { /* Logic for new project or root file */ }) {
+                    IconButton(onClick = { /* Could trigger project wizard */ }) {
                         Icon(Icons.Rounded.Add, contentDescription = "New", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
                     }
-                    Icon(Icons.Rounded.UnfoldLess, contentDescription = "Collapse All", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    IconButton(onClick = { expandedPaths.clear(); expandedPaths[rootDir.path] = true }) {
+                        Icon(Icons.Rounded.UnfoldLess, contentDescription = "Collapse All", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
         }

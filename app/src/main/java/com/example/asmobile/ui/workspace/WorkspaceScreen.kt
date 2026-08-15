@@ -136,7 +136,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                 }
                 
                 Spacer(Modifier.weight(1f))
-                Text("v2.2-ELITE", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("v2.4-ELITE", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     ) {
@@ -398,7 +398,7 @@ private fun MobileToolsTabs(buildViewModel: BuildLogViewModel) {
                 }
             }
         ) {
-            val tabs = listOf("Build", "Logcat", "Terminal", "Layout", "Inspection")
+            val tabs = listOf("Build", "Logcat", "Terminal", "Layout", "Database", "Inspection")
             tabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
@@ -406,7 +406,7 @@ private fun MobileToolsTabs(buildViewModel: BuildLogViewModel) {
                     text = { 
                         Text(
                             title, 
-                            style = TextStyle(fontSize = 11.sp),
+                            style = TextStyle(fontSize = 10.sp),
                             fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
                             color = if (selectedTab == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         ) 
@@ -420,7 +420,8 @@ private fun MobileToolsTabs(buildViewModel: BuildLogViewModel) {
                 1 -> BuildLogPanel(selectedTab = 0, modifier = Modifier.fillMaxSize())
                 2 -> BuildLogPanel(selectedTab = 2, modifier = Modifier.fillMaxSize())
                 3 -> LayoutInspectorPanel(modifier = Modifier.fillMaxSize())
-                4 -> AppInspectionPanel(modifier = Modifier.fillMaxSize())
+                4 -> DatabaseInspectorPanel(modifier = Modifier.fillMaxSize())
+                5 -> AppInspectionPanel(modifier = Modifier.fillMaxSize())
             }
         }
     }
@@ -597,22 +598,74 @@ private fun DeviceManagerList() {
 
 @Composable
 private fun LayoutInspectorPanel(modifier: Modifier = Modifier) {
+    var selectedView by remember { mutableStateOf("MainActivity") }
+    
     Column(modifier = modifier.padding(16.dp)) {
-        Text("Layout Inspector", style = MaterialTheme.typography.titleSmall)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("Layout Inspector: $selectedView", style = MaterialTheme.typography.titleSmall)
+            AssistChip(onClick = {}, label = { Text("Live Updates") }, leadingIcon = { Icon(Icons.Rounded.Bolt, null, Modifier.size(14.dp)) })
+        }
         Spacer(Modifier.height(16.dp))
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-            shape = RoundedCornerShape(12.dp),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Component Tree", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.height(8.dp))
-                Text("• Scaffold", style = MaterialTheme.typography.bodySmall)
-                Text("  • Box", style = MaterialTheme.typography.bodySmall)
-                Text("    • Column", style = MaterialTheme.typography.bodySmall)
-                Text("      • Text (\"Hello World\")", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
+        
+        Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Surface(
+                modifier = Modifier.weight(0.4f).fillMaxHeight(),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Component Tree", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.height(12.dp))
+                    TreeItem("Scaffold", 0, true)
+                    TreeItem("Box", 1, false)
+                    TreeItem("Column", 2, true)
+                    TreeItem("Text (\"Hello World\")", 3, false)
+                    TreeItem("Button", 2, false)
+                }
+            }
+            
+            Surface(
+                modifier = Modifier.weight(0.6f).fillMaxHeight(),
+                color = Color.Black,
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text("Live View Mirror", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TreeItem(label: String, level: Int, isSelected: Boolean) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = (level * 12).dp)
+            .padding(vertical = 4.dp)
+            .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Icon(Icons.Rounded.Category, null, modifier = Modifier.size(14.dp), tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.width(8.dp))
+        Text(label, style = MaterialTheme.typography.bodySmall, color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+    }
+}
+
+@Composable
+private fun DatabaseInspectorPanel(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(16.dp)) {
+        Text("Database Inspector", style = MaterialTheme.typography.titleSmall)
+        Spacer(Modifier.height(24.dp))
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(Icons.Rounded.Storage, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.surfaceVariant)
+                Spacer(Modifier.height(16.dp))
+                Text("No active databases found.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Run an app with Room to inspect data.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
             }
         }
     }

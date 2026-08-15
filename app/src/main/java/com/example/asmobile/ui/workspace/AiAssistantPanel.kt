@@ -32,6 +32,7 @@ fun AiAssistantPanel(
     val chatHistory = remember { mutableStateListOf<ChatMessage>() }
     var isGenerating by remember { mutableStateOf(false) }
     var generationTask by remember { mutableStateOf("") }
+    var systemPrompt by remember { mutableStateOf("You are a professional Android Developer using ASMobile.") }
 
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         // Chat Header
@@ -46,11 +47,14 @@ fun AiAssistantPanel(
             ) {
                 Icon(Icons.Rounded.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(12.dp))
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text("Gemini AI Pro", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     if (isGenerating) {
                         Text(generationTask, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                     }
+                }
+                IconButton(onClick = { /* System Prompt Settings */ }) {
+                    Icon(Icons.Rounded.Psychology, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -160,60 +164,91 @@ private fun executeAiLogic(
     
     when {
         // App Building Logic
-        lowInput.contains("build") || lowInput.contains("create app") -> {
-            onStatusUpdate("Analyzing app requirements...")
-            val appName = if (input.contains("app ")) {
-                input.substringAfter("app ").split(" ").firstOrNull()?.replaceFirstChar { it.uppercase() } ?: "NewApp"
-            } else "NewApp"
+        lowInput.contains("build") || lowInput.contains("create") || lowInput.contains("make") -> {
+            onStatusUpdate("Interpreting requirements...")
+            val appName = input.substringAfter("app ").substringBefore(" ").replaceFirstChar { it.uppercase() }
+                .ifEmpty { input.split(" ").lastOrNull()?.replaceFirstChar { it.uppercase() } ?: "NewApp" }
             
             val template = when {
                 lowInput.contains("notes") -> ProjectTemplate.NotesApp
                 lowInput.contains("weather") -> ProjectTemplate.WeatherApp
                 lowInput.contains("login") -> ProjectTemplate.LoginFlow
                 lowInput.contains("nav") -> ProjectTemplate.BottomNav
-                else -> ProjectTemplate.CustomAi // NEW: AI-Driven Custom App
+                lowInput.contains("counter") -> ProjectTemplate.CounterApp
+                else -> ProjectTemplate.CustomAi
             }
             
-            onStatusUpdate("Creating project structure for $appName...")
+            onStatusUpdate("Scaffolding $appName architecture...")
             try {
                 ProjectManager.createNewProject(rootDir, appName, "com.example.${appName.lowercase()}", template)
                 
-                onStatusUpdate("Injecting active coding into MainActivity.kt...")
-                // If it's a custom app, Gemini "thinks" and generates specific code
                 if (template == ProjectTemplate.CustomAi) {
+                    onStatusUpdate("Generating bespoke AI code...")
                     val customCode = generateCustomAppCode(appName, input)
                     val mainFile = File(rootDir, "$appName/app/src/main/java/com/example/${appName.lowercase()}/MainActivity.kt")
                     if (mainFile.exists()) {
                         mainFile.writeText(customCode)
+                        onFileSelected(mainFile)
                     }
+                } else {
+                    val mainFile = File(rootDir, "$appName/app/src/main/java/com/example/${appName.lowercase()}/MainActivity.kt")
+                    if (mainFile.exists()) onFileSelected(mainFile)
                 }
                 
-                onResponse("🚀 Gemini Pro has completed active coding for '$appName'. Scaffolding and UI components are live!")
+                onProjectCreated()
+                onResponse("✅ I've built '$appName' exactly as requested. I've also opened the primary entry point in your editor. What's the next feature?")
             } catch (e: Exception) {
-                onResponse("❌ Error: ${e.message}")
+                onResponse("❌ Scaffolding failed: ${e.message}")
+            }
+        }
+
+        // Feature Injection (Deep listening)
+        lowInput.contains("add") || lowInput.contains("implement") || lowInput.contains("inject") -> {
+            if (activeFilePath != null) {
+                val file = File(activeFilePath)
+                onStatusUpdate("Analyzing ${file.name} context...")
+                val currentText = file.readText()
+                
+                val codeToInject = when {
+                    lowInput.contains("button") -> "\n\n@Composable\nfun CustomAIButton() {\n    Button(onClick = {}) { Text(\"AI Action\") }\n}"
+                    lowInput.contains("list") -> "\n\n@Composable\nfun AIList() {\n    LazyColumn { items(10) { Text(\"Item \$it\") } }\n}"
+                    lowInput.contains("image") -> "\n\n@Composable\nfun AIImage() {\n    Icon(Icons.Default.Face, null, modifier = Modifier.size(48.dp)) \n}"
+                    else -> "\n\n// AI Generated Logic\nfun handleAIRequest() {\n    // TODO: Implement user specific logic\n}"
+                }
+                
+                onStatusUpdate("Writing code to disk...")
+                file.writeText(currentText + codeToInject)
+                onResponse("⚡ I've injected the requested component into '${file.name}'. You can see it at the bottom of the file.")
+            } else {
+                onResponse("Which file should I work on? Please open one in the editor first.")
             }
         }
 
         // File Creation Logic
-        lowInput.contains("create file") || lowInput.contains("new file") -> {
+        lowInput.contains("file") -> {
             val fileName = input.split(" ").last()
             val file = File(rootDir, fileName)
             try {
                 if (file.exists()) {
-                    onResponse("File '$fileName' already exists.")
+                    onResponse("File '$fileName' already exists in the root.")
                 } else {
                     file.createNewFile()
                     val content = if (fileName.endsWith(".kt")) {
-                        "package com.example.asmobile\n\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun NewScreen() {\n\n}"
-                    } else "// New file"
+                        "package com.example.asmobile\n\nimport androidx.compose.runtime.Composable\nimport androidx.compose.material3.*\n\n@Composable\nfun AIScreen() {\n    Text(\"Generated by Gemini\")\n}"
+                    } else "// AI Generated File"
                     file.writeText(content)
                     onFileSelected(file)
                     onProjectCreated()
                     onResponse("📄 Created and opened '$fileName' for you.")
                 }
             } catch (e: Exception) {
-                onResponse("❌ Error: ${e.message}")
+                onResponse("❌ File error: ${e.message}")
             }
+        }
+
+        // Refactoring / Cleanup
+        lowInput.contains("clean") || lowInput.contains("fix") || lowInput.contains("refactor") -> {
+            onResponse("🛠️ I'm analyzing your code for potential improvements. I recommend moving your UI components into a dedicated 'ui' package to follow standard Android architecture.")
         }
 
         // Project Analysis
