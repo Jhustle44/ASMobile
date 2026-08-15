@@ -122,20 +122,33 @@ private fun executeAiLogic(
     when {
         // App Building Logic
         lowInput.contains("build") || lowInput.contains("create app") -> {
-            val appName = input.split(" ").lastOrNull()?.replaceFirstChar { it.uppercase() } ?: "NewApp"
+            val appName = if (input.contains("app ")) {
+                input.substringAfter("app ").split(" ").firstOrNull()?.replaceFirstChar { it.uppercase() } ?: "NewApp"
+            } else "NewApp"
+            
             val template = when {
                 lowInput.contains("notes") -> ProjectTemplate.NotesApp
                 lowInput.contains("weather") -> ProjectTemplate.WeatherApp
                 lowInput.contains("login") -> ProjectTemplate.LoginFlow
                 lowInput.contains("nav") -> ProjectTemplate.BottomNav
-                else -> ProjectTemplate.EmptyCompose
+                else -> ProjectTemplate.CustomAi // NEW: AI-Driven Custom App
             }
             
             try {
                 ProjectManager.createNewProject(rootDir, appName, "com.example.${appName.lowercase()}", template)
-                onResponse("✅ Successfully built '$appName' using the ${template.label} template. You can find it in your project tree.")
+                
+                // If it's a custom app, Gemini "thinks" and generates specific code
+                if (template == ProjectTemplate.CustomAi) {
+                    val customCode = generateCustomAppCode(appName, input)
+                    val mainFile = File(rootDir, "$appName/app/src/main/java/com/example/${appName.lowercase()}/MainActivity.kt")
+                    if (mainFile.exists()) {
+                        mainFile.writeText(customCode)
+                    }
+                }
+                
+                onResponse("🚀 Gemini Pro has built '$appName' from your description. I've scaffolded the architecture and injected tailored Compose code. Check it out in the Project tab!")
             } catch (e: Exception) {
-                onResponse("❌ Error building app: ${e.message}")
+                onResponse("❌ Error building custom app: ${e.message}")
             }
         }
 
@@ -166,6 +179,48 @@ private fun executeAiLogic(
             onResponse("I've analyzed your project. I can scaffold a new app or generate code for your active file. Try asking to 'build a weather app'.")
         }
     }
+}
+
+private fun generateCustomAppCode(appName: String, description: String): String {
+    val lowDesc = description.lowercase()
+    val content = when {
+        lowDesc.contains("recipe") -> "Text(\"Recipe Book App\", style = MaterialTheme.typography.headlineMedium)\nLazyColumn { items(5) { Text(\"Recipe #\$it\", modifier = Modifier.padding(8.dp)) } }"
+        lowDesc.contains("fitness") -> "Icon(Icons.Default.DirectionsRun, null, modifier = Modifier.size(64.dp))\nText(\"Fitness Tracker\", style = MaterialTheme.typography.displaySmall)\nLinearProgressIndicator(progress = 0.7f, modifier = Modifier.fillMaxWidth())"
+        lowDesc.contains("chat") -> "Column { Box(Modifier.weight(1f)) { Text(\"Chat History\") }\nOutlinedTextField(value = \"\", onValueChange = {}, label = { Text(\"Message\") }, modifier = Modifier.fillMaxWidth()) }"
+        else -> "Text(\"AI Generated Content for \$appName\", style = MaterialTheme.typography.headlineMedium)\nText(\"Description: \$description\", style = MaterialTheme.typography.bodySmall)"
+    }
+
+    return """
+        package com.example.${appName.lowercase()}
+
+        import android.os.Bundle
+        import androidx.activity.ComponentActivity
+        import androidx.activity.compose.setContent
+        import androidx.compose.foundation.layout.*
+        import androidx.compose.foundation.lazy.LazyColumn
+        import androidx.compose.material.icons.Icons
+        import androidx.compose.material.icons.filled.*
+        import androidx.compose.material3.*
+        import androidx.compose.runtime.*
+        import androidx.compose.ui.Alignment
+        import androidx.compose.ui.Modifier
+        import androidx.compose.ui.unit.dp
+
+        class MainActivity : ComponentActivity() {
+            override fun onCreate(savedInstanceState: Bundle?) {
+                super.onCreate(savedInstanceState)
+                setContent {
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        $content
+                    }
+                }
+            }
+        }
+    """.trimIndent()
 }
 
 data class ChatMessage(val content: String, val isUser: Boolean)

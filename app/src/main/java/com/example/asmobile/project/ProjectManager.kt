@@ -51,6 +51,7 @@ object ProjectManager {
             ProjectTemplate.CounterApp -> createCounterApp(appDir, packageName, projectName)
             ProjectTemplate.NotesApp -> createNotesApp(appDir, packageName, projectName)
             ProjectTemplate.WeatherApp -> createWeatherApp(appDir, packageName, projectName)
+            ProjectTemplate.CustomAi -> createEmptyCompose(appDir, packageName, projectName) // Base for AI customization
         }
 
         // Create AndroidManifest.xml
@@ -282,5 +283,6 @@ enum class ProjectTemplate(val label: String, val description: String) {
     LoginFlow("Login Flow", "A standard login screen layout."),
     CounterApp("Counter App", "A simple state management example."),
     NotesApp("Notes App", "A list-based app with a FAB."),
-    WeatherApp("Weather App", "A beautiful weather forecast UI.")
+    WeatherApp("Weather App", "A beautiful weather forecast UI."),
+    CustomAi("Gemini Generated", "An app built entirely by AI from your description.")
 }

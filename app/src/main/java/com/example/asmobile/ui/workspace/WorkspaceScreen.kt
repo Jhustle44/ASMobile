@@ -110,13 +110,23 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                     selectedDestination = MobileDestination.Tools
                     scope.launch { drawerState.close() }
                 }
+                DrawerToolItem("Resource Explorer", Icons.Rounded.Category) { 
+                    selectedDestination = MobileDestination.Project
+                    scope.launch { drawerState.close() }
+                }
                 DrawerToolItem("App Inspection", Icons.Rounded.Search) { 
                     selectedDestination = MobileDestination.Tools
                     scope.launch { drawerState.close() }
                 }
+                DrawerToolItem("Dependency Manager", Icons.Rounded.Layers) { 
+                    scope.launch { drawerState.close() }
+                }
+                DrawerToolItem("Cloud Sync (Beta)", Icons.Rounded.CloudSync) { 
+                    scope.launch { drawerState.close() }
+                }
                 
                 Spacer(Modifier.weight(1f))
-                Text("v1.9-PRO", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("v2.0-ELITE", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     ) {

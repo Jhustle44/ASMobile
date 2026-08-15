@@ -157,7 +157,7 @@ fun Dashboard(
             }
         }
 
-        // Resource Usage Monitor
+        // System Performance Monitor
         item {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -169,17 +169,32 @@ fun Dashboard(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Rounded.Analytics, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("System Performance", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text("Real-time IDE Performance", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     }
                     Spacer(Modifier.height(20.dp))
-                    ResourceProgress("Compile Engine", 0.45f, MaterialTheme.colorScheme.primary)
+                    ResourceProgress("Compile Engine (Kotlin 2.0)", 0.45f, MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(16.dp))
-                    ResourceProgress("Memory Heap", 0.65f, Color(0xFF8B5CF6))
+                    ResourceProgress("Gemini Context Window", 0.82f, Color(0xFF8B5CF6))
+                    Spacer(Modifier.height(16.dp))
+                    ResourceProgress("Indexing Progress", 1.0f, Color(0xFF10B981))
+                }
+            }
+        }
+
+        // Community & Learning
+        item {
+            Column {
+                Text("Developer Resources", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.height(12.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    QuickActionChip(Icons.Rounded.Description, "Docs", onClick = {})
+                    QuickActionChip(Icons.Rounded.BugReport, "Samples", onClick = {})
+                    QuickActionChip(Icons.Rounded.Groups, "Forums", onClick = {})
                 }
             }
         }
         
-        item { Spacer(Modifier.height(80.dp)) } // Padding for floating nav
+        item { Spacer(Modifier.height(100.dp)) } // Extra padding for floating nav
     }
 }
 
