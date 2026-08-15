@@ -7,6 +7,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
@@ -15,9 +18,31 @@ import com.example.asmobile.ui.workspace.WorkspaceScreen
 import java.io.File
 
 class MainActivity : ComponentActivity() {
+    private var keepSplashScreen = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+        
+        // Keep splash screen on for 1.5 seconds
+        splashScreen.setKeepOnScreenCondition { keepSplashScreen }
+        lifecycleScope.launch {
+            delay(1500)
+            keepSplashScreen = false
+        }
+
+        // Subtle exit animation
+        splashScreen.setOnExitAnimationListener { splashScreenProvider ->
+            val iconView = splashScreenProvider.iconView
+            iconView.animate()
+                .scaleX(1.1f)
+                .scaleY(1.1f)
+                .alpha(0f)
+                .setDuration(400L)
+                .withEndAction { splashScreenProvider.remove() }
+                .start()
+        }
+
         seedSampleFiles(this)
         enableEdgeToEdge()
         setContent {
