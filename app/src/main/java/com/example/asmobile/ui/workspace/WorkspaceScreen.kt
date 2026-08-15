@@ -107,7 +107,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                 Text("Project Tools", modifier = Modifier.padding(start = 28.dp, bottom = 12.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                 
                 DrawerToolItem("Device Manager", Icons.Rounded.Smartphone) { 
-                    selectedDestination = MobileDestination.Tools
+                    selectedDestination = MobileDestination.Devices
                     scope.launch { drawerState.close() }
                 }
                 DrawerToolItem("Resource Explorer", Icons.Rounded.Category) { 
@@ -126,7 +126,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                 }
                 
                 Spacer(Modifier.weight(1f))
-                Text("v2.0-ELITE", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("v2.1-ELITE", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     ) {
@@ -186,6 +186,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                         onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) },
                         modifier = Modifier.fillMaxSize()
                     )
+                    MobileDestination.Devices -> VirtualDeviceScreen(modifier = Modifier.fillMaxSize())
                     MobileDestination.Tools -> MobileToolsTabs(buildViewModel)
                 }
             }
@@ -355,6 +356,7 @@ enum class MobileDestination(val label: String, val icon: Vector) {
     Ai("AI", Icons.Rounded.AutoAwesome),
     Editor("Editor", Icons.Rounded.Code),
     Git("Git", Icons.Rounded.History),
+    Devices("Devices", Icons.Rounded.Smartphone),
     Tools("Tools", Icons.Rounded.Build)
 }
 

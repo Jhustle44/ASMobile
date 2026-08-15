@@ -29,6 +29,8 @@ fun AiAssistantPanel(
 ) {
     var message by remember { mutableStateOf("") }
     val chatHistory = remember { mutableStateListOf<ChatMessage>() }
+    var isGenerating by remember { mutableStateOf(false) }
+    var generationTask by remember { mutableStateOf("") }
 
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         // Chat Header
@@ -43,7 +45,12 @@ fun AiAssistantPanel(
             ) {
                 Icon(Icons.Rounded.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(12.dp))
-                Text("Gemini AI Pro", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Column {
+                    Text("Gemini AI Pro", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    if (isGenerating) {
+                        Text(generationTask, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
             }
         }
 
@@ -66,6 +73,9 @@ fun AiAssistantPanel(
             items(chatHistory) { msg ->
                 ChatBubble(msg)
             }
+            if (isGenerating) {
+                item { GeneratingIndicator() }
+            }
         }
 
         // Input Area
@@ -84,7 +94,8 @@ fun AiAssistantPanel(
                     modifier = Modifier.weight(1f),
                     placeholder = { Text("Command Gemini...") },
                     shape = RoundedCornerShape(24.dp),
-                    maxLines = 5
+                    maxLines = 5,
+                    enabled = !isGenerating
                 )
                 Spacer(Modifier.width(8.dp))
                 IconButton(
@@ -93,11 +104,23 @@ fun AiAssistantPanel(
                             chatHistory.add(ChatMessage(message, true))
                             val input = message
                             message = ""
-                            executeAiLogic(input, rootDir, activeFilePath, onFileSelected) { response ->
-                                chatHistory.add(ChatMessage(response, false))
-                            }
+                            
+                            // Start generation simulation
+                            isGenerating = true
+                            executeAiLogic(
+                                input, 
+                                rootDir, 
+                                activeFilePath, 
+                                onFileSelected,
+                                onStatusUpdate = { generationTask = it },
+                                onResponse = { response ->
+                                    chatHistory.add(ChatMessage(response, false))
+                                    isGenerating = false
+                                }
+                            )
                         }
                     },
+                    enabled = !isGenerating,
                     colors = IconButtonDefaults.iconButtonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
@@ -110,11 +133,24 @@ fun AiAssistantPanel(
     }
 }
 
+@Composable
+private fun GeneratingIndicator() {
+    Row(
+        modifier = Modifier.padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+        Text("Gemini is coding...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+    }
+}
+
 private fun executeAiLogic(
     input: String,
     rootDir: File,
     activeFilePath: String?,
     onFileSelected: (File) -> Unit,
+    onStatusUpdate: (String) -> Unit,
     onResponse: (String) -> Unit
 ) {
     val lowInput = input.lowercase()
@@ -122,6 +158,7 @@ private fun executeAiLogic(
     when {
         // App Building Logic
         lowInput.contains("build") || lowInput.contains("create app") -> {
+            onStatusUpdate("Analyzing app requirements...")
             val appName = if (input.contains("app ")) {
                 input.substringAfter("app ").split(" ").firstOrNull()?.replaceFirstChar { it.uppercase() } ?: "NewApp"
             } else "NewApp"
@@ -134,9 +171,11 @@ private fun executeAiLogic(
                 else -> ProjectTemplate.CustomAi // NEW: AI-Driven Custom App
             }
             
+            onStatusUpdate("Creating project structure for $appName...")
             try {
                 ProjectManager.createNewProject(rootDir, appName, "com.example.${appName.lowercase()}", template)
                 
+                onStatusUpdate("Injecting active coding into MainActivity.kt...")
                 // If it's a custom app, Gemini "thinks" and generates specific code
                 if (template == ProjectTemplate.CustomAi) {
                     val customCode = generateCustomAppCode(appName, input)
@@ -146,9 +185,9 @@ private fun executeAiLogic(
                     }
                 }
                 
-                onResponse("🚀 Gemini Pro has built '$appName' from your description. I've scaffolded the architecture and injected tailored Compose code. Check it out in the Project tab!")
+                onResponse("🚀 Gemini Pro has completed active coding for '$appName'. Scaffolding and UI components are live!")
             } catch (e: Exception) {
-                onResponse("❌ Error building custom app: ${e.message}")
+                onResponse("❌ Error: ${e.message}")
             }
         }
 
