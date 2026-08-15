@@ -64,6 +64,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
     var selectedDestination by remember { mutableStateOf(MobileDestination.Dashboard) }
     var showProjectWizard by remember { mutableStateOf(false) }
     var showSearchEverywhere by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
     var buildVariant by remember { mutableStateOf("debug") }
     
     val openFiles = remember { mutableStateListOf<String>() }
@@ -88,31 +89,33 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                     fontWeight = FontWeight.ExtraBold
                 )
                 NavigationDrawerItem(
-                    label = { Text("Search Project") },
+                    label = { Text("Settings") },
                     selected = false,
-                    onClick = { },
-                    icon = { Icon(Icons.Rounded.Search, null) },
+                    onClick = { 
+                        showSettings = true
+                        scope.launch { drawerState.close() }
+                    },
+                    icon = { Icon(Icons.Rounded.Settings, null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(
                     label = { Text("Device Manager") },
                     selected = false,
-                    onClick = { },
+                    onClick = { 
+                        selectedDestination = MobileDestination.Tools
+                        scope.launch { drawerState.close() }
+                    },
                     icon = { Icon(Icons.Rounded.Smartphone, null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(
-                    label = { Text("Resource Explorer") },
+                    label = { Text("Resource Manager") },
                     selected = false,
-                    onClick = { },
+                    onClick = { 
+                        selectedDestination = MobileDestination.Project // Could be separate
+                        scope.launch { drawerState.close() }
+                    },
                     icon = { Icon(Icons.Rounded.Category, null) },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                NavigationDrawerItem(
-                    label = { Text("Dependency Manager") },
-                    selected = false,
-                    onClick = { },
-                    icon = { Icon(Icons.Rounded.Layers, null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(
@@ -271,7 +274,16 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                         )
                     }
                     MobileDestination.Git -> GitPanel(rootDir = rootDir, modifier = Modifier.fillMaxSize())
-                    MobileDestination.Ai -> AiAssistantPanel(modifier = Modifier.fillMaxSize())
+                    MobileDestination.Ai -> AiAssistantPanel(
+                        rootDir = rootDir,
+                        activeFilePath = activeFilePath,
+                        onFileSelected = { file ->
+                            if (!openFiles.contains(file.absolutePath)) openFiles.add(file.absolutePath)
+                            activeFilePath = file.absolutePath
+                            selectedDestination = MobileDestination.Editor
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
                     MobileDestination.Tools -> MobileToolsTabs(buildViewModel)
                 }
             }
@@ -297,6 +309,10 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                     selectedDestination = MobileDestination.Editor
                 }
             )
+        }
+
+        if (showSettings) {
+            SettingsScreen(onBack = { showSettings = false })
         }
     }
 }
@@ -480,54 +496,46 @@ private fun AdaptiveGrid(columns: GridCells, spacing: Arrangement.HorizontalOrVe
 
 @Composable
 private fun AppInspectionPanel(modifier: Modifier = Modifier) {
+    var selectedTab by remember { mutableIntStateOf(0) }
     Column(modifier = modifier.padding(16.dp)) {
         Text("App Inspection", style = MaterialTheme.typography.titleSmall)
         Spacer(Modifier.height(16.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Process: ", style = MaterialTheme.typography.labelMedium)
-            Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                shape = RoundedCornerShape(4.dp),
-                modifier = Modifier.padding(horizontal = 8.dp)
+        TabRow(selectedTabIndex = selectedTab, containerColor = Color.Transparent) {
+            Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }) { Text("Build", modifier = Modifier.padding(8.dp)) }
+            Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) { Text("Devices", modifier = Modifier.padding(8.dp)) }
+            Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }) { Text("Network", modifier = Modifier.padding(8.dp)) }
+        }
+        
+        Spacer(Modifier.height(16.dp))
+        
+        when (selectedTab) {
+            0 -> BuildLogPanel(selectedTab = 1, modifier = Modifier.fillMaxSize())
+            1 -> DeviceManagerList()
+            else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Network Inspector") }
+        }
+    }
+}
+
+@Composable
+private fun DeviceManagerList() {
+    val devices = listOf("Pixel 8 Pro (API 34)", "Pixel Fold (API 33)", "Nexus 5X (API 28)")
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        items(devices) { device ->
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("com.example.asmobile (3124)", style = MaterialTheme.typography.bodySmall)
-                    Icon(Icons.Rounded.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
-                }
-            }
-        }
-        Spacer(Modifier.height(16.dp))
-        TabRow(selectedTabIndex = 0, containerColor = Color.Transparent) {
-            Tab(selected = true, onClick = {}) { Text("Database", modifier = Modifier.padding(8.dp)) }
-            Tab(selected = false, onClick = {}) { Text("Background", modifier = Modifier.padding(8.dp)) }
-            Tab(selected = false, onClick = {}) { Text("Network", modifier = Modifier.padding(8.dp)) }
-        }
-        
-        Spacer(Modifier.height(16.dp))
-        
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Rounded.Storage, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("app_database.db", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    Icon(Icons.Rounded.Smartphone, null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.width(16.dp))
+                    Text(device, style = MaterialTheme.typography.bodyLarge)
                 }
-                Spacer(Modifier.height(8.dp))
-                val tables = listOf("Users", "Notes", "Settings")
-                tables.forEach { table ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(table, style = MaterialTheme.typography.bodySmall)
-                        Text("24 entries", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
-                    }
+                IconButton(onClick = { }) {
+                    Icon(Icons.Rounded.PlayArrow, null, tint = Color(0xFF4CAF50))
                 }
             }
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
         }
     }
 }

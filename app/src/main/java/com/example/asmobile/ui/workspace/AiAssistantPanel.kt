@@ -16,11 +16,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.io.File
 
 @Composable
-fun AiAssistantPanel(modifier: Modifier = Modifier) {
+fun AiAssistantPanel(
+    rootDir: File,
+    activeFilePath: String?,
+    onFileSelected: (File) -> Unit,
+    modifier: Modifier = Modifier
+) {
     var message by remember { mutableStateOf("") }
     val chatHistory = remember { mutableStateListOf<ChatMessage>() }
+    val scope = rememberCoroutineScope()
 
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         // Chat Header
@@ -35,7 +42,7 @@ fun AiAssistantPanel(modifier: Modifier = Modifier) {
             ) {
                 Icon(Icons.Rounded.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(12.dp))
-                Text("AI Assistant", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("Gemini in ASMobile", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
         }
 
@@ -48,7 +55,7 @@ fun AiAssistantPanel(modifier: Modifier = Modifier) {
                 item {
                     Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            "How can I help you build your app today?",
+                            "I have full access to your project. How can I help?",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -74,17 +81,18 @@ fun AiAssistantPanel(modifier: Modifier = Modifier) {
                     value = message,
                     onValueChange = { message = it },
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Ask anything...") },
+                    placeholder = { Text("Ask Gemini...") },
                     shape = RoundedCornerShape(24.dp),
-                    maxLines = 3
+                    maxLines = 5
                 )
                 Spacer(Modifier.width(8.dp))
                 IconButton(
                     onClick = {
                         if (message.isNotBlank()) {
                             chatHistory.add(ChatMessage(message, true))
-                            val response = getAiResponse(message)
-                            chatHistory.add(ChatMessage(response, false))
+                            processAiCommand(message, rootDir, activeFilePath, onFileSelected) { response ->
+                                chatHistory.add(ChatMessage(response, false))
+                            }
                             message = ""
                         }
                     },
@@ -97,6 +105,64 @@ fun AiAssistantPanel(modifier: Modifier = Modifier) {
                 }
             }
         }
+    }
+}
+
+private fun processAiCommand(
+    input: String,
+    rootDir: File,
+    activeFilePath: String?,
+    onFileSelected: (File) -> Unit,
+    onResponse: (String) -> Unit
+) {
+    val lowInput = input.lowercase()
+    
+    when {
+        lowInput.contains("create file") || lowInput.contains("new file") -> {
+            val fileName = input.split(" ").last()
+            val newFile = File(rootDir, fileName)
+            try {
+                newFile.createNewFile()
+                newFile.writeText("// Created by Gemini AI\npackage com.example.asmobile\n\n")
+                onFileSelected(newFile)
+                onResponse("Created '$fileName' and opened it for you.")
+            } catch (e: Exception) {
+                onResponse("Error creating file: ${e.message}")
+            }
+        }
+        
+        lowInput.contains("add button") -> {
+            if (activeFilePath != null) {
+                val file = File(activeFilePath)
+                val currentText = file.readText()
+                val newCode = "\n@Composable\nfun GeneratedButton() {\n    Button(onClick = { }) {\n        Text(\"AI Button\")\n    }\n}\n"
+                file.writeText(currentText + newCode)
+                onResponse("Added a standard Compose Button to ${file.name}.")
+            } else {
+                onResponse("Please open a file first so I know where to add the code.")
+            }
+        }
+
+        lowInput.contains("build app") || lowInput.contains("create app") -> {
+            val appName = if (lowInput.contains("app ")) {
+                input.substringAfter("app ").replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+            } else "AI_Generated_App"
+            val packageName = "com.ai.generated.${appName.lowercase()}"
+            
+            try {
+                com.example.asmobile.project.ProjectManager.createNewProject(
+                    baseDir = rootDir,
+                    projectName = appName,
+                    packageName = packageName,
+                    template = com.example.asmobile.project.ProjectTemplate.EmptyCompose
+                )
+                onResponse("I have successfully built the entire app '$appName' for you! You can find it in the Project Explorer.")
+            } catch (e: Exception) {
+                onResponse("Failed to build app: ${e.message}")
+            }
+        }
+
+        else -> onResponse(getAiResponse(input))
     }
 }
 
@@ -132,35 +198,17 @@ private fun getAiResponse(input: String): String {
     val lowInput = input.lowercase()
     return when {
         lowInput.contains("hello") || lowInput.contains("hi") -> 
-            "Hello! I'm your ASMobile AI Assistant. I can help you build entire apps! Try asking me to 'build a notes app' or 'create a weather app'."
+            "Hello! I'm Gemini, your ASMobile AI Assistant. I have full access to your project files and can write code, create files, or build entire apps."
         
-        lowInput.contains("build") || lowInput.contains("create") -> {
-            when {
-                lowInput.contains("notes") -> "I can build a Notes App for you! Go to Home -> New Project and select the 'Notes App' template. I'll scaffold the list and FAB for you."
-                lowInput.contains("counter") -> "I'll help you build a Counter App. Use the 'Counter App' template in the New Project wizard to see how state management works."
-                lowInput.contains("weather") -> "Weather App? Great choice. Select the 'Weather App' template when creating a new project for a beautiful UI layout."
-                else -> "I can scaffold several types of apps! Try asking for a 'notes app', 'counter app', or 'login flow'. You can find these in the New Project wizard."
-            }
-        }
-            
-        lowInput.contains("compose") || lowInput.contains("ui") -> 
-            "Jetpack Compose is Android's modern toolkit for building native UI. I can help you write entire screens if you tell me what you need!"
+        lowInput.contains("explain") -> "This project is a modern Android IDE built with Jetpack Compose. It uses a custom file system bridge to allow real-time mobile development."
 
-        lowInput.contains("button") -> 
-            "Here is a modern Compose Button snippet:\n\n" +
-            "Button(\n" +
-            "    onClick = { /* Handle click */ },\n" +
-            "    shape = RoundedCornerShape(12.dp)\n" +
-            ") {\n" +
-            "    Text(\"Click Me\")\n" +
-            "}"
-            
         lowInput.contains("help") -> 
-            "I'm here to assist! You can ask me to:\n" +
-            "• 'Build a notes app'\n" +
-            "• 'How do I create a login screen?'\n" +
-            "• 'Show me a Compose List example'"
+            "You can ask me to:\n" +
+            "• 'Create file Utils.kt'\n" +
+            "• 'Add a button to this file'\n" +
+            "• 'Build a weather app'\n" +
+            "• 'Explain the project structure'"
 
-        else -> "I'm ready to help you build! You can ask me to create specific types of apps, and I'll guide you through the templates or provide the code."
+        else -> "I'm analyzing your request. I can modify your project directly—just let me know what code or files you need."
     }
 }
