@@ -17,6 +17,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.io.File
+import com.example.asmobile.project.ProjectManager
+import com.example.asmobile.project.ProjectTemplate
 
 @Composable
 fun AiAssistantPanel(
@@ -27,7 +29,6 @@ fun AiAssistantPanel(
 ) {
     var message by remember { mutableStateOf("") }
     val chatHistory = remember { mutableStateListOf<ChatMessage>() }
-    val scope = rememberCoroutineScope()
 
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         // Chat Header
@@ -42,7 +43,7 @@ fun AiAssistantPanel(
             ) {
                 Icon(Icons.Rounded.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(12.dp))
-                Text("Gemini in ASMobile", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("Gemini AI Pro", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
         }
 
@@ -55,7 +56,7 @@ fun AiAssistantPanel(
                 item {
                     Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            "I have full access to your project. How can I help?",
+                            "I'm ready to build your app. What's on your mind?",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -81,7 +82,7 @@ fun AiAssistantPanel(
                     value = message,
                     onValueChange = { message = it },
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Ask Gemini...") },
+                    placeholder = { Text("Command Gemini...") },
                     shape = RoundedCornerShape(24.dp),
                     maxLines = 5
                 )
@@ -90,10 +91,11 @@ fun AiAssistantPanel(
                     onClick = {
                         if (message.isNotBlank()) {
                             chatHistory.add(ChatMessage(message, true))
-                            processAiCommand(message, rootDir, activeFilePath, onFileSelected) { response ->
+                            val input = message
+                            message = ""
+                            executeAiLogic(input, rootDir, activeFilePath, onFileSelected) { response ->
                                 chatHistory.add(ChatMessage(response, false))
                             }
-                            message = ""
                         }
                     },
                     colors = IconButtonDefaults.iconButtonColors(
@@ -108,7 +110,7 @@ fun AiAssistantPanel(
     }
 }
 
-private fun processAiCommand(
+private fun executeAiLogic(
     input: String,
     rootDir: File,
     activeFilePath: String?,
@@ -118,51 +120,51 @@ private fun processAiCommand(
     val lowInput = input.lowercase()
     
     when {
-        lowInput.contains("create file") || lowInput.contains("new file") -> {
-            val fileName = input.split(" ").last()
-            val newFile = File(rootDir, fileName)
-            try {
-                newFile.createNewFile()
-                newFile.writeText("// Created by Gemini AI\npackage com.example.asmobile\n\n")
-                onFileSelected(newFile)
-                onResponse("Created '$fileName' and opened it for you.")
-            } catch (e: Exception) {
-                onResponse("Error creating file: ${e.message}")
+        // App Building Logic
+        lowInput.contains("build") || lowInput.contains("create app") -> {
+            val appName = input.split(" ").lastOrNull()?.replaceFirstChar { it.uppercase() } ?: "NewApp"
+            val template = when {
+                lowInput.contains("notes") -> ProjectTemplate.NotesApp
+                lowInput.contains("weather") -> ProjectTemplate.WeatherApp
+                lowInput.contains("login") -> ProjectTemplate.LoginFlow
+                lowInput.contains("nav") -> ProjectTemplate.BottomNav
+                else -> ProjectTemplate.EmptyCompose
             }
-        }
-        
-        lowInput.contains("add button") -> {
-            if (activeFilePath != null) {
-                val file = File(activeFilePath)
-                val currentText = file.readText()
-                val newCode = "\n@Composable\nfun GeneratedButton() {\n    Button(onClick = { }) {\n        Text(\"AI Button\")\n    }\n}\n"
-                file.writeText(currentText + newCode)
-                onResponse("Added a standard Compose Button to ${file.name}.")
-            } else {
-                onResponse("Please open a file first so I know where to add the code.")
-            }
-        }
-
-        lowInput.contains("build app") || lowInput.contains("create app") -> {
-            val appName = if (lowInput.contains("app ")) {
-                input.substringAfter("app ").replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-            } else "AI_Generated_App"
-            val packageName = "com.ai.generated.${appName.lowercase()}"
             
             try {
-                com.example.asmobile.project.ProjectManager.createNewProject(
-                    baseDir = rootDir,
-                    projectName = appName,
-                    packageName = packageName,
-                    template = com.example.asmobile.project.ProjectTemplate.EmptyCompose
-                )
-                onResponse("I have successfully built the entire app '$appName' for you! You can find it in the Project Explorer.")
+                ProjectManager.createNewProject(rootDir, appName, "com.example.${appName.lowercase()}", template)
+                onResponse("✅ Successfully built '$appName' using the ${template.label} template. You can find it in your project tree.")
             } catch (e: Exception) {
-                onResponse("Failed to build app: ${e.message}")
+                onResponse("❌ Error building app: ${e.message}")
             }
         }
 
-        else -> onResponse(getAiResponse(input))
+        // File Creation Logic
+        lowInput.contains("create file") || lowInput.contains("new file") -> {
+            val fileName = input.split(" ").last()
+            val file = File(rootDir, fileName)
+            try {
+                if (file.exists()) {
+                    onResponse("File '$fileName' already exists.")
+                } else {
+                    file.createNewFile()
+                    file.writeText("// Generated by Gemini\npackage com.example.asmobile\n\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun NewScreen() {\n\n}")
+                    onFileSelected(file)
+                    onResponse("📄 Created and opened '$fileName' for you.")
+                }
+            } catch (e: Exception) {
+                onResponse("❌ Error: ${e.message}")
+            }
+        }
+
+        // General Help
+        lowInput.contains("help") -> {
+            onResponse("I can help you build apps instantly. Commands:\n• 'Build a notes app called MyNotes'\n• 'Create file ThemeUtils.kt'\n• 'How do I add a button?'")
+        }
+
+        else -> {
+            onResponse("I've analyzed your project. I can scaffold a new app or generate code for your active file. Try asking to 'build a weather app'.")
+        }
     }
 }
 
@@ -180,8 +182,8 @@ private fun ChatBubble(message: ChatMessage) {
             shape = RoundedCornerShape(
                 topStart = 16.dp,
                 topEnd = 16.dp,
-                bottomStart = if (message.isUser) 16.dp else 0.dp,
-                bottomEnd = if (message.isUser) 0.dp else 16.dp
+                bottomStart = if (message.isUser) 16.dp else 2.dp,
+                bottomEnd = if (message.isUser) 2.dp else 16.dp
             )
         ) {
             Text(
@@ -191,24 +193,5 @@ private fun ChatBubble(message: ChatMessage) {
                 color = textColor
             )
         }
-    }
-}
-
-private fun getAiResponse(input: String): String {
-    val lowInput = input.lowercase()
-    return when {
-        lowInput.contains("hello") || lowInput.contains("hi") -> 
-            "Hello! I'm Gemini, your ASMobile AI Assistant. I have full access to your project files and can write code, create files, or build entire apps."
-        
-        lowInput.contains("explain") -> "This project is a modern Android IDE built with Jetpack Compose. It uses a custom file system bridge to allow real-time mobile development."
-
-        lowInput.contains("help") -> 
-            "You can ask me to:\n" +
-            "• 'Create file Utils.kt'\n" +
-            "• 'Add a button to this file'\n" +
-            "• 'Build a weather app'\n" +
-            "• 'Explain the project structure'"
-
-        else -> "I'm analyzing your request. I can modify your project directly—just let me know what code or files you need."
     }
 }

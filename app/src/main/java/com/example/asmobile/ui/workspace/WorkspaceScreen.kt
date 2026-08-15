@@ -54,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import kotlinx.coroutines.launch
 import java.io.File
+import com.example.asmobile.ui.theme.*
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -61,12 +62,13 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val rootDir = remember { context.filesDir }
     
+    // UI State
     var selectedDestination by remember { mutableStateOf(MobileDestination.Dashboard) }
     var showProjectWizard by remember { mutableStateOf(false) }
     var showSearchEverywhere by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
-    var buildVariant by remember { mutableStateOf("debug") }
     
+    // Project State
     val openFiles = remember { mutableStateListOf<String>() }
     var activeFilePath by remember { mutableStateOf<String?>(null) }
     
@@ -76,212 +78,102 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
 
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = selectedDestination == MobileDestination.Dashboard,
         drawerContent = {
             ModalDrawerSheet(
                 drawerContainerColor = MaterialTheme.colorScheme.surface,
-                drawerShape = RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp)
+                drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
             ) {
-                Spacer(Modifier.height(24.dp))
-                Text(
-                    "ASMobile Tools", 
-                    modifier = Modifier.padding(16.dp),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold
-                )
+                DrawerHeader()
+                Spacer(Modifier.height(12.dp))
+                
                 NavigationDrawerItem(
-                    label = { Text("Settings") },
-                    selected = false,
-                    onClick = { 
-                        showSettings = true
-                        scope.launch { drawerState.close() }
-                    },
-                    icon = { Icon(Icons.Rounded.Settings, null) },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                NavigationDrawerItem(
-                    label = { Text("Device Manager") },
-                    selected = false,
-                    onClick = { 
-                        selectedDestination = MobileDestination.Tools
-                        scope.launch { drawerState.close() }
-                    },
-                    icon = { Icon(Icons.Rounded.Smartphone, null) },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                NavigationDrawerItem(
-                    label = { Text("Resource Manager") },
-                    selected = false,
-                    onClick = { 
-                        selectedDestination = MobileDestination.Project // Could be separate
-                        scope.launch { drawerState.close() }
-                    },
-                    icon = { Icon(Icons.Rounded.Category, null) },
+                    label = { Text("Dashboard") },
+                    selected = selectedDestination == MobileDestination.Dashboard,
+                    onClick = { selectedDestination = MobileDestination.Dashboard; scope.launch { drawerState.close() } },
+                    icon = { Icon(Icons.Rounded.Dashboard, null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(
                     label = { Text("Settings") },
                     selected = false,
-                    onClick = { },
+                    onClick = { showSettings = true; scope.launch { drawerState.close() } },
                     icon = { Icon(Icons.Rounded.Settings, null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
+                
+                HorizontalDivider(modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                
+                Text("Project Tools", modifier = Modifier.padding(start = 28.dp, bottom = 12.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                
+                DrawerToolItem("Device Manager", Icons.Rounded.Smartphone) { 
+                    selectedDestination = MobileDestination.Tools
+                    scope.launch { drawerState.close() }
+                }
+                DrawerToolItem("App Inspection", Icons.Rounded.Search) { 
+                    selectedDestination = MobileDestination.Tools
+                    scope.launch { drawerState.close() }
+                }
+                
                 Spacer(Modifier.weight(1f))
-                Text("Version 1.4-Mobile", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("v1.9-PRO", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     ) {
         Scaffold(
             topBar = {
-                Surface(
-                    color = MaterialTheme.colorScheme.background.copy(alpha = 0.9f),
-                    modifier = Modifier.statusBarsPadding()
-                ) {
-                    CenterAlignedTopAppBar(
-                        title = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                                    .padding(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .background(
-                                            Brush.linearGradient(colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)),
-                                            CircleShape
-                                        )
-                                        .padding(4.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(Icons.Rounded.Source, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(14.dp))
-                                }
-                                Spacer(Modifier.width(8.dp))
-                                Text(
-                                    "ASMobile",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    letterSpacing = 0.5.sp
-                                )
-                            }
-                        },
-                        navigationIcon = {
-                            IconButton(
-                                onClick = { scope.launch { drawerState.open() } },
-                                modifier = Modifier.padding(start = 8.dp)
-                            ) {
-                                Icon(Icons.Rounded.Menu, contentDescription = "Menu", tint = MaterialTheme.colorScheme.primary)
-                            }
-                        },
-                        actions = {
-                            IconButton(onClick = { showSearchEverywhere = true }) {
-                                Icon(Icons.Rounded.Search, contentDescription = "Search", modifier = Modifier.size(22.dp))
-                            }
-                            Spacer(Modifier.width(4.dp))
-                        },
-                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                            containerColor = Color.Transparent
-                        )
-                    )
-                }
+                WorkspaceTopBar(
+                    onMenuClick = { scope.launch { drawerState.open() } },
+                    onSearchClick = { showSearchEverywhere = true }
+                )
             },
             bottomBar = {
-                Surface(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                        .shadow(12.dp, RoundedCornerShape(24.dp)),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-                    shape = RoundedCornerShape(24.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                ) {
-                    NavigationBar(
-                        containerColor = Color.Transparent,
-                        tonalElevation = 0.dp,
-                        modifier = Modifier.height(64.dp)
-                    ) {
-                        MobileDestination.entries.forEach { destination ->
-                            NavigationBarItem(
-                                selected = selectedDestination == destination,
-                                onClick = { selectedDestination = destination },
-                                icon = { 
-                                    Icon(
-                                        destination.icon, 
-                                        contentDescription = destination.label,
-                                        modifier = Modifier.size(22.dp)
-                                    ) 
-                                },
-                                label = { 
-                                    Text(
-                                        destination.label, 
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = if (selectedDestination == destination) FontWeight.Bold else FontWeight.Normal
-                                    ) 
-                                },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                )
-                            )
-                        }
-                    }
-                }
+                WorkspaceBottomBar(
+                    selectedDestination = selectedDestination,
+                    onDestinationSelected = { selectedDestination = it }
+                )
             },
             floatingActionButton = {
-                if (selectedDestination == MobileDestination.Editor || selectedDestination == MobileDestination.Dashboard) {
+                if (selectedDestination == MobileDestination.Editor) {
                     ExtendedFloatingActionButton(
                         onClick = { buildViewModel.startBuild() },
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
                         shape = RoundedCornerShape(16.dp),
-                        icon = { Icon(Icons.Rounded.PlayArrow, "Run Build", modifier = Modifier.size(20.dp)) },
-                        text = { Text("Run", fontWeight = FontWeight.Bold) },
-                        modifier = Modifier.padding(bottom = 80.dp) // Adjust for floating bottom bar
+                        icon = { Icon(Icons.Rounded.PlayArrow, null) },
+                        text = { Text("Build & Run") },
+                        modifier = Modifier.padding(bottom = 80.dp)
                     )
                 }
             },
-            modifier = modifier.systemBarsPadding()
+            modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
         ) { padding ->
-            Box(modifier = Modifier.padding(padding)) {
+            Box(modifier = Modifier.padding(padding).fillMaxSize()) {
                 when (selectedDestination) {
                     MobileDestination.Dashboard -> Dashboard(
                         rootDir = rootDir,
-                        onFileSelected = { file ->
-                            if (!openFiles.contains(file.absolutePath)) openFiles.add(file.absolutePath)
-                            activeFilePath = file.absolutePath
-                            selectedDestination = MobileDestination.Editor
-                        },
+                        onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) },
                         onNewProjectClick = { showProjectWizard = true }
                     )
                     MobileDestination.Project -> FileTree(
                         rootDir = rootDir,
-                        onFileSelected = { file ->
-                            if (!openFiles.contains(file.absolutePath)) openFiles.add(file.absolutePath)
-                            activeFilePath = file.absolutePath
-                            selectedDestination = MobileDestination.Editor
+                        onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) }
+                    )
+                    MobileDestination.Editor -> TabbedEditor(
+                        openFiles = openFiles,
+                        activeFilePath = activeFilePath,
+                        onFileSelected = { activeFilePath = it },
+                        onFileClosed = { path ->
+                            openFiles.remove(path)
+                            if (activeFilePath == path) activeFilePath = openFiles.lastOrNull()
+                            if (openFiles.isEmpty()) selectedDestination = MobileDestination.Dashboard
                         }
                     )
-                    MobileDestination.Editor -> {
-                        TabbedEditor(
-                            openFiles = openFiles,
-                            activeFilePath = activeFilePath,
-                            onFileSelected = { activeFilePath = it },
-                            onFileClosed = { path ->
-                                openFiles.remove(path)
-                                if (activeFilePath == path) activeFilePath = openFiles.lastOrNull()
-                            }
-                        )
-                    }
                     MobileDestination.Git -> GitPanel(rootDir = rootDir, modifier = Modifier.fillMaxSize())
                     MobileDestination.Ai -> AiAssistantPanel(
                         rootDir = rootDir,
                         activeFilePath = activeFilePath,
-                        onFileSelected = { file ->
-                            if (!openFiles.contains(file.absolutePath)) openFiles.add(file.absolutePath)
-                            activeFilePath = file.absolutePath
-                            selectedDestination = MobileDestination.Editor
-                        },
+                        onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) },
                         modifier = Modifier.fillMaxSize()
                     )
                     MobileDestination.Tools -> MobileToolsTabs(buildViewModel)
@@ -289,12 +181,14 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
             }
         }
 
+        // Overlay Dialogs
         if (showProjectWizard) {
             NewProjectWizard(
                 baseDir = rootDir,
                 onDismiss = { showProjectWizard = false },
-                onProjectCreated = { 
-                    // Refresh or notify
+                onProjectCreated = { name ->
+                    showProjectWizard = false
+                    // Optionally open the new project
                 }
             )
         }
@@ -303,11 +197,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
             SearchEverywhere(
                 rootDir = rootDir,
                 onDismiss = { showSearchEverywhere = false },
-                onFileSelected = { file ->
-                    if (!openFiles.contains(file.absolutePath)) openFiles.add(file.absolutePath)
-                    activeFilePath = file.absolutePath
-                    selectedDestination = MobileDestination.Editor
-                }
+                onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) }
             )
         }
 
@@ -315,6 +205,138 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
             SettingsScreen(onBack = { showSettings = false })
         }
     }
+}
+
+private fun openFile(
+    file: File, 
+    openFiles: MutableList<String>, 
+    setActive: (String) -> Unit, 
+    setDest: (MobileDestination) -> Unit
+) {
+    if (!openFiles.contains(file.absolutePath)) {
+        openFiles.add(file.absolutePath)
+    }
+    setActive(file.absolutePath)
+    setDest(MobileDestination.Editor)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WorkspaceTopBar(onMenuClick: () -> Unit, onSearchClick: () -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.background,
+        tonalElevation = 2.dp,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        CenterAlignedTopAppBar(
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        .padding(horizontal = 16.dp, vertical = 6.dp)
+                ) {
+                    Icon(Icons.Rounded.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("ASMobile Pro", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold)
+                }
+            },
+            navigationIcon = {
+                IconButton(onClick = onMenuClick) {
+                    Icon(Icons.Rounded.Menu, null, tint = MaterialTheme.colorScheme.primary)
+                }
+            },
+            actions = {
+                IconButton(onClick = onSearchClick) {
+                    Icon(Icons.Rounded.Search, null)
+                }
+                IconButton(onClick = { }) {
+                    Icon(Icons.Rounded.AccountCircle, null)
+                }
+            },
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
+        )
+    }
+}
+
+@Composable
+private fun WorkspaceBottomBar(
+    selectedDestination: MobileDestination,
+    onDestinationSelected: (MobileDestination) -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .padding(horizontal = 12.dp, vertical = 12.dp)
+            .shadow(16.dp, RoundedCornerShape(28.dp)),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
+        shape = RoundedCornerShape(28.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        NavigationBar(
+            containerColor = Color.Transparent,
+            tonalElevation = 0.dp,
+            modifier = Modifier.height(68.dp)
+        ) {
+            MobileDestination.entries.forEach { destination ->
+                val isSelected = selectedDestination == destination
+                NavigationBarItem(
+                    selected = isSelected,
+                    onClick = { onDestinationSelected(destination) },
+                    icon = { 
+                        Icon(
+                            destination.icon, 
+                            null,
+                            modifier = Modifier.size(if (isSelected) 24.dp else 22.dp)
+                        ) 
+                    },
+                    label = { 
+                        Text(
+                            destination.label, 
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                        ) 
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DrawerHeader() {
+    Column(modifier = Modifier.padding(28.dp)) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .background(
+                    Brush.linearGradient(colors = listOf(GlowPurple, GlowBlue)),
+                    CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Rounded.Source, null, tint = Color.White, modifier = Modifier.size(24.dp))
+        }
+        Spacer(Modifier.height(16.dp))
+        Text("jhustle44", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+        Text("Premium Developer", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun DrawerToolItem(label: String, icon: Vector, onClick: () -> Unit) {
+    NavigationDrawerItem(
+        label = { Text(label) },
+        selected = false,
+        onClick = onClick,
+        icon = { Icon(icon, null, modifier = Modifier.size(20.dp)) },
+        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+    )
 }
 
 enum class MobileDestination(val label: String, val icon: Vector) {

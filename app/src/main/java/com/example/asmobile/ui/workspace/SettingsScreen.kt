@@ -11,6 +11,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {
@@ -18,64 +21,75 @@ fun SettingsScreen(onBack: () -> Unit) {
     var autoSave by remember { mutableStateOf(true) }
     var aiSuggestions by remember { mutableStateOf(true) }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Dialog(
+        onDismissRequest = onBack,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
         Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 2.dp
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
         ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, null)
-                }
-                Text("Settings", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
-            }
-        }
-
-        LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            item { SettingHeader("Appearance") }
-            item {
-                SettingSwitch(
-                    title = "Dark Mode",
-                    description = "Use Obsidian Dark theme system-wide",
-                    checked = darkMode,
-                    onCheckedChange = { darkMode = it }
-                )
-            }
-            
-            item { Spacer(Modifier.height(24.dp)) }
-            item { SettingHeader("Editor") }
-            item {
-                SettingSwitch(
-                    title = "Auto-save",
-                    description = "Automatically save files on every keystroke",
-                    checked = autoSave,
-                    onCheckedChange = { autoSave = it }
-                )
-            }
-            item {
-                SettingSwitch(
-                    title = "AI Suggestions",
-                    description = "Enable Gemini real-time code completions",
-                    checked = aiSuggestions,
-                    onCheckedChange = { aiSuggestions = it }
-                )
-            }
-
-            item { Spacer(Modifier.height(24.dp)) }
-            item { SettingHeader("About") }
-            item {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Top Bar
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = { },
-                    color = androidx.compose.ui.graphics.Color.Transparent
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 2.dp
                 ) {
-                    Column(modifier = Modifier.padding(vertical = 12.dp)) {
-                        Text("ASMobile version", style = MaterialTheme.typography.labelLarge)
-                        Text("1.7-Final (Build 7)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = MaterialTheme.colorScheme.primary)
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        Text("Settings", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+                    }
+                }
+
+                LazyColumn(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+                    item { SettingSectionHeader("Appearance") }
+                    item {
+                        SettingToggle(
+                            title = "Obsidian Dark Theme",
+                            description = "Use high-contrast OLED black aesthetics",
+                            checked = darkMode,
+                            onCheckedChange = { darkMode = it }
+                        )
+                    }
+                    
+                    item { Spacer(Modifier.height(32.dp)) }
+                    item { SettingSectionHeader("Development") }
+                    item {
+                        SettingToggle(
+                            title = "Intelligent Auto-save",
+                            description = "Commit changes to local disk automatically",
+                            checked = autoSave,
+                            onCheckedChange = { autoSave = it }
+                        )
+                    }
+                    item {
+                        SettingToggle(
+                            title = "Gemini Code Suggestions",
+                            description = "Real-time AI completions while typing",
+                            checked = aiSuggestions,
+                            onCheckedChange = { aiSuggestions = it }
+                        )
+                    }
+
+                    item { Spacer(Modifier.height(32.dp)) }
+                    item { SettingSectionHeader("System") }
+                    item {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = androidx.compose.ui.graphics.Color.Transparent
+                        ) {
+                            Column(modifier = Modifier.padding(vertical = 12.dp)) {
+                                Text("ASMobile version", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                                Text("v1.9-PRO (Build 2026.08.15)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
                     }
                 }
             }
@@ -84,27 +98,35 @@ fun SettingsScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun SettingHeader(text: String) {
+private fun SettingSectionHeader(text: String) {
     Text(
-        text = text,
+        text = text.uppercase(),
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.primary,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(bottom = 8.dp)
+        fontWeight = FontWeight.ExtraBold,
+        letterSpacing = 1.sp,
+        modifier = Modifier.padding(bottom = 12.dp)
     )
 }
 
 @Composable
-private fun SettingSwitch(title: String, description: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+private fun SettingToggle(title: String, description: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
             Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
             Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        Switch(
+            checked = checked, 
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+            )
+        )
     }
 }

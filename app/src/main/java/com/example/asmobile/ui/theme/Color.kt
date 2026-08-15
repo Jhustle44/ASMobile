@@ -2,31 +2,32 @@ package com.example.asmobile.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Modern Elegant "Deep Space" Palette
-val SpaceBlack = Color(0xFF040608)
-val SpaceDark = Color(0xFF0B1015)
-val SpaceSurface = Color(0xFF141C24)
-val SpaceElevated = Color(0xFF1C2833)
+// Ultra-Modern "Obsidian Pro" Palette
+val ObsidianBlack = Color(0xFF040608)
+val ObsidianDeep = Color(0xFF0C0E12)
+val ObsidianSurface = Color(0xFF161B22)
+val ObsidianBorder = Color(0xFF30363D).copy(alpha = 0.5f)
 
-// Accents (Vibrant & Elegant)
-val ElectricViolet = Color(0xFF8B5CF6)
-val DeepViolet = Color(0xFF6D28D9)
-val CyberCyan = Color(0xFF06B6D4)
-val RoseGold = Color(0xFFFB7185)
+// Accents (Premium)
+val GlowPurple = Color(0xFFA855F7)
+val GlowBlue = Color(0xFF3B82F6)
+val GlowEmerald = Color(0xFF10B981)
+val GlowGold = Color(0xFFFBBF24)
 
 // Text
-val PrimaryText = Color(0xFFF8FAFC)
-val SecondaryText = Color(0xFF94A3B8)
-val MutedText = Color(0xFF64748B)
+val TextWhite = Color(0xFFF0F6FC)
+val TextGray = Color(0xFF8B949E)
+val TextMuted = Color(0xFF484F58)
 
-// Border
-val SpaceBorder = Color(0xFF2D3748).copy(alpha = 0.5f)
+// Semantic
+val ErrorRed = Color(0xFFF85149)
+val SuccessGreen = Color(0xFF3FB950)
 
-// Legacy Aliases
-val BackgroundDark = SpaceBlack
-val SurfaceDark = SpaceDark
-val SurfaceVariantDark = SpaceSurface
-val ElegantGold = ElectricViolet
-val ElegantGoldVariant = DeepViolet
-val TextPrimary = PrimaryText
-val TextSecondary = SecondaryText
+// Legacy compatibility
+val BackgroundDark = ObsidianBlack
+val SurfaceDark = ObsidianDeep
+val SurfaceVariantDark = ObsidianSurface
+val ElegantGold = GlowPurple
+val ElegantGoldVariant = GlowBlue
+val TextPrimary = TextWhite
+val TextSecondary = TextGray
