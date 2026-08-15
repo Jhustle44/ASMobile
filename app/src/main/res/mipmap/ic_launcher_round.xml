@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Circular Background Gradient -->
+    <path android:pathData="M54,54m-48,0a48,48 0,1 1,96 0a48,48 0,1 1,-96 0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="108"
+                android:endY="108"
+                android:type="linear">
+                <item android:offset="0" android:color="#1A237E" />
+                <item android:offset="1" android:color="#283593" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Subtle Phone Silhouette -->
+    <path
+        android:fillColor="#15FFFFFF"
+        android:pathData="M36,24 L72,24 C74.2,24 76,25.8 76,28 L76,80 C76,82.2 74.2,84 72,84 L36,84 C33.8,84 32,82.2 32,80 L32,28 C32,25.8 33.8,24 36,24 Z" />
+
+    <!-- Modern < symbol -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M48,42 L38,54 L48,66" />
+
+    <!-- Modern > symbol (Electric Cyan) -->
+    <path
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M60,42 L70,54 L60,66" />
+
+    <!-- Subtle line at bottom -->
+    <path
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M48,78 L60,78" />
+
+</vector>

@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">AS Mobile</string>
+    <string name="project_explorer">Project Explorer</string>
+    <string name="git_operations">Git Operations</string>
+    <string name="logcat">Logcat</string>
+    <string name="build">Build</string>
+    <string name="start_build">Start Build</string>
+    <string name="repo_url">Repo URL</string>
+    <string name="commit_message">Commit Message</string>
+    <string name="clone">Clone</string>
+    <string name="commit">Commit</string>
+    <string name="push">Push</string>
+    <string name="pull">Pull</string>
+    <string name="select_file">Select a file to edit</string>
+</resources>
