@@ -196,7 +196,20 @@ fun Dashboard(
             }
         }
         
-        item { Spacer(Modifier.height(100.dp)) } // Extra padding for floating nav
+        item { 
+            Button(
+                onClick = onSyncClick,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
+            ) {
+                Icon(Icons.Rounded.Terminal, null)
+                Spacer(Modifier.width(12.dp))
+                Text("Open Build Terminal", fontWeight = FontWeight.Bold)
+            }
+        }
+        
+        item { Spacer(Modifier.height(100.dp)) }
     }
 }
 

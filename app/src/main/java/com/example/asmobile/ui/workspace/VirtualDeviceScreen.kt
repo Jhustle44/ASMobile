@@ -3,7 +3,9 @@ package com.example.asmobile.ui.workspace
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
@@ -17,13 +19,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun VirtualDeviceScreen(modifier: Modifier = Modifier) {
+fun VirtualDeviceScreen(
+    viewModel: DeviceViewModel,
+    modifier: Modifier = Modifier
+) {
     var showAddDevice by remember { mutableStateOf(false) }
-    val devices = remember { mutableStateListOf(
-        DeviceModel("Pixel 8 Pro", "API 34", true),
-        DeviceModel("Pixel Fold", "API 33", false),
-        DeviceModel("Nexus 5X", "API 28", false)
-    ) }
 
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
         Row(
@@ -49,8 +49,11 @@ fun VirtualDeviceScreen(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(devices) { device ->
-                DeviceCard(device)
+            itemsIndexed(viewModel.devices) { index, device ->
+                DeviceCard(
+                    device = device,
+                    onToggle = { viewModel.toggleDevice(index) }
+                )
             }
         }
     }
@@ -59,17 +62,15 @@ fun VirtualDeviceScreen(modifier: Modifier = Modifier) {
         AddDeviceDialog(
             onDismiss = { showAddDevice = false },
             onAdd = { name, api ->
-                devices.add(DeviceModel(name, api, false))
+                viewModel.addDevice(name, api)
                 showAddDevice = false
             }
         )
     }
 }
 
-data class DeviceModel(val name: String, val api: String, val isRunning: Boolean)
-
 @Composable
-private fun DeviceCard(device: DeviceModel) {
+private fun DeviceCard(device: DeviceModel, onToggle: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -105,17 +106,16 @@ private fun DeviceCard(device: DeviceModel) {
             Spacer(Modifier.height(12.dp))
             
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                var isRunning by remember { mutableStateOf(device.isRunning) }
                 IconButton(
-                    onClick = { isRunning = !isRunning },
+                    onClick = onToggle,
                     colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = if (isRunning) MaterialTheme.colorScheme.error.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        containerColor = if (device.isRunning) MaterialTheme.colorScheme.error.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     )
                 ) {
                     Icon(
-                        if (isRunning) Icons.Rounded.Stop else Icons.Rounded.PlayArrow,
+                        if (device.isRunning) Icons.Rounded.Stop else Icons.Rounded.PlayArrow,
                         null,
-                        tint = if (isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                        tint = if (device.isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                     )
                 }
                 IconButton(onClick = { }) {

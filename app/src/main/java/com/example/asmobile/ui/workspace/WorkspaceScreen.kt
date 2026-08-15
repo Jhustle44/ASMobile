@@ -69,9 +69,13 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
     var showProjectWizard by remember { mutableStateOf(false) }
     var showSearchEverywhere by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
+    var showAccount by remember { mutableStateOf(false) }
+    
+    // Global State
+    val deviceViewModel: DeviceViewModel = viewModel()
+    val projectViewModel: ProjectViewModel = viewModel()
     
     // Project State
-    var refreshTrigger by remember { mutableIntStateOf(0) }
     val openFiles = remember { mutableStateListOf<String>() }
     var activeFilePath by remember { mutableStateOf<String?>(null) }
     
@@ -140,7 +144,8 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
             topBar = {
                 WorkspaceTopBar(
                     onMenuClick = { scope.launch { drawerState.open() } },
-                    onSearchClick = { showSearchEverywhere = true }
+                    onSearchClick = { showSearchEverywhere = true },
+                    onAccountClick = { showAccount = true }
                 )
             },
             bottomBar = {
@@ -165,9 +170,9 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
             modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
         ) { padding ->
             Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-                key(refreshTrigger) {
+                key(projectViewModel.refreshTrigger) {
                     when (selectedDestination) {
-                            MobileDestination.Dashboard -> Dashboard(
+                        MobileDestination.Dashboard -> Dashboard(
                             rootDir = rootDir,
                             onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) },
                             onNewProjectClick = { showProjectWizard = true },
@@ -193,10 +198,10 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                             rootDir = rootDir,
                             activeFilePath = activeFilePath,
                             onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) },
-                            onProjectCreated = { refreshTrigger++ },
+                            onProjectCreated = { projectViewModel.notifyProjectCreated("AI") },
                             modifier = Modifier.fillMaxSize()
                         )
-                        MobileDestination.Devices -> VirtualDeviceScreen(modifier = Modifier.fillMaxSize())
+                        MobileDestination.Devices -> VirtualDeviceScreen(viewModel = deviceViewModel, modifier = Modifier.fillMaxSize())
                         MobileDestination.Tools -> MobileToolsTabs(buildViewModel)
                     }
                 }
@@ -209,9 +214,8 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                 baseDir = rootDir,
                 onDismiss = { showProjectWizard = false },
                 onProjectCreated = { name ->
-                    refreshTrigger++
+                    projectViewModel.notifyProjectCreated(name)
                     showProjectWizard = false
-                    // Optionally open the new project
                 }
             )
         }
@@ -226,6 +230,10 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
 
         if (showSettings) {
             SettingsScreen(onBack = { showSettings = false })
+        }
+
+        if (showAccount) {
+            AccountDialog(onDismiss = { showAccount = false })
         }
     }
 }
@@ -245,7 +253,7 @@ private fun openFile(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun WorkspaceTopBar(onMenuClick: () -> Unit, onSearchClick: () -> Unit) {
+private fun WorkspaceTopBar(onMenuClick: () -> Unit, onSearchClick: () -> Unit, onAccountClick: () -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.background,
         tonalElevation = 2.dp,
@@ -274,7 +282,7 @@ private fun WorkspaceTopBar(onMenuClick: () -> Unit, onSearchClick: () -> Unit) 
                 IconButton(onClick = onSearchClick) {
                     Icon(Icons.Rounded.Search, null)
                 }
-                IconButton(onClick = { }) {
+                IconButton(onClick = onAccountClick) {
                     Icon(Icons.Rounded.AccountCircle, null)
                 }
             },
@@ -390,7 +398,7 @@ private fun MobileToolsTabs(buildViewModel: BuildLogViewModel) {
                 }
             }
         ) {
-            val tabs = listOf("Build", "Logcat", "Terminal", "Inspection")
+            val tabs = listOf("Build", "Logcat", "Terminal", "Layout", "Inspection")
             tabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
@@ -398,7 +406,7 @@ private fun MobileToolsTabs(buildViewModel: BuildLogViewModel) {
                     text = { 
                         Text(
                             title, 
-                            style = MaterialTheme.typography.labelLarge,
+                            style = TextStyle(fontSize = 11.sp),
                             fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
                             color = if (selectedTab == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         ) 
@@ -411,7 +419,8 @@ private fun MobileToolsTabs(buildViewModel: BuildLogViewModel) {
                 0 -> BuildLogPanel(selectedTab = 1, modifier = Modifier.fillMaxSize())
                 1 -> BuildLogPanel(selectedTab = 0, modifier = Modifier.fillMaxSize())
                 2 -> BuildLogPanel(selectedTab = 2, modifier = Modifier.fillMaxSize())
-                3 -> AppInspectionPanel(modifier = Modifier.fillMaxSize())
+                3 -> LayoutInspectorPanel(modifier = Modifier.fillMaxSize())
+                4 -> AppInspectionPanel(modifier = Modifier.fillMaxSize())
             }
         }
     }
@@ -582,6 +591,29 @@ private fun DeviceManagerList() {
                 }
             }
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+        }
+    }
+}
+
+@Composable
+private fun LayoutInspectorPanel(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(16.dp)) {
+        Text("Layout Inspector", style = MaterialTheme.typography.titleSmall)
+        Spacer(Modifier.height(16.dp))
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("Component Tree", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.height(8.dp))
+                Text("• Scaffold", style = MaterialTheme.typography.bodySmall)
+                Text("  • Box", style = MaterialTheme.typography.bodySmall)
+                Text("    • Column", style = MaterialTheme.typography.bodySmall)
+                Text("      • Text (\"Hello World\")", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
+            }
         }
     }
 }

@@ -84,9 +84,13 @@ fun FileTree(
                 }
                 
                 Row {
-                    Icon(Icons.Rounded.Settings, contentDescription = "Settings", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.width(8.dp))
-                    Icon(Icons.Rounded.UnfoldLess, contentDescription = "Collapse All", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    IconButton(onClick = { /* Refresh could be triggered here */ }) {
+                        Icon(Icons.Rounded.Refresh, contentDescription = "Refresh", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    IconButton(onClick = { /* Logic for new project or root file */ }) {
+                        Icon(Icons.Rounded.Add, contentDescription = "New", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                    }
+                    Icon(Icons.Rounded.UnfoldLess, contentDescription = "Collapse All", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -211,6 +215,30 @@ private fun FileRow(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false }
                 ) {
+                    if (item.file.isDirectory) {
+                        DropdownMenuItem(
+                            text = { Text("New Kotlin File") },
+                            onClick = { 
+                                val newFile = File(item.file, "NewFile.kt")
+                                newFile.createNewFile()
+                                newFile.writeText("package com.example.asmobile\n\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun NewScreen() {\n\n}")
+                                showMenu = false
+                                onClick() // Refresh tree
+                            },
+                            leadingIcon = { Icon(Icons.Rounded.Add, null, Modifier.size(18.dp)) }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("New Directory") },
+                            onClick = { 
+                                File(item.file, "new_folder").mkdirs()
+                                showMenu = false
+                                onClick()
+                            },
+                            leadingIcon = { Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(18.dp)) }
+                        )
+                        HorizontalDivider()
+                    }
+                    
                     DropdownMenuItem(
                         text = { Text("Rename") },
                         onClick = { 
@@ -222,11 +250,10 @@ private fun FileRow(
                     DropdownMenuItem(
                         text = { Text("Delete") },
                         onClick = { 
-                            if (item.file.delete()) {
-                                // Trigger refresh by modifying state
-                                onClick() // Force close parent if deleted
+                            if (item.file.deleteRecursively()) {
+                                showMenu = false 
+                                onClick() 
                             }
-                            showMenu = false 
                         },
                         leadingIcon = { Icon(Icons.Rounded.Delete, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error) }
                     )
