@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -41,59 +42,72 @@ fun GitPanel(rootDir: File, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight()
-                .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-                .padding(8.dp)
+                .background(MaterialTheme.colorScheme.background, RoundedCornerShape(4.dp))
+                .padding(12.dp)
         ) {
-            Text("Changes", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
+            Text("Changes", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(12.dp))
             val changes = listOf("MainActivity.kt", "build.gradle.kts", "AndroidManifest.xml")
             LazyColumn {
                 items(changes) { file ->
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
-                        Checkbox(checked = true, onCheckedChange = {}, modifier = Modifier.size(24.dp))
-                        Icon(Icons.Rounded.Code, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFF7F52FF))
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
+                        Checkbox(
+                            checked = true, 
+                            onCheckedChange = {}, 
+                            modifier = Modifier.size(20.dp),
+                            colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
+                        )
                         Spacer(Modifier.width(8.dp))
-                        Text(file, style = MaterialTheme.typography.bodySmall)
+                        Icon(Icons.Rounded.Code, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFF7F52FF).copy(alpha = 0.8f))
+                        Spacer(Modifier.width(8.dp))
+                        Text(file, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
         }
         
-        VerticalDivider()
+        Spacer(Modifier.width(8.dp))
         
         // Right Column: Commit details
         Column(
             modifier = Modifier
                 .weight(1.2f)
                 .fillMaxHeight()
-                .padding(16.dp)
+                .padding(8.dp)
         ) {
-            Text(stringResource(R.string.commit_message), style = MaterialTheme.typography.titleSmall)
-            Spacer(Modifier.height(16.dp))
+            Text(stringResource(R.string.commit_message), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(12.dp))
             OutlinedTextField(
                 value = commitMessage,
                 onValueChange = { commitMessage = it },
                 modifier = Modifier.fillMaxWidth().weight(1f),
-                placeholder = { Text("Write a commit message...") },
-                textStyle = MaterialTheme.typography.bodySmall
+                placeholder = { Text("Write a commit message...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
+                textStyle = MaterialTheme.typography.bodySmall,
+                shape = RoundedCornerShape(4.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                )
             )
             
             Spacer(Modifier.height(16.dp))
             
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(
                     onClick = { viewModel.commit("cloned_repo", commitMessage) },
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(vertical = 12.dp)
                 ) {
-                    Text("Commit", maxLines = 1, style = MaterialTheme.typography.labelLarge)
+                    Text("Commit", maxLines = 1, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 }
                 FilledTonalButton(
                     onClick = { /* Push logic */ },
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(vertical = 12.dp)
                 ) {
-                    Text("Commit and Push", maxLines = 1, style = MaterialTheme.typography.labelLarge)
+                    Text("Push", maxLines = 1, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 }
             }
         }

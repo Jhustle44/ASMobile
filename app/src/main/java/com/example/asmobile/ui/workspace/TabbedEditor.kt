@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.CircleShape
 import java.io.File
 
 @Composable
@@ -27,8 +29,8 @@ fun TabbedEditor(
     Column(modifier = modifier.fillMaxSize()) {
         if (openFiles.isNotEmpty()) {
             Surface(
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
-                shadowElevation = 1.dp
+                color = MaterialTheme.colorScheme.background,
+                shadowElevation = 2.dp
             ) {
                 LazyRow(
                     modifier = Modifier.fillMaxWidth()
@@ -62,30 +64,33 @@ private fun EditorTab(
     onClose: () -> Unit
 ) {
     val backgroundColor = if (isActive) MaterialTheme.colorScheme.surface else Color.Transparent
-    val contentColor = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    val contentColor = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
     
     Row(
         modifier = Modifier
             .background(backgroundColor)
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp)
             .height(24.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = fileName,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium,
             color = contentColor,
-            fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
+            fontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.Medium
         )
-        Spacer(Modifier.width(8.dp))
-        Icon(
-            Icons.Rounded.Close,
-            contentDescription = "Close",
-            modifier = Modifier
-                .size(14.dp)
-                .clickable { onClose() },
-            tint = contentColor.copy(alpha = 0.6f)
-        )
+        if (isActive) {
+            Spacer(Modifier.width(12.dp))
+            Icon(
+                Icons.Rounded.Close,
+                contentDescription = "Close",
+                modifier = Modifier
+                    .size(14.dp)
+                    .clip(CircleShape)
+                    .clickable { onClose() },
+                tint = contentColor.copy(alpha = 0.5f)
+            )
+        }
     }
 }

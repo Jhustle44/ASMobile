@@ -42,6 +42,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.asmobile.ui.tools.BuildLogViewModel
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class)
@@ -78,17 +87,31 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Rounded.Source,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Spacer(Modifier.width(8.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .background(
+                                            Brush.linearGradient(
+                                                colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
+                                            ),
+                                            CircleShape
+                                        )
+                                        .padding(6.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.Source,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(Modifier.width(12.dp))
                                 Text(
                                     stringResource(R.string.app_name),
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.ExtraBold,
+                                    letterSpacing = 1.sp
                                 )
                             }
                             
@@ -104,15 +127,16 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                                 Box {
                                     Surface(
                                         onClick = { showRunConfig = true },
-                                        color = MaterialTheme.colorScheme.surfaceVariant,
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                                         shape = RoundedCornerShape(4.dp),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                                         modifier = Modifier.padding(horizontal = 4.dp)
                                     ) {
                                         Row(
                                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Icon(Icons.Rounded.Android, contentDescription = null, modifier = Modifier.size(16.dp))
+                                            Icon(Icons.Rounded.Android, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                                             Spacer(Modifier.width(8.dp))
                                             Text("app", style = MaterialTheme.typography.labelLarge)
                                             Icon(Icons.Rounded.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -136,26 +160,33 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                                     }
                                 }
 
-                                ToolbarButton(
-                                    icon = Icons.Rounded.PlayArrow,
-                                    contentDescription = "Run app",
-                                    tint = Color(0xFF4CAF50),
-                                    onClick = {
-                                        buildViewModel.startBuild()
-                                        currentTool = "Build"
-                                        isToolsVisible = true
-                                    }
-                                )
-                                ToolbarButton(Icons.Rounded.BugReport, "Debug app", tint = Color(0xFF4CAF50))
-                                ToolbarButton(Icons.Rounded.SettingsBackupRestore, "Attach Debugger")
-                                ToolbarButton(Icons.Rounded.Stop, "Stop app", tint = Color(0xFFF44336))
-                                Spacer(Modifier.width(16.dp))
-                                ToolbarButton(Icons.Rounded.Search, "Search Everywhere")
+                                Spacer(Modifier.width(8.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
+                                        .clickable { 
+                                            buildViewModel.startBuild()
+                                            currentTool = "Build"
+                                            isToolsVisible = true
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.PlayArrow, 
+                                        contentDescription = "Run",
+                                        tint = Color(0xFF4CAF50),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                Spacer(Modifier.width(8.dp))
+                                ToolbarButton(Icons.Rounded.BugReport, "Debug", tint = Color(0xFF4CAF50))
+                                ToolbarButton(Icons.Rounded.Search, "Search")
                             }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
+                        containerColor = MaterialTheme.colorScheme.background,
                     ),
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -163,19 +194,20 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
         },
         bottomBar = {
             Surface(
-                color = MaterialTheme.colorScheme.surfaceContainer,
-                tonalElevation = 3.dp
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 8.dp,
+                shadowElevation = 8.dp
             ) {
                 Column {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 8.dp),
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Row {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             ToolTab(
                                 label = "Git",
                                 icon = Icons.Rounded.Source,
@@ -224,18 +256,6 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                                     }
                                 }
                             )
-                            ToolTab(
-                                label = "App Inspection",
-                                icon = Icons.Rounded.Search,
-                                isSelected = currentTool == "Inspect" && isToolsVisible,
-                                onClick = {
-                                    if (currentTool == "Inspect") isToolsVisible = !isToolsVisible
-                                    else {
-                                        currentTool = "Inspect"
-                                        isToolsVisible = true
-                                    }
-                                }
-                            )
                         }
                     }
                 }
@@ -244,28 +264,45 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
         modifier = modifier.systemBarsPadding()
     ) { padding ->
         Row(modifier = Modifier.padding(padding)) {
-            // Left Side Navigation Rail (Tool Windows)
+            // Left Side Navigation Rail
             NavigationRail(
                 modifier = Modifier.fillMaxHeight(),
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor = MaterialTheme.colorScheme.background,
+                header = {
+                    Spacer(Modifier.height(16.dp))
+                }
             ) {
                 NavigationRailItem(
                     selected = leftPanelTab == "Project",
                     onClick = { leftPanelTab = "Project" },
                     icon = { Icon(Icons.Rounded.Folder, contentDescription = "Project") },
-                    label = { Text("Project") }
+                    label = { Text("Project", style = MaterialTheme.typography.labelSmall) },
+                    colors = NavigationRailItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    )
                 )
                 NavigationRailItem(
                     selected = leftPanelTab == "Resource",
                     onClick = { leftPanelTab = "Resource" },
                     icon = { Icon(Icons.Rounded.Image, contentDescription = "Resource Manager") },
-                    label = { Text("Resource") }
+                    label = { Text("Resource", style = MaterialTheme.typography.labelSmall) },
+                    colors = NavigationRailItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    )
                 )
                 NavigationRailItem(
                     selected = leftPanelTab == "Structure",
                     onClick = { leftPanelTab = "Structure" },
                     icon = { Icon(Icons.AutoMirrored.Rounded.List, contentDescription = "Structure") },
-                    label = { Text("Structure") }
+                    label = { Text("Structure", style = MaterialTheme.typography.labelSmall) },
+                    colors = NavigationRailItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    )
                 )
             }
             
@@ -400,12 +437,19 @@ private fun ToolbarButton(
     tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     onClick: () -> Unit = {}
 ) {
-    IconButton(onClick = onClick) {
+    Box(
+        modifier = Modifier
+            .size(34.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .padding(8.dp),
+        contentAlignment = Alignment.Center
+    ) {
         Icon(
             icon,
             contentDescription = contentDescription,
-            modifier = Modifier.size(20.dp),
-            tint = tint
+            modifier = Modifier.size(18.dp),
+            tint = tint.copy(alpha = 0.8f)
         )
     }
 }
@@ -417,20 +461,34 @@ private fun ToolTab(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    val backgroundColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent
+    val contentColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent
+
     Surface(
         onClick = onClick,
-        color = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
-        contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-        shape = MaterialTheme.shapes.small,
-        modifier = Modifier.padding(vertical = 4.dp, horizontal = 2.dp)
+        color = backgroundColor,
+        contentColor = contentColor,
+        shape = RoundedCornerShape(4.dp),
+        border = BorderStroke(1.dp, borderColor),
+        modifier = Modifier.padding(vertical = 2.dp)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+            Icon(
+                icon, 
+                contentDescription = null, 
+                modifier = Modifier.size(16.dp),
+                tint = contentColor
+            )
             Spacer(Modifier.width(8.dp))
-            Text(label, style = MaterialTheme.typography.labelLarge)
+            Text(
+                label, 
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+            )
         }
     }
 }

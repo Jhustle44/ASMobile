@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.font.FontWeight
 import com.example.asmobile.R
 import java.io.File
 
@@ -137,27 +139,27 @@ private fun FileRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 2.dp),
-        shape = MaterialTheme.shapes.small,
+            .padding(horizontal = 12.dp, vertical = 1.dp),
+        shape = RoundedCornerShape(2.dp),
         color = Color.Transparent
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 8.dp, vertical = 8.dp)
-                .padding(start = (item.level * 16).dp),
+                .padding(horizontal = 8.dp, vertical = 6.dp)
+                .padding(start = (item.level * 12).dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = when {
                     item.file.isDirectory && isExpanded -> Icons.Rounded.KeyboardArrowDown
                     item.file.isDirectory -> Icons.AutoMirrored.Rounded.KeyboardArrowRight
-                    else -> Icons.Rounded.ChevronRight // Placeholder for file
+                    else -> Icons.Rounded.ChevronRight
                 },
                 contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                modifier = Modifier.size(14.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
             )
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             Icon(
                 imageVector = when {
                     item.file.isDirectory -> Icons.Rounded.Folder
@@ -177,14 +179,15 @@ private fun FileRow(
                     item.file.extension == "kt" -> Color(0xFF7F52FF)
                     item.file.extension == "java" -> Color(0xFFE76F51)
                     item.file.extension == "gradle" || item.file.name.endsWith(".gradle.kts") -> Color(0xFF005C97)
-                    else -> MaterialTheme.colorScheme.secondary
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 }
             )
             Text(
                 text = item.file.name,
                 modifier = Modifier.padding(start = 12.dp),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = if (item.file.isDirectory) FontWeight.SemiBold else FontWeight.Normal
             )
         }
     }

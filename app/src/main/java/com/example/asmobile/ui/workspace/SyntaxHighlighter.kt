@@ -55,32 +55,32 @@ object SyntaxHighlighter {
             
             when {
                 matcher.group(1) != null -> { // Keyword
-                    withStyle(SpanStyle(color = colorScheme.primary, fontWeight = FontWeight.Bold)) {
+                    withStyle(SpanStyle(color = Color(0xFFC084FC), fontWeight = FontWeight.Bold)) { // Soft Purple
                         append(matcher.group())
                     }
                 }
                 matcher.group(2) != null -> { // String
-                    withStyle(SpanStyle(color = colorScheme.tertiary)) {
+                    withStyle(SpanStyle(color = Color(0xFF4ADE80))) { // Emerald Green
                         append(matcher.group())
                     }
                 }
                 matcher.group(3) != null -> { // Comment
-                    withStyle(SpanStyle(color = colorScheme.onSurfaceVariant.copy(alpha = 0.6f))) {
+                    withStyle(SpanStyle(color = Color(0xFF71717A), fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)) { // Zinc Grey
                         append(matcher.group())
                     }
                 }
                 matcher.group(4) != null -> { // Number
-                    withStyle(SpanStyle(color = colorScheme.secondary)) {
+                    withStyle(SpanStyle(color = Color(0xFFFB923C))) { // Orange
                         append(matcher.group())
                     }
                 }
                 matcher.group(5) != null -> { // Annotation
-                    withStyle(SpanStyle(color = Color(0xFFE4BC5E))) {
+                    withStyle(SpanStyle(color = Color(0xFFFACC15))) { // Yellow
                         append(matcher.group())
                     }
                 }
                 matcher.group(6) != null -> { // Type
-                    withStyle(SpanStyle(color = Color(0xFF4EC9B0))) {
+                    withStyle(SpanStyle(color = Color(0xFF38BDF8))) { // Sky Blue
                         append(matcher.group())
                     }
                 }

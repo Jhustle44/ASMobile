@@ -97,9 +97,9 @@ fun Editor(
                 Column(
                     modifier = Modifier
                         .fillMaxHeight()
-                        .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-                        .padding(top = 16.dp, bottom = 16.dp, start = 12.dp, end = 8.dp)
-                        .width(44.dp),
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(top = 16.dp, bottom = 16.dp, start = 12.dp, end = 12.dp)
+                        .width(48.dp),
                     horizontalAlignment = Alignment.End
                 ) {
                     for (i in 1..lines) {
@@ -108,27 +108,27 @@ fun Editor(
                             style = TextStyle(
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                                lineHeight = 20.sp
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                lineHeight = 22.sp
                             ),
                             maxLines = 1
                         )
                     }
                 }
                 
-                VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                 
                 BasicTextField(
                     value = text,
                     onValueChange = { text = it },
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
                     textStyle = TextStyle(
                         fontFamily = FontFamily.Monospace,
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurface,
-                        lineHeight = 20.sp
+                        lineHeight = 22.sp
                     ),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     visualTransformation = remember(extension, colorScheme) { 
