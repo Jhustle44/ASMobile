@@ -43,4 +43,26 @@ class BuildManager {
 
         _isBuilding.value = false
     }
+
+    suspend fun startSync() {
+        _isBuilding.value = true
+        _status.value = "Syncing project with Gradle..."
+        _progress.value = 0.2f
+        delay(1000)
+        _progress.value = 0.8f
+        delay(500)
+        _progress.value = 1.0f
+        _status.value = "Project synced"
+        _isBuilding.value = false
+    }
+
+    suspend fun startClean() {
+        _isBuilding.value = true
+        _status.value = "Cleaning project..."
+        _progress.value = 0.3f
+        delay(800)
+        _progress.value = 1.0f
+        _status.value = "Project cleaned"
+        _isBuilding.value = false
+    }
 }

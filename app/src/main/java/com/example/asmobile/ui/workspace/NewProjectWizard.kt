@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.asmobile.project.ProjectManager
 import com.example.asmobile.project.ProjectTemplate
+import com.example.asmobile.project.ProjectLanguage
 import java.io.File
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.BorderStroke
@@ -26,6 +27,7 @@ fun NewProjectWizard(
     var projectName by remember { mutableStateOf("MyAwesomeApp") }
     var packageName by remember { mutableStateOf("com.example.awesomeapp") }
     var selectedTemplate by remember { mutableStateOf(ProjectTemplate.EmptyCompose) }
+    var selectedLanguage by remember { mutableStateOf(ProjectLanguage.Kotlin) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -76,6 +78,20 @@ fun NewProjectWizard(
                 
                 Spacer(Modifier.height(24.dp))
                 
+                Text("Select Language", style = MaterialTheme.typography.labelLarge, modifier = Modifier.align(Alignment.Start))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    ProjectLanguage.entries.forEach { lang ->
+                        FilterChip(
+                            selected = selectedLanguage == lang,
+                            onClick = { selectedLanguage = lang },
+                            label = { Text(lang.label) },
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                    }
+                }
+                
+                Spacer(Modifier.height(24.dp))
+                
                 Text("Select Template", style = MaterialTheme.typography.labelLarge, modifier = Modifier.align(Alignment.Start))
                 Spacer(Modifier.height(8.dp))
                 
@@ -93,7 +109,7 @@ fun NewProjectWizard(
                 Button(
                     onClick = {
                         try {
-                            ProjectManager.createNewProject(baseDir, projectName, packageName, selectedTemplate)
+                            ProjectManager.createNewProject(baseDir, projectName, packageName, selectedTemplate, selectedLanguage)
                             onProjectCreated(projectName)
                             onDismiss()
                         } catch (e: Exception) {

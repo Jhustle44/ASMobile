@@ -74,6 +74,10 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
     // Global State
     val deviceViewModel: DeviceViewModel = viewModel()
     val projectViewModel: ProjectViewModel = viewModel()
+    val buildToolsViewModel: BuildToolsViewModel = viewModel()
+    
+    // UI State
+    var showExport by remember { mutableStateOf(false) }
     
     // Project State
     val openFiles = remember { mutableStateListOf<String>() }
@@ -148,9 +152,13 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                     showAccount = true
                     scope.launch { drawerState.close() }
                 }
+                DrawerToolItem("Export & Sign", Icons.Rounded.IosShare) { 
+                    showExport = true
+                    scope.launch { drawerState.close() }
+                }
                 
                 Spacer(Modifier.weight(1f))
-                Text("v2.5-ELITE", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("v2.5-PRO", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     ) {
@@ -190,8 +198,8 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                             rootDir = rootDir,
                             onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) },
                             onNewProjectClick = { showProjectWizard = true },
-                            onSyncClick = { buildViewModel.startBuild() },
-                            onCleanClick = { buildViewModel.clearLogs() }
+                            onSyncClick = { buildViewModel.startSync() },
+                            onCleanClick = { buildViewModel.startClean() }
                         )
                         MobileDestination.Project -> FileTree(
                             rootDir = rootDir,
@@ -249,6 +257,13 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
         if (showAccount) {
             AccountDialog(onDismiss = { showAccount = false })
         }
+
+        if (showExport) {
+            ExportScreen(
+                viewModel = buildToolsViewModel,
+                onBack = { showExport = false }
+            )
+        }
     }
 }
 
@@ -294,10 +309,25 @@ private fun WorkspaceTopBar(onMenuClick: () -> Unit, onSearchClick: () -> Unit, 
             },
             actions = {
                 IconButton(onClick = onSearchClick) {
-                    Icon(Icons.Rounded.Search, null)
+                    Icon(Icons.Rounded.Search, null, modifier = Modifier.size(24.dp))
                 }
-                IconButton(onClick = onAccountClick) {
-                    Icon(Icons.Rounded.AccountCircle, null)
+                IconButton(
+                    onClick = onAccountClick,
+                    modifier = Modifier.padding(end = 4.dp)
+                ) {
+                    Surface(
+                        modifier = Modifier.size(32.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                    ) {
+                        Icon(
+                            Icons.Rounded.Person, 
+                            null, 
+                            modifier = Modifier.padding(4.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             },
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)

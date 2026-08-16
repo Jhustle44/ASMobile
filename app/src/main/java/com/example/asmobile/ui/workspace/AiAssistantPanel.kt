@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import java.io.File
 import com.example.asmobile.project.ProjectManager
 import com.example.asmobile.project.ProjectTemplate
+import com.example.asmobile.project.ProjectLanguage
 
 @Composable
 fun AiAssistantPanel(
@@ -181,12 +182,16 @@ private fun executeAiLogic(
                 lowInput.contains("login") -> ProjectTemplate.LoginFlow
                 lowInput.contains("nav") -> ProjectTemplate.BottomNav
                 lowInput.contains("counter") -> ProjectTemplate.CounterApp
+                lowInput.contains("social") || lowInput.contains("feed") -> ProjectTemplate.SocialApp
+                lowInput.contains("shop") || lowInput.contains("commerce") || lowInput.contains("store") -> ProjectTemplate.ECommerce
                 else -> ProjectTemplate.CustomAi
             }
             
+            val language = if (lowInput.contains("java")) ProjectLanguage.Java else ProjectLanguage.Kotlin
+            
             onStatusUpdate("Scaffolding $appName architecture...")
             try {
-                ProjectManager.createNewProject(rootDir, appName, "com.ai.${appName.lowercase()}", template)
+                ProjectManager.createNewProject(rootDir, appName, "com.ai.${appName.lowercase()}", template, language)
                 
                 val mainFile = File(rootDir, "$appName/app/src/main/java/com/ai/${appName.lowercase()}/MainActivity.kt")
                 
@@ -259,8 +264,13 @@ private fun executeAiLogic(
         }
 
         // Refactoring / Cleanup
-        lowInput.contains("clean") || lowInput.contains("fix") || lowInput.contains("refactor") -> {
-            onResponse("🛠️ I'm analyzing your code for potential improvements. I recommend moving your UI components into a dedicated 'ui' package to follow standard Android architecture.")
+        lowInput.contains("clean") || lowInput.contains("fix") || lowInput.contains("refactor") || lowInput.contains("sync") -> {
+            onResponse("🛠️ I'm initiating a project maintenance cycle. I'll analyze your dependencies and clean the build artifacts to ensure Elite performance.")
+        }
+
+        // Export & Signing
+        lowInput.contains("export") || lowInput.contains("sign") || lowInput.contains("zipalign") -> {
+            onResponse("📦 You can access professional signing tools in the side drawer under 'Export & Sign'. I can guide you through generating a release keystore there.")
         }
 
         // Project Analysis

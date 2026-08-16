@@ -9,16 +9,14 @@ plugins {
 
 android {
     namespace = "com.example.asmobile"
-    compileSdk {
-        version = release(37)
-    }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.example.asmobile"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 37
-        versionCode = 14
-        versionName = "2.5"
+        versionCode = 15
+        versionName = "2.5-PRO"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -47,8 +45,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         compose = true

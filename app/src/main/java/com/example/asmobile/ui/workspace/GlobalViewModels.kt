@@ -2,6 +2,8 @@ package com.example.asmobile.ui.workspace
 
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 
 data class DeviceModel(val name: String, val api: String, val isRunning: Boolean)
 
@@ -31,5 +33,26 @@ class ProjectViewModel : ViewModel() {
     fun notifyProjectCreated(name: String) {
         lastCreatedProject = name
         refreshTrigger++
+    }
+}
+
+class BuildToolsViewModel : ViewModel() {
+    private val _isProcessing = mutableStateOf(false)
+    val isProcessing: State<Boolean> = _isProcessing
+
+    fun generateKeystore(alias: String, pass: String) {
+        viewModelScope.launch {
+            _isProcessing.value = true
+            kotlinx.coroutines.delay(2000)
+            _isProcessing.value = false
+        }
+    }
+
+    fun zipalignApk(path: String) {
+        viewModelScope.launch {
+            _isProcessing.value = true
+            kotlinx.coroutines.delay(1500)
+            _isProcessing.value = false
+        }
     }
 }

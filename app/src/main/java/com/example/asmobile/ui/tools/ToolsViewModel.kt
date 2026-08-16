@@ -78,6 +78,18 @@ class BuildLogViewModel : ViewModel() {
         }
     }
 
+    fun startSync() {
+        viewModelScope.launch {
+            buildManager.startSync()
+        }
+    }
+
+    fun startClean() {
+        viewModelScope.launch {
+            buildManager.startClean()
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         logcatManager.stopReading()
