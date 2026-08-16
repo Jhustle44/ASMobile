@@ -161,9 +161,24 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                     showExport = true
                     scope.launch { drawerState.close() }
                 }
+                DrawerToolItem("Plugin Marketplace", Icons.Rounded.Extension) { 
+                    selectedDestination = MobileDestination.Plugins
+                    scope.launch { drawerState.close() }
+                }
                 
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+
+                NavigationDrawerItem(
+                    label = { Text("My Developer Profile", style = MaterialTheme.typography.labelLarge) },
+                    selected = false,
+                    onClick = { showAccount = true; scope.launch { drawerState.close() } },
+                    icon = { Icon(Icons.Rounded.Face, null, modifier = Modifier.size(20.dp)) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                )
+
                 Spacer(Modifier.weight(1f))
-                Text("ASMobile v2.8-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
+                Text("ASMobile v2.8.5-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
             }
         }
     ) {
@@ -214,7 +229,6 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                                 onNewProjectClick = { showProjectWizard = true },
                                 onSyncClick = { buildViewModel.startSync() },
                                 onCleanClick = { buildViewModel.startClean() },
-                                onAccountClick = { showAccount = true },
                                 buildStatus = status,
                                 buildProgress = progress,
                                 isBuilding = isBuilding
@@ -252,6 +266,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                             modifier = Modifier.fillMaxSize()
                         )
                         MobileDestination.Tools -> MobileToolsTabs(buildViewModel = buildViewModel, projectViewModel = projectViewModel)
+                        MobileDestination.Plugins -> PluginMarketplace(modifier = Modifier.fillMaxSize())
                     }
                 }
             }
@@ -450,7 +465,8 @@ enum class MobileDestination(val label: String, val icon: Vector) {
     Editor("Editor", Icons.Rounded.Code),
     Git("Git", Icons.Rounded.History),
     Devices("Devices", Icons.Rounded.Smartphone),
-    Tools("Tools", Icons.Rounded.Build)
+    Tools("Tools", Icons.Rounded.Build),
+    Plugins("Plugins", Icons.Rounded.Extension)
 }
 
 @Composable

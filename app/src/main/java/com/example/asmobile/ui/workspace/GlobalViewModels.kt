@@ -33,20 +33,27 @@ class DeviceViewModel : ViewModel() {
                     _devices.addAll(list)
                 } else {
                     storageFile!!.delete()
-                    loadDevices()
+                    seedDefaultDevices()
                 }
             } else {
-                // Default devices
-                _devices.addAll(listOf(
-                    DeviceModel("Pixel 8 Pro", "API 34", true),
-                    DeviceModel("Pixel Fold", "API 33", false),
-                    DeviceModel("Nexus 5X", "API 28", false)
-                ))
-                saveDevices()
+                seedDefaultDevices()
             }
         } catch (e: Exception) {
             _devices.clear()
+            seedDefaultDevices()
         }
+    }
+
+    private fun seedDefaultDevices() {
+        _devices.addAll(listOf(
+            DeviceModel("Pixel 9 Pro", "API 35", false),
+            DeviceModel("Pixel Fold 2", "API 34", false),
+            DeviceModel("Pixel Tablet", "API 34", false),
+            DeviceModel("Nexus 6P (Legacy)", "API 23", false),
+            DeviceModel("Samsung Galaxy S24 (Sim)", "API 34", false),
+            DeviceModel("Generic Desktop", "API 33", false)
+        ))
+        saveDevices()
     }
 
     private fun saveDevices() {

@@ -31,7 +31,6 @@ fun Dashboard(
     onNewProjectClick: () -> Unit,
     onSyncClick: () -> Unit = {},
     onCleanClick: () -> Unit = {},
-    onAccountClick: () -> Unit = {},
     buildStatus: String = "Idle",
     buildProgress: Float = 0f,
     isBuilding: Boolean = false,
@@ -68,14 +67,14 @@ fun Dashboard(
                 }
                 
                 Surface(
-                    onClick = onAccountClick,
+                    onClick = { /* Could open notifications */ },
                     modifier = Modifier.size(52.dp),
                     shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Rounded.AccountCircle, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(28.dp))
+                        Icon(Icons.Rounded.NotificationsActive, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                     }
                 }
             }

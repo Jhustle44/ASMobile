@@ -3,6 +3,7 @@ package com.example.asmobile.ui.workspace
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -60,6 +61,17 @@ fun AiAssistantPanel(
                     Icon(Icons.Rounded.Psychology, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
+        }
+
+        // Tool Actions Row
+        LazyRow(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item { AISuggestionChip("🛠️ Fix Bugs") { message = "Analyze my active file and fix any potential bugs or crashes." } }
+            item { AISuggestionChip("⚡ Optimize") { message = "Refactor my code for better performance and Material 3 best practices." } }
+            item { AISuggestionChip("📝 Document") { message = "Add KDoc comments and explanation to all functions in this file." } }
+            item { AISuggestionChip("🎨 Style UI") { message = "Modernize the UI layout of this screen using Glassmorphism 2.0." } }
         }
 
         // Chat Messages
@@ -166,6 +178,24 @@ fun AiAssistantPanel(
             currentPrompt = systemPrompt,
             onDismiss = { showSystemPromptDialog = false },
             onSave = { systemPrompt = it }
+        )
+    }
+}
+
+@Composable
+private fun AISuggestionChip(label: String, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold
         )
     }
 }
