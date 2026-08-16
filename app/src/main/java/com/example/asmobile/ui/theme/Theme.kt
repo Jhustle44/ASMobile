@@ -61,6 +61,24 @@ fun ASMobileTheme(
             onBackground = Color(0xFF93A1A1),
             onSurface = Color(0xFF93A1A1)
         )
+        com.example.asmobile.ui.workspace.ThemeMode.Midnight -> darkColorScheme(
+            primary = Color(0xFF38B6FF),
+            background = Color(0xFF000814),
+            surface = Color(0xFF001D3D),
+            onPrimary = Color.White
+        )
+        com.example.asmobile.ui.workspace.ThemeMode.Forest -> darkColorScheme(
+            primary = Color(0xFF2ECC71),
+            background = Color(0xFF0B1A0E),
+            surface = Color(0xFF1B2E1D),
+            onPrimary = Color.White
+        )
+        com.example.asmobile.ui.workspace.ThemeMode.Rose -> darkColorScheme(
+            primary = Color(0xFFFF4D6D),
+            background = Color(0xFF1A0A0E),
+            surface = Color(0xFF2D1419),
+            onPrimary = Color.White
+        )
     }
 
     MaterialTheme(

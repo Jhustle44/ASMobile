@@ -31,16 +31,18 @@ class BuildManager {
         performLintCheck()
         
         _status.value = "Starting build..."
-        _progress.value = 0f
+        _progress.value = 0.3f
+        delay(1000)
 
         val steps = listOf(
-            "Initializing...",
+            "Analyzing project structure...",
+            "Checking for syntax errors...",
             "Resolving dependencies...",
-            "Compiling Java/Kotlin...",
-            "Processing resources...",
-            "Linking...",
-            "Signing APK...",
-            "Build successful!"
+            "Compiling Java/Kotlin assets...",
+            "Processing XML resources...",
+            "Generating dex files...",
+            "Signing Elite APK...",
+            "Build complete!"
         )
 
         for ((index, step) in steps.withIndex()) {

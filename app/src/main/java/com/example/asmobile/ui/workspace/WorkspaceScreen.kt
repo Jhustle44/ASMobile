@@ -211,7 +211,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
 
                     item {
                         Spacer(Modifier.height(40.dp))
-                        Text("ASMobile v3.5-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
+                        Text("ASMobile v3.6-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -418,7 +418,10 @@ private fun WorkspaceTopBar(
                     val nextTheme = when(themeViewModel.currentTheme) {
                         ThemeMode.Obsidian -> ThemeMode.Arctic
                         ThemeMode.Arctic -> ThemeMode.Solar
-                        ThemeMode.Solar -> ThemeMode.Obsidian
+                        ThemeMode.Solar -> ThemeMode.Midnight
+                        ThemeMode.Midnight -> ThemeMode.Forest
+                        ThemeMode.Forest -> ThemeMode.Rose
+                        ThemeMode.Rose -> ThemeMode.Obsidian
                     }
                     themeViewModel.setTheme(nextTheme)
                 }) {
@@ -434,6 +437,9 @@ private fun WorkspaceTopBar(
                                 ThemeMode.Obsidian -> Icons.Rounded.DarkMode
                                 ThemeMode.Arctic -> Icons.Rounded.LightMode
                                 ThemeMode.Solar -> Icons.Rounded.WbSunny
+                                ThemeMode.Midnight -> Icons.Rounded.Bedtime
+                                ThemeMode.Forest -> Icons.Rounded.Park
+                                ThemeMode.Rose -> Icons.Rounded.AutoFixHigh
                             }, 
                             null, 
                             modifier = Modifier.size(16.dp),

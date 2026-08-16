@@ -109,7 +109,10 @@ class ThemeViewModel : ViewModel() {
 enum class ThemeMode(val label: String) {
     Obsidian("Obsidian (Elite)"),
     Arctic("Arctic White"),
-    Solar("Solarized Pro")
+    Solar("Solarized Pro"),
+    Midnight("Midnight Blue"),
+    Forest("Deep Forest"),
+    Rose("Rose Gold")
 }
 
 class PluginViewModel : ViewModel() {
