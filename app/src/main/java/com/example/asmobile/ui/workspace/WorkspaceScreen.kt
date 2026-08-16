@@ -124,19 +124,33 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                     selectedDestination = MobileDestination.Project
                     scope.launch { drawerState.close() }
                 }
+                DrawerToolItem("Layout Inspector", Icons.Rounded.Layers) { 
+                    projectViewModel.selectedToolTab = 3
+                    selectedDestination = MobileDestination.Tools
+                    scope.launch { drawerState.close() }
+                }
+                DrawerToolItem("Database Inspector", Icons.Rounded.Storage) { 
+                    projectViewModel.selectedToolTab = 4
+                    selectedDestination = MobileDestination.Tools
+                    scope.launch { drawerState.close() }
+                }
                 DrawerToolItem("App Inspection", Icons.Rounded.Search) { 
+                    projectViewModel.selectedToolTab = 5
                     selectedDestination = MobileDestination.Tools
                     scope.launch { drawerState.close() }
                 }
                 DrawerToolItem("Dependency Manager", Icons.Rounded.Layers) { 
+                    projectViewModel.selectedToolTab = 0 
+                    selectedDestination = MobileDestination.Tools
                     scope.launch { drawerState.close() }
                 }
                 DrawerToolItem("Cloud Sync (Beta)", Icons.Rounded.CloudSync) { 
+                    showAccount = true
                     scope.launch { drawerState.close() }
                 }
                 
                 Spacer(Modifier.weight(1f))
-                Text("v2.4-ELITE", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("v2.5-ELITE", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     ) {
@@ -202,7 +216,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                             modifier = Modifier.fillMaxSize()
                         )
                         MobileDestination.Devices -> VirtualDeviceScreen(viewModel = deviceViewModel, modifier = Modifier.fillMaxSize())
-                        MobileDestination.Tools -> MobileToolsTabs(buildViewModel)
+                        MobileDestination.Tools -> MobileToolsTabs(buildViewModel = buildViewModel, projectViewModel = projectViewModel)
                     }
                 }
             }
@@ -381,8 +395,11 @@ enum class MobileDestination(val label: String, val icon: Vector) {
 }
 
 @Composable
-private fun MobileToolsTabs(buildViewModel: BuildLogViewModel) {
-    var selectedTab by remember { mutableIntStateOf(0) }
+private fun MobileToolsTabs(
+    buildViewModel: BuildLogViewModel,
+    projectViewModel: ProjectViewModel = viewModel()
+) {
+    val selectedTab = projectViewModel.selectedToolTab
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         ScrollableTabRow(
             selectedTabIndex = selectedTab,
@@ -402,7 +419,7 @@ private fun MobileToolsTabs(buildViewModel: BuildLogViewModel) {
             tabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
-                    onClick = { selectedTab = index },
+                    onClick = { projectViewModel.selectedToolTab = index },
                     text = { 
                         Text(
                             title, 

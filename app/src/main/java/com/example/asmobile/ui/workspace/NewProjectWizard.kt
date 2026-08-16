@@ -92,9 +92,13 @@ fun NewProjectWizard(
                 
                 Button(
                     onClick = {
-                        ProjectManager.createNewProject(baseDir, projectName, packageName, selectedTemplate)
-                        onProjectCreated(projectName)
-                        onDismiss()
+                        try {
+                            ProjectManager.createNewProject(baseDir, projectName, packageName, selectedTemplate)
+                            onProjectCreated(projectName)
+                            onDismiss()
+                        } catch (e: Exception) {
+                            // UI feedback for error
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)

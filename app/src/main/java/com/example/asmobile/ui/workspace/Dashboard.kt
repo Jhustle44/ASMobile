@@ -105,6 +105,9 @@ fun Dashboard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 12.dp, start = 4.dp)
                 )
+                val projectsCount = rootDir.listFiles { f -> f.isDirectory }?.size ?: 0
+                val filesCount = rootDir.walkTopDown().filter { it.isFile }.count()
+                
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.surface,
@@ -112,11 +115,11 @@ fun Dashboard(
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Row(modifier = Modifier.padding(20.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                        ProjectInfoItem(Icons.Rounded.Folder, "Projects", "4")
+                        ProjectInfoItem(Icons.Rounded.Folder, "Projects", projectsCount.toString())
                         VerticalDivider(modifier = Modifier.height(40.dp))
-                        ProjectInfoItem(Icons.Rounded.History, "Commits", "28")
+                        ProjectInfoItem(Icons.Rounded.History, "Files", filesCount.toString())
                         VerticalDivider(modifier = Modifier.height(40.dp))
-                        ProjectInfoItem(Icons.Rounded.Schedule, "Uptime", "12h")
+                        ProjectInfoItem(Icons.Rounded.Schedule, "Uptime", "14h")
                     }
                 }
             }

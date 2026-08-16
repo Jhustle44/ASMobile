@@ -50,7 +50,8 @@ fun VirtualDeviceScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            itemsIndexed(viewModel.devices) { index, device ->
+            items(viewModel.devices.size) { index ->
+                val device = viewModel.devices[index]
                 DeviceCard(
                     device = device,
                     onToggle = { viewModel.toggleDevice(index) }

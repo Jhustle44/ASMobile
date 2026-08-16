@@ -164,10 +164,16 @@ private fun executeAiLogic(
     
     when {
         // App Building Logic
-        lowInput.contains("build") || lowInput.contains("create") || lowInput.contains("make") -> {
+        lowInput.contains("build") || lowInput.contains("create") || lowInput.contains("make") || lowInput.contains("new app") -> {
             onStatusUpdate("Interpreting requirements...")
-            val appName = input.substringAfter("app ").substringBefore(" ").replaceFirstChar { it.uppercase() }
-                .ifEmpty { input.split(" ").lastOrNull()?.replaceFirstChar { it.uppercase() } ?: "NewApp" }
+            
+            // Smarter name extraction
+            val appName = when {
+                input.contains("called ") -> input.substringAfter("called ").substringBefore(" ")
+                input.contains("name ") -> input.substringAfter("name ").substringBefore(" ")
+                input.contains("app ") -> input.substringAfter("app ").substringBefore(" ")
+                else -> input.split(" ").lastOrNull() ?: "NewApp"
+            }.replaceFirstChar { it.uppercase() }.filter { it.isLetterOrDigit() }
             
             val template = when {
                 lowInput.contains("notes") -> ProjectTemplate.NotesApp
@@ -180,19 +186,20 @@ private fun executeAiLogic(
             
             onStatusUpdate("Scaffolding $appName architecture...")
             try {
-                ProjectManager.createNewProject(rootDir, appName, "com.example.${appName.lowercase()}", template)
+                ProjectManager.createNewProject(rootDir, appName, "com.ai.${appName.lowercase()}", template)
+                
+                val mainFile = File(rootDir, "$appName/app/src/main/java/com/ai/${appName.lowercase()}/MainActivity.kt")
                 
                 if (template == ProjectTemplate.CustomAi) {
                     onStatusUpdate("Generating bespoke AI code...")
                     val customCode = generateCustomAppCode(appName, input)
-                    val mainFile = File(rootDir, "$appName/app/src/main/java/com/example/${appName.lowercase()}/MainActivity.kt")
                     if (mainFile.exists()) {
                         mainFile.writeText(customCode)
-                        onFileSelected(mainFile)
                     }
-                } else {
-                    val mainFile = File(rootDir, "$appName/app/src/main/java/com/example/${appName.lowercase()}/MainActivity.kt")
-                    if (mainFile.exists()) onFileSelected(mainFile)
+                }
+                
+                if (mainFile.exists()) {
+                    onFileSelected(mainFile)
                 }
                 
                 onProjectCreated()
@@ -203,46 +210,51 @@ private fun executeAiLogic(
         }
 
         // Feature Injection (Deep listening)
-        lowInput.contains("add") || lowInput.contains("implement") || lowInput.contains("inject") -> {
+        lowInput.contains("add") || lowInput.contains("implement") || lowInput.contains("inject") || lowInput.contains("put") -> {
             if (activeFilePath != null) {
                 val file = File(activeFilePath)
                 onStatusUpdate("Analyzing ${file.name} context...")
-                val currentText = file.readText()
+                val currentText = try { file.readText() } catch(e: Exception) { "" }
                 
                 val codeToInject = when {
                     lowInput.contains("button") -> "\n\n@Composable\nfun CustomAIButton() {\n    Button(onClick = {}) { Text(\"AI Action\") }\n}"
                     lowInput.contains("list") -> "\n\n@Composable\nfun AIList() {\n    LazyColumn { items(10) { Text(\"Item \$it\") } }\n}"
-                    lowInput.contains("image") -> "\n\n@Composable\nfun AIImage() {\n    Icon(Icons.Default.Face, null, modifier = Modifier.size(48.dp)) \n}"
-                    else -> "\n\n// AI Generated Logic\nfun handleAIRequest() {\n    // TODO: Implement user specific logic\n}"
+                    lowInput.contains("image") || lowInput.contains("icon") -> "\n\n@Composable\nfun AIImage() {\n    Icon(Icons.Default.Face, null, modifier = Modifier.size(48.dp)) \n}"
+                    lowInput.contains("text") -> "\n\n@Composable\nfun AIText() {\n    Text(\"Hello from Gemini AI\", style = MaterialTheme.typography.bodyLarge)\n}"
+                    else -> "\n\n// AI Generated Logic for: $input\nfun handleAIRequest() {\n    // TODO: Implement user specific logic\n}"
                 }
                 
                 onStatusUpdate("Writing code to disk...")
                 file.writeText(currentText + codeToInject)
                 onResponse("⚡ I've injected the requested component into '${file.name}'. You can see it at the bottom of the file.")
             } else {
-                onResponse("Which file should I work on? Please open one in the editor first.")
+                onResponse("Which file should I work on? Please open one in the editor first so I know where to insert the code.")
             }
         }
 
         // File Creation Logic
-        lowInput.contains("file") -> {
+        lowInput.contains("file") || lowInput.contains("create") -> {
             val fileName = input.split(" ").last()
-            val file = File(rootDir, fileName)
-            try {
-                if (file.exists()) {
-                    onResponse("File '$fileName' already exists in the root.")
-                } else {
-                    file.createNewFile()
-                    val content = if (fileName.endsWith(".kt")) {
-                        "package com.example.asmobile\n\nimport androidx.compose.runtime.Composable\nimport androidx.compose.material3.*\n\n@Composable\nfun AIScreen() {\n    Text(\"Generated by Gemini\")\n}"
-                    } else "// AI Generated File"
-                    file.writeText(content)
-                    onFileSelected(file)
-                    onProjectCreated()
-                    onResponse("📄 Created and opened '$fileName' for you.")
+            if (fileName.contains(".")) {
+                val file = File(rootDir, fileName)
+                try {
+                    if (file.exists()) {
+                        onResponse("File '$fileName' already exists in the root.")
+                    } else {
+                        file.createNewFile()
+                        val content = if (fileName.endsWith(".kt")) {
+                            "package com.example.asmobile\n\nimport androidx.compose.runtime.Composable\nimport androidx.compose.material3.*\n\n@Composable\nfun AIScreen() {\n    Text(\"Generated by Gemini\")\n}"
+                        } else "// AI Generated File"
+                        file.writeText(content)
+                        onFileSelected(file)
+                        onProjectCreated()
+                        onResponse("📄 Created and opened '$fileName' for you.")
+                    }
+                } catch (e: Exception) {
+                    onResponse("❌ File error: ${e.message}")
                 }
-            } catch (e: Exception) {
-                onResponse("❌ File error: ${e.message}")
+            } else {
+                onResponse("Please specify a full file name (e.g., 'MyScreen.kt').")
             }
         }
 

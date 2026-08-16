@@ -5,9 +5,10 @@ import java.io.File
 object ProjectManager {
     fun createNewProject(baseDir: File, projectName: String, packageName: String, template: ProjectTemplate = ProjectTemplate.EmptyCompose) {
         val projectDir = File(baseDir, projectName)
-        if (!projectDir.exists()) {
-            projectDir.mkdirs()
+        if (projectDir.exists()) {
+            projectDir.deleteRecursively()
         }
+        projectDir.mkdirs()
 
         // Create basic structure
         val appDir = File(projectDir, "app/src/main/java/${packageName.replace(".", "/")}")
