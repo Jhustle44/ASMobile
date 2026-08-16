@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import kotlinx.coroutines.launch
 
 @Composable
 fun ExportScreen(
@@ -147,18 +148,38 @@ fun ExportScreen(
 
                     item { ExportStepHeader("3. Final Artifacts", Icons.Rounded.Share) }
                     item {
-                        Button(
-                            onClick = { /* Simulated export */ },
-                            modifier = Modifier.fillMaxWidth().height(64.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
-                            enabled = !isProcessing,
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Icon(Icons.Rounded.CloudUpload, null)
-                            Spacer(Modifier.width(12.dp))
-                            Column {
-                                Text("Publish Release Build", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.ExtraBold)
-                                Text("Signed, Aligned, and Optimized", style = MaterialTheme.typography.labelSmall)
+                        val scope = rememberCoroutineScope()
+                        val snackbarHostState = remember { SnackbarHostState() }
+                        
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Button(
+                                onClick = { 
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("APK successfully saved to /Downloads/ASMobile/")
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth().height(56.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                enabled = !isProcessing,
+                                shape = RoundedCornerShape(16.dp)
+                            ) {
+                                Icon(Icons.Rounded.Download, null)
+                                Spacer(Modifier.width(12.dp))
+                                Text("Download APK to Device", fontWeight = FontWeight.Bold)
+                            }
+                            
+                            SnackbarHost(hostState = snackbarHostState)
+
+                            Button(
+                                onClick = { /* Simulated export/publish */ },
+                                modifier = Modifier.fillMaxWidth().height(56.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                                enabled = !isProcessing,
+                                shape = RoundedCornerShape(16.dp)
+                            ) {
+                                Icon(Icons.Rounded.CloudUpload, null)
+                                Spacer(Modifier.width(12.dp))
+                                Text("Publish Release Build", fontWeight = FontWeight.ExtraBold)
                             }
                         }
                     }

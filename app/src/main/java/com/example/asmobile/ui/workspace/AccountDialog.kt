@@ -53,14 +53,16 @@ fun AccountDialog(onDismiss: () -> Unit) {
                     if (isLoginMode) "Account Login" else "Create Profile",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = (-0.5).sp
+                    letterSpacing = (-0.5).sp,
+                    color = MaterialTheme.colorScheme.primary
                 )
                 
                 Text(
                     if (isLoginMode) "Access your projects everywhere" else "Join the Elite developer network",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp)
+                    modifier = Modifier.padding(top = 4.dp),
+                    fontWeight = FontWeight.Medium
                 )
                 
                 Spacer(Modifier.height(32.dp))

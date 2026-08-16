@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.BorderStroke
 
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {
@@ -39,25 +40,29 @@ fun SettingsScreen(onBack: () -> Unit) {
                 // Header
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 1.dp
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                    tonalElevation = 2.dp,
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
                 ) {
                     Row(
                         modifier = Modifier
                             .statusBarsPadding()
-                            .padding(horizontal = 8.dp, vertical = 16.dp),
+                            .padding(horizontal = 12.dp, vertical = 20.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(onClick = onBack) {
                             Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = MaterialTheme.colorScheme.primary)
                         }
-                        Spacer(Modifier.width(12.dp))
-                        Text(
-                            "IDE Settings", 
-                            style = MaterialTheme.typography.headlineSmall, 
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = (-0.5).sp
-                        )
+                        Spacer(Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                "Elite Preferences", 
+                                style = MaterialTheme.typography.titleLarge, 
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = (-0.5).sp
+                            )
+                            Text("Configure your professional workspace", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                     }
                 }
 
@@ -127,7 +132,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                     item {
                         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("ASMobile Elite Pro", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                            Text("Version 3.2-ELITE (Build 2026.08.16)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Version 3.4-ELITE (Build 2026.08.16)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }

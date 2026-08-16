@@ -210,7 +210,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
 
                     item {
                         Spacer(Modifier.height(40.dp))
-                        Text("ASMobile v3.2-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
+                        Text("ASMobile v3.4-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -269,9 +269,18 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                                 isBuilding = isBuilding
                             )
                         }
-                        MobileDestination.Project -> FileTree(
+                        MobileDestination.Project -> ProjectExplorer(
                             rootDir = rootDir,
-                            onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) }
+                            onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) },
+                            onNewProjectClick = { showProjectWizard = true },
+                            onRunProject = { project ->
+                                projectViewModel.startRun(project)
+                                selectedDestination = MobileDestination.Devices
+                                // Ensure at least one device is running for the simulation
+                                if (deviceViewModel.devices.none { it.isRunning }) {
+                                    deviceViewModel.toggleDevice(0)
+                                }
+                            }
                         )
                         MobileDestination.Editor -> TabbedEditor(
                             openFiles = openFiles,
@@ -366,26 +375,33 @@ private fun WorkspaceTopBar(
     themeViewModel: ThemeViewModel
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.background,
-        tonalElevation = 0.dp
+        color = MaterialTheme.colorScheme.background.copy(alpha = 0.9f),
+        tonalElevation = 0.dp,
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
     ) {
         CenterAlignedTopAppBar(
             title = {
                 Surface(
                     onClick = onSearchClick,
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
-                        Icon(Icons.Rounded.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Rounded.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(12.dp))
-                        Text("Search Everything...", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
-                        Spacer(Modifier.width(40.dp))
-                        Text("⌘K", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                        Text("Search Elite...", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                        Spacer(Modifier.width(48.dp))
+                        Box(
+                            modifier = Modifier
+                                .background(Color.White.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                        ) {
+                            Text("⌘K", style = TextStyle(fontSize = 9.sp), color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                        }
                     }
                 }
             },
@@ -404,15 +420,24 @@ private fun WorkspaceTopBar(
                     }
                     themeViewModel.setTheme(nextTheme)
                 }) {
-                    Icon(
-                        when(themeViewModel.currentTheme) {
-                            ThemeMode.Obsidian -> Icons.Rounded.DarkMode
-                            ThemeMode.Arctic -> Icons.Rounded.LightMode
-                            ThemeMode.Solar -> Icons.Rounded.WbSunny
-                        }, 
-                        null, 
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
+                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            when(themeViewModel.currentTheme) {
+                                ThemeMode.Obsidian -> Icons.Rounded.DarkMode
+                                ThemeMode.Arctic -> Icons.Rounded.LightMode
+                                ThemeMode.Solar -> Icons.Rounded.WbSunny
+                            }, 
+                            null, 
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
 
                 IconButton(
@@ -448,28 +473,41 @@ private fun WorkspaceBottomBar(
 ) {
     Surface(
         modifier = Modifier
-            .padding(horizontal = 24.dp, vertical = 12.dp)
-            .shadow(24.dp, RoundedCornerShape(32.dp)),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+            .padding(horizontal = 28.dp, vertical = 14.dp)
+            .shadow(32.dp, RoundedCornerShape(32.dp), ambientColor = GlowPurple.copy(alpha = 0.5f)),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
         shape = RoundedCornerShape(32.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
     ) {
         NavigationBar(
             containerColor = Color.Transparent,
             tonalElevation = 0.dp,
             modifier = Modifier.height(64.dp)
         ) {
-            MobileDestination.entries.forEach { destination ->
+            val essentialDestinations = listOf(
+                MobileDestination.Dashboard,
+                MobileDestination.Project,
+                MobileDestination.Ai,
+                MobileDestination.Editor,
+                MobileDestination.Tools
+            )
+            essentialDestinations.forEach { destination ->
                 val isSelected = selectedDestination == destination
                 NavigationBarItem(
                     selected = isSelected,
                     onClick = { onDestinationSelected(destination) },
                     icon = { 
-                        Icon(
-                            destination.icon, 
-                            null,
-                            modifier = Modifier.size(if (isSelected) 22.dp else 20.dp)
-                        ) 
+                        Box(
+                            modifier = if (isSelected) Modifier
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
+                                .padding(8.dp) else Modifier
+                        ) {
+                            Icon(
+                                destination.icon, 
+                                null,
+                                modifier = Modifier.size(if (isSelected) 22.dp else 20.dp)
+                            ) 
+                        }
                     },
                     label = { 
                         Text(

@@ -119,17 +119,17 @@ fun Dashboard(
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.surface,
                 shape = RoundedCornerShape(24.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
             ) {
                 Row(
-                    modifier = Modifier.padding(vertical = 20.dp),
+                    modifier = Modifier.padding(vertical = 24.dp),
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     DashboardStat("Projects", projectsCount.toString(), Icons.Rounded.Folder)
-                    VerticalDivider(modifier = Modifier.height(32.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                    Box(modifier = Modifier.width(1.dp).height(32.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)))
                     DashboardStat("Files", filesCount.toString(), Icons.Rounded.Description)
-                    VerticalDivider(modifier = Modifier.height(32.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                    Box(modifier = Modifier.width(1.dp).height(32.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)))
                     DashboardStat("Builds", "12", Icons.Rounded.CheckCircle)
                 }
             }

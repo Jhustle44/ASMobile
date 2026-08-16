@@ -81,10 +81,15 @@ class ProjectViewModel : ViewModel() {
     var lastCreatedProject: String? = null
     var refreshTrigger by mutableIntStateOf(0)
     var selectedToolTab by mutableIntStateOf(0)
+    var activeRunProject: File? by mutableStateOf(null)
 
     fun notifyProjectCreated(name: String) {
         lastCreatedProject = name
         refreshTrigger++
+    }
+
+    fun startRun(project: File) {
+        activeRunProject = project
     }
 }
 
@@ -105,10 +110,37 @@ enum class ThemeMode(val label: String) {
 class PluginViewModel : ViewModel() {
     private val _installedPlugins = mutableStateListOf<String>()
     val installedPlugins: List<String> get() = _installedPlugins
+    private var storageFile: File? = null
+
+    fun initStorage(rootDir: File) {
+        storageFile = File(rootDir, "plugins.json")
+        loadPlugins()
+    }
+
+    private fun loadPlugins() {
+        try {
+            if (storageFile?.exists() == true) {
+                val json = storageFile!!.readText()
+                val list = Json.decodeFromString<List<String>>(json)
+                _installedPlugins.clear()
+                _installedPlugins.addAll(list)
+            }
+        } catch (e: Exception) {}
+    }
+
+    private fun savePlugins() {
+        viewModelScope.launch {
+            try {
+                val json = Json.encodeToString(_installedPlugins.toList())
+                storageFile?.writeText(json)
+            } catch (e: Exception) {}
+        }
+    }
 
     fun installPlugin(name: String) {
         if (!_installedPlugins.contains(name)) {
             _installedPlugins.add(name)
+            savePlugins()
         }
     }
 }

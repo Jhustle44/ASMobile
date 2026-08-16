@@ -35,6 +35,15 @@ fun VirtualDeviceScreen(
     var showAddDevice by remember { mutableStateOf(false) }
     var activeDeviceIndex by remember { mutableIntStateOf(-1) }
 
+    LaunchedEffect(projectViewModel.activeRunProject) {
+        if (projectViewModel.activeRunProject != null) {
+            val runningIndex = viewModel.devices.indexOfFirst { it.isRunning }
+            if (runningIndex != -1) {
+                activeDeviceIndex = runningIndex
+            }
+        }
+    }
+
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
         if (activeDeviceIndex == -1) {
             DeviceGallery(
@@ -46,7 +55,11 @@ fun VirtualDeviceScreen(
         } else {
             VirtualDisplayView(
                 device = viewModel.devices[activeDeviceIndex],
-                onBack = { activeDeviceIndex = -1 },
+                projectName = projectViewModel.activeRunProject?.name,
+                onBack = { 
+                    activeDeviceIndex = -1 
+                    projectViewModel.activeRunProject = null // Reset after viewing
+                },
                 onRun = onRunProject
             )
         }
@@ -109,9 +122,20 @@ private fun DeviceGallery(
 @Composable
 private fun VirtualDisplayView(
     device: DeviceModel,
+    projectName: String?,
     onBack: () -> Unit,
     onRun: () -> Unit
 ) {
+    var isAppLaunching by remember(projectName) { mutableStateOf(projectName != null) }
+
+    LaunchedEffect(projectName) {
+        if (projectName != null) {
+            isAppLaunching = true
+            kotlinx.coroutines.delay(2000)
+            isAppLaunching = false
+        }
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, null) }
@@ -152,8 +176,18 @@ private fun VirtualDisplayView(
                 if (device.isRunning) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Rounded.Android, null, tint = Color.Green, modifier = Modifier.size(48.dp))
-                            Text("System Booted", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                            if (isAppLaunching) {
+                                CircularProgressIndicator(color = Color.White)
+                                Spacer(Modifier.height(16.dp))
+                                Text("Launching $projectName...", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                            } else if (projectName != null) {
+                                Icon(Icons.Rounded.AutoAwesome, null, tint = Color.Green, modifier = Modifier.size(48.dp))
+                                Text(projectName, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text("Running Live", color = Color.Green, style = MaterialTheme.typography.labelSmall)
+                            } else {
+                                Icon(Icons.Rounded.Android, null, tint = Color.Green, modifier = Modifier.size(48.dp))
+                                Text("System Booted", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                            }
                         }
                     }
                 } else {
@@ -176,8 +210,13 @@ private fun VirtualDisplayView(
                         item { Text("I/System: Initializing hardware...", color = Color.Gray, fontSize = 10.sp) }
                         if (device.isRunning) {
                             item { Text("D/Activity: MainActivity created", color = Color.Cyan, fontSize = 10.sp) }
-                            item { Text("V/View: Inflating layout...", color = Color.White, fontSize = 10.sp) }
-                            item { Text("W/Asset: Loading pro resources", color = Color.Yellow, fontSize = 10.sp) }
+                            if (projectName != null) {
+                                item { Text("I/App: Attaching to process: com.ai.${projectName.lowercase()}", color = Color.Green, fontSize = 10.sp) }
+                                item { Text("D/ViewRoot: Starting main frame loop...", color = Color.White, fontSize = 10.sp) }
+                            } else {
+                                item { Text("V/View: Inflating layout...", color = Color.White, fontSize = 10.sp) }
+                                item { Text("W/Asset: Loading pro resources", color = Color.Yellow, fontSize = 10.sp) }
+                            }
                         }
                     }
                 }

@@ -11,10 +11,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 
 @Composable
 fun PluginMarketplace(
@@ -90,10 +92,40 @@ fun PluginMarketplace(
             IconButton(onClick = { }) { Icon(Icons.Rounded.Search, null) }
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(16.dp))
+
+        var selectedCategoryTab by remember { mutableStateOf("All") }
+        val categories = listOf("All") + plugins.map { it.category }.distinct()
+
+        ScrollableTabRow(
+            selectedTabIndex = categories.indexOf(selectedCategoryTab),
+            containerColor = Color.Transparent,
+            edgePadding = 0.dp,
+            divider = {},
+            indicator = { tabPositions ->
+                if (categories.indexOf(selectedCategoryTab) < tabPositions.size) {
+                    TabRowDefaults.SecondaryIndicator(
+                        modifier = Modifier.tabIndicatorOffset(tabPositions[categories.indexOf(selectedCategoryTab)]),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        ) {
+            categories.forEach { category ->
+                Tab(
+                    selected = selectedCategoryTab == category,
+                    onClick = { selectedCategoryTab = category },
+                    text = { Text(category, style = MaterialTheme.typography.labelLarge) }
+                )
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        val filteredPlugins = if (selectedCategoryTab == "All") plugins else plugins.filter { it.category == selectedCategoryTab }
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            items(plugins) { plugin ->
+            items(filteredPlugins) { plugin ->
                 PluginCard(
                     plugin = plugin,
                     isInstalled = viewModel.installedPlugins.contains(plugin.name),
@@ -109,6 +141,9 @@ data class PluginItem(val name: String, val desc: String, val size: String, val 
 
 @Composable
 private fun PluginCard(plugin: PluginItem, isInstalled: Boolean, onInstall: () -> Unit) {
+    var isDownloading by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -161,15 +196,26 @@ private fun PluginCard(plugin: PluginItem, isInstalled: Boolean, onInstall: () -
             }
             
             Button(
-                onClick = onInstall,
-                enabled = !isInstalled,
+                onClick = {
+                    if (!isInstalled && !isDownloading) {
+                        isDownloading = true
+                        scope.launch {
+                            kotlinx.coroutines.delay(2000) // Simulate download
+                            isDownloading = false
+                            onInstall()
+                        }
+                    }
+                },
+                enabled = !isInstalled && !isDownloading,
                 shape = RoundedCornerShape(12.dp),
                 contentPadding = PaddingValues(horizontal = 12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (isInstalled) Color(0xFF10B981) else MaterialTheme.colorScheme.primary
                 )
             ) {
-                if (isInstalled) {
+                if (isDownloading) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
+                } else if (isInstalled) {
                     Icon(Icons.Rounded.Check, null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
                     Text("Ready", style = MaterialTheme.typography.labelLarge)
