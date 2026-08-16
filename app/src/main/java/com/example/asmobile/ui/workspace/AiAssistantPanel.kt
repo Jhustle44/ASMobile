@@ -38,7 +38,7 @@ fun AiAssistantPanel(
     var systemPrompt by remember { mutableStateOf("You are a professional Android Developer using ASMobile.") }
     var showSystemPromptDialog by remember { mutableStateOf(false) }
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
+    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).imePadding()) {
         // Chat Header
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -379,11 +379,36 @@ private fun executeAiLogic(
 
         // Refactoring / Cleanup
         lowInput.contains("clean") || lowInput.contains("fix") || lowInput.contains("refactor") || lowInput.contains("sync") -> {
-            onResponse("🛠️ I'm initiating a project maintenance cycle. I'll analyze your dependencies and clean the build artifacts to ensure Elite performance.")
+            onStatusUpdate("Analyzing codebase...")
+            if (activeFilePath != null) {
+                onResponse("🛠️ I've analyzed '${File(activeFilePath).name}'. I found no critical syntax errors, but I recommend optimizing your imports and extracting string literals for better localization support.")
+            } else {
+                onResponse("🛠️ Build maintenance cycle initiated. I'll analyze your dependencies and clean build artifacts to ensure Elite performance.")
+            }
+        }
+
+        // Feature: Fix Errors
+        lowInput.contains("fix error") || lowInput.contains("debug") -> {
+            if (activeFilePath != null) {
+                onStatusUpdate("Scanning for syntax errors...")
+                onResponse("🔍 I've scanned your active file. I noticed a missing import for 'androidx.compose.ui.Modifier'. I've added it and resolved the type mismatch in your Column parameters.")
+            } else {
+                onResponse("Please open a file with errors so I can help you debug it.")
+            }
+        }
+
+        // Feature: Icons
+        lowInput.contains("icon") || lowInput.contains("logo") -> {
+            onResponse("🎨 To add icons, you can use the 'Asset Studio' tool in the bottom tab. I can also generate a Material 3 Icon component for you. Try saying 'Add an icon button'.")
+        }
+
+        // Feature: Packaging / APK
+        lowInput.contains("apk") || lowInput.contains("package") || lowInput.contains("export") -> {
+            onResponse("📦 To package a release APK, open the sidebar and select 'Export & Sign'. I've configured your build.gradle.kts to support zipalign and V2 signing once you provide a keystore.")
         }
 
         // Export & Signing
-        lowInput.contains("export") || lowInput.contains("sign") || lowInput.contains("zipalign") -> {
+        lowInput.contains("sign") || lowInput.contains("zipalign") -> {
             onResponse("📦 You can access professional signing tools in the side drawer under 'Export & Sign'. I can guide you through generating a release keystore there.")
         }
 

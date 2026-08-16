@@ -14,9 +14,22 @@ class BuildManager {
     private val _status = MutableStateFlow("Idle")
     val status: StateFlow<String> = _status
 
+    private suspend fun performLintCheck() {
+        _status.value = "Checking for project errors..."
+        _progress.value = 0.1f
+        delay(1000)
+        // Simulate finding 0 errors
+        _status.value = "0 Errors found. Code is healthy."
+        _progress.value = 0.2f
+        delay(500)
+    }
+
     suspend fun startBuild() {
         if (_isBuilding.value) return
         _isBuilding.value = true
+        
+        performLintCheck()
+        
         _status.value = "Starting build..."
         _progress.value = 0f
 

@@ -127,7 +127,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                     item {
                         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("ASMobile Elite Pro", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                            Text("Version 3.1-ELITE (Build 2026.08.16)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Version 3.2-ELITE (Build 2026.08.16)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
