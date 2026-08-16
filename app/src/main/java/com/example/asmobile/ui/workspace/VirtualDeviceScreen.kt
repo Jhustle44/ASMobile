@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun VirtualDeviceScreen(
     viewModel: DeviceViewModel,
+    onRunProject: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var showAddDevice by remember { mutableStateOf(false) }
@@ -54,7 +55,8 @@ fun VirtualDeviceScreen(
                 val device = viewModel.devices[index]
                 DeviceCard(
                     device = device,
-                    onToggle = { viewModel.toggleDevice(index) }
+                    onToggle = { viewModel.toggleDevice(index) },
+                    onRun = onRunProject
                 )
             }
         }
@@ -72,7 +74,7 @@ fun VirtualDeviceScreen(
 }
 
 @Composable
-private fun DeviceCard(device: DeviceModel, onToggle: () -> Unit) {
+private fun DeviceCard(device: DeviceModel, onToggle: () -> Unit, onRun: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -138,8 +140,11 @@ private fun DeviceCard(device: DeviceModel, onToggle: () -> Unit) {
                         )
                     }
                 }
-                IconButton(onClick = { }) {
+                IconButton(onClick = { /* Device Settings */ }) {
                     Icon(Icons.Rounded.Settings, null, modifier = Modifier.size(20.dp))
+                }
+                IconButton(onClick = onRun) {
+                    Icon(Icons.Rounded.PlayArrow, null, tint = Color(0xFF4CAF50), modifier = Modifier.size(20.dp))
                 }
             }
         }

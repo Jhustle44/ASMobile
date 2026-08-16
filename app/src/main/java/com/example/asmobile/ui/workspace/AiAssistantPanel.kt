@@ -34,6 +34,7 @@ fun AiAssistantPanel(
     var isGenerating by remember { mutableStateOf(false) }
     var generationTask by remember { mutableStateOf("") }
     var systemPrompt by remember { mutableStateOf("You are a professional Android Developer using ASMobile.") }
+    var showSystemPromptDialog by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         // Chat Header
@@ -54,7 +55,7 @@ fun AiAssistantPanel(
                         Text(generationTask, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                     }
                 }
-                IconButton(onClick = { /* System Prompt Settings */ }) {
+                IconButton(onClick = { showSystemPromptDialog = true }) {
                     Icon(Icons.Rounded.Psychology, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -138,6 +139,42 @@ fun AiAssistantPanel(
             }
         }
     }
+
+    if (showSystemPromptDialog) {
+        SystemPromptDialog(
+            currentPrompt = systemPrompt,
+            onDismiss = { showSystemPromptDialog = false },
+            onSave = { systemPrompt = it }
+        )
+    }
+}
+
+@Composable
+private fun SystemPromptDialog(
+    currentPrompt: String,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    var text by remember { mutableStateOf(currentPrompt) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("AI Custom Instructions") },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("Tell Gemini how to behave...") },
+                minLines = 3
+            )
+        },
+        confirmButton = {
+            Button(onClick = { onSave(text); onDismiss() }) { Text("Save") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
 }
 
 @Composable
@@ -197,7 +234,7 @@ private fun executeAiLogic(
                 
                 if (template == ProjectTemplate.CustomAi) {
                     onStatusUpdate("Generating bespoke AI code...")
-                    val customCode = generateCustomAppCode(appName, input)
+                    val customCode = generateCustomAppCode(appName, input, language)
                     if (mainFile.exists()) {
                         mainFile.writeText(customCode)
                     }
@@ -303,17 +340,42 @@ private fun executeAiLogic(
     }
 }
 
-private fun generateCustomAppCode(appName: String, description: String): String {
+private fun generateCustomAppCode(appName: String, description: String, language: ProjectLanguage = ProjectLanguage.Kotlin): String {
     val lowDesc = description.lowercase()
+    
+    if (language == ProjectLanguage.Java) {
+        return """
+            package com.ai.${appName.lowercase()};
+
+            import android.os.Bundle;
+            import androidx.activity.ComponentActivity;
+            import androidx.activity.compose.ComponentActivityKt;
+            import androidx.compose.material3.Text;
+            import androidx.compose.runtime.Composable;
+
+            public class MainActivity extends ComponentActivity {
+                @Override
+                protected void onCreate(Bundle savedInstanceState) {
+                    super.onCreate(savedInstanceState);
+                    // AI Generated Java Content
+                    ComponentActivityKt.setContent(this, null, () -> {
+                        return null; // Compose in Java is complex, normally used with Kotlin interop
+                    });
+                }
+            }
+        """.trimIndent()
+    }
+
     val content = when {
         lowDesc.contains("recipe") -> "Text(\"Recipe Book App\", style = MaterialTheme.typography.headlineMedium)\nLazyColumn { items(5) { Text(\"Recipe #\$it\", modifier = Modifier.padding(8.dp)) } }"
         lowDesc.contains("fitness") -> "Icon(Icons.Default.DirectionsRun, null, modifier = Modifier.size(64.dp))\nText(\"Fitness Tracker\", style = MaterialTheme.typography.displaySmall)\nLinearProgressIndicator(progress = 0.7f, modifier = Modifier.fillMaxWidth())"
         lowDesc.contains("chat") -> "Column { Box(Modifier.weight(1f)) { Text(\"Chat History\") }\nOutlinedTextField(value = \"\", onValueChange = {}, label = { Text(\"Message\") }, modifier = Modifier.fillMaxWidth()) }"
+        lowDesc.contains("bakery") -> "Text(\"Bakery Management\", style = MaterialTheme.typography.displayMedium)\nText(\"Track your orders and ingredients.\")\nButton(onClick = {}) { Text(\"New Order\") }"
         else -> "Text(\"AI Generated Content for \$appName\", style = MaterialTheme.typography.headlineMedium)\nText(\"Description: \$description\", style = MaterialTheme.typography.bodySmall)"
     }
 
     return """
-        package com.example.${appName.lowercase()}
+        package com.ai.${appName.lowercase()}
 
         import android.os.Bundle
         import androidx.activity.ComponentActivity

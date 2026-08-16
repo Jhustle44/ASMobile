@@ -53,15 +53,15 @@ object ProjectManager {
 
         // Template specific files
         when (template) {
-            ProjectTemplate.EmptyCompose -> createEmptyCompose(appDir, packageName, projectName)
-            ProjectTemplate.BottomNav -> createBottomNav(appDir, packageName, projectName)
-            ProjectTemplate.LoginFlow -> createLoginFlow(appDir, packageName, projectName)
-            ProjectTemplate.CounterApp -> createCounterApp(appDir, packageName, projectName)
-            ProjectTemplate.NotesApp -> createNotesApp(appDir, packageName, projectName)
-            ProjectTemplate.WeatherApp -> createWeatherApp(appDir, packageName, projectName)
-            ProjectTemplate.CustomAi -> createEmptyCompose(appDir, packageName, projectName) // Base for AI customization
-            ProjectTemplate.SocialApp -> createSocialApp(appDir, packageName, projectName)
-            ProjectTemplate.ECommerce -> createECommerceApp(appDir, packageName, projectName)
+            ProjectTemplate.EmptyCompose -> createEmptyCompose(appDir, packageName, projectName, language)
+            ProjectTemplate.BottomNav -> createBottomNav(appDir, packageName, projectName, language)
+            ProjectTemplate.LoginFlow -> createLoginFlow(appDir, packageName, projectName, language)
+            ProjectTemplate.CounterApp -> createCounterApp(appDir, packageName, projectName, language)
+            ProjectTemplate.NotesApp -> createNotesApp(appDir, packageName, projectName, language)
+            ProjectTemplate.WeatherApp -> createWeatherApp(appDir, packageName, projectName, language)
+            ProjectTemplate.CustomAi -> createEmptyCompose(appDir, packageName, projectName, language)
+            ProjectTemplate.SocialApp -> createSocialApp(appDir, packageName, projectName, language)
+            ProjectTemplate.ECommerce -> createECommerceApp(appDir, packageName, projectName, language)
         }
 
         // Create AndroidManifest.xml
@@ -85,8 +85,12 @@ object ProjectManager {
         """.trimIndent())
     }
 
-    private fun createEmptyCompose(appDir: File, packageName: String, projectName: String) {
-        File(appDir, "MainActivity.kt").writeText("""
+    private fun createEmptyCompose(appDir: File, packageName: String, projectName: String, language: ProjectLanguage) {
+        val ext = language.extension
+        val filename = "MainActivity.$ext"
+        
+        val content = if (language == ProjectLanguage.Kotlin) {
+            """
             package $packageName
 
             import android.os.Bundle
@@ -102,222 +106,271 @@ object ProjectManager {
                     }
                 }
             }
-        """.trimIndent())
+            """.trimIndent()
+        } else {
+            """
+            package $packageName;
+
+            import android.os.Bundle;
+            import androidx.activity.ComponentActivity;
+            import androidx.activity.compose.ComponentActivityKt;
+            import androidx.compose.material3.Text;
+
+            public class MainActivity extends ComponentActivity {
+                @Override
+                protected void onCreate(Bundle savedInstanceState) {
+                    super.onCreate(savedInstanceState);
+                    // Standard Java Activity initialization
+                }
+            }
+            """.trimIndent()
+        }
+        File(appDir, filename).writeText(content)
     }
 
-    private fun createBottomNav(appDir: File, packageName: String, projectName: String) {
-        File(appDir, "MainActivity.kt").writeText("""
-            package $packageName
+    private fun createBottomNav(appDir: File, packageName: String, projectName: String, language: ProjectLanguage) {
+        val ext = language.extension
+        File(appDir, "MainActivity.$ext").writeText(
+            if (language == ProjectLanguage.Kotlin) {
+                """
+                package $packageName
 
-            import android.os.Bundle
-            import androidx.activity.ComponentActivity
-            import androidx.activity.compose.setContent
-            import androidx.compose.material3.*
-            import androidx.compose.runtime.*
-            import androidx.compose.material.icons.Icons
-            import androidx.compose.material.icons.filled.*
+                import android.os.Bundle
+                import androidx.activity.ComponentActivity
+                import androidx.activity.compose.setContent
+                import androidx.compose.material3.*
+                import androidx.compose.runtime.*
+                import androidx.compose.material.icons.Icons
+                import androidx.compose.material.icons.filled.*
 
-            class MainActivity : ComponentActivity() {
-                override fun onCreate(savedInstanceState: Bundle?) {
-                    super.onCreate(savedInstanceState)
-                    setContent {
-                        var selectedItem by remember { mutableIntStateOf(0) }
-                        Scaffold(
-                            bottomBar = {
-                                NavigationBar {
-                                    NavigationBarItem(icon = { Icon(Icons.Default.Home, null) }, label = { Text("Home") }, selected = selectedItem == 0, onClick = { selectedItem = 0 })
-                                    NavigationBarItem(icon = { Icon(Icons.Default.Person, null) }, label = { Text("Profile") }, selected = selectedItem == 1, onClick = { selectedItem = 1 })
+                class MainActivity : ComponentActivity() {
+                    override fun onCreate(savedInstanceState: Bundle?) {
+                        super.onCreate(savedInstanceState)
+                        setContent {
+                            var selectedItem by remember { mutableIntStateOf(0) }
+                            Scaffold(
+                                bottomBar = {
+                                    NavigationBar {
+                                        NavigationBarItem(icon = { Icon(Icons.Default.Home, null) }, label = { Text("Home") }, selected = selectedItem == 0, onClick = { selectedItem = 0 })
+                                        NavigationBarItem(icon = { Icon(Icons.Default.Person, null) }, label = { Text("Profile") }, selected = selectedItem == 1, onClick = { selectedItem = 1 })
+                                    }
                                 }
-                            }
-                        ) { padding ->
-                            Text("Page " + selectedItem, modifier = androidx.compose.ui.Modifier.padding(padding))
-                        }
-                    }
-                }
-            }
-        """.trimIndent())
-    }
-
-    private fun createLoginFlow(appDir: File, packageName: String, projectName: String) {
-        File(appDir, "MainActivity.kt").writeText("""
-            package $packageName
-
-            import android.os.Bundle
-            import androidx.activity.ComponentActivity
-            import androidx.activity.compose.setContent
-            import androidx.compose.foundation.layout.*
-            import androidx.compose.material3.*
-            import androidx.compose.runtime.*
-            import androidx.compose.ui.Modifier
-            import androidx.compose.ui.unit.dp
-
-            class MainActivity : ComponentActivity() {
-                override fun onCreate(savedInstanceState: Bundle?) {
-                    super.onCreate(savedInstanceState)
-                    setContent {
-                        Column(modifier = Modifier.padding(16.dp).fillMaxSize(), verticalArrangement = Arrangement.Center) {
-                            Text("Login to $projectName", style = MaterialTheme.typography.headlineMedium)
-                            Spacer(Modifier.height(16.dp))
-                            OutlinedTextField(value = "", onValueChange = {}, label = { Text("Username") }, modifier = Modifier.fillMaxWidth())
-                            OutlinedTextField(value = "", onValueChange = {}, label = { Text("Password") }, modifier = Modifier.fillMaxWidth())
-                            Spacer(Modifier.height(24.dp))
-                            Button(onClick = {}, modifier = Modifier.fillMaxWidth()) { Text("Sign In") }
-                        }
-                    }
-                }
-            }
-        """.trimIndent())
-    }
-    private fun createCounterApp(appDir: File, packageName: String, projectName: String) {
-        File(appDir, "MainActivity.kt").writeText("""
-            package $packageName
-
-            import android.os.Bundle
-            import androidx.activity.ComponentActivity
-            import androidx.activity.compose.setContent
-            import androidx.compose.foundation.layout.*
-            import androidx.compose.material3.*
-            import androidx.compose.runtime.*
-            import androidx.compose.ui.Alignment
-            import androidx.compose.ui.Modifier
-            import androidx.compose.ui.unit.dp
-
-            class MainActivity : ComponentActivity() {
-                override fun onCreate(savedInstanceState: Bundle?) {
-                    super.onCreate(savedInstanceState)
-                    setContent {
-                        var count by remember { mutableIntStateOf(0) }
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Text("Counter: ${'$'}count", style = MaterialTheme.typography.headlineLarge)
-                            Spacer(Modifier.height(24.dp))
-                            Button(onClick = { count++ }) {
-                                Text("Increment")
+                            ) { padding ->
+                                Text("Page " + selectedItem, modifier = androidx.compose.ui.Modifier.padding(padding))
                             }
                         }
                     }
                 }
-            }
-        """.trimIndent())
+                """.trimIndent()
+            } else "// Java Bottom Nav Template"
+        )
     }
 
-    private fun createNotesApp(appDir: File, packageName: String, projectName: String) {
-        File(appDir, "MainActivity.kt").writeText("""
-            package $packageName
+    private fun createLoginFlow(appDir: File, packageName: String, projectName: String, language: ProjectLanguage) {
+        val ext = language.extension
+        File(appDir, "MainActivity.$ext").writeText(
+            if (language == ProjectLanguage.Kotlin) {
+                """
+                package $packageName
 
-            import android.os.Bundle
-            import androidx.activity.ComponentActivity
-            import androidx.activity.compose.setContent
-            import androidx.compose.foundation.layout.*
-            import androidx.compose.foundation.lazy.LazyColumn
-            import androidx.compose.foundation.lazy.items
-            import androidx.compose.material.icons.Icons
-            import androidx.compose.material.icons.filled.Add
-            import androidx.compose.material3.*
-            import androidx.compose.runtime.*
-            import androidx.compose.ui.Modifier
-            import androidx.compose.ui.unit.dp
+                import android.os.Bundle
+                import androidx.activity.ComponentActivity
+                import androidx.activity.compose.setContent
+                import androidx.compose.foundation.layout.*
+                import androidx.compose.material3.*
+                import androidx.compose.runtime.*
+                import androidx.compose.ui.Modifier
+                import androidx.compose.ui.unit.dp
 
-            class MainActivity : ComponentActivity() {
-                override fun onCreate(savedInstanceState: Bundle?) {
-                    super.onCreate(savedInstanceState)
-                    setContent {
-                        var notes by remember { mutableStateOf(listOf("Buy groceries", "Finish project", "Call mom")) }
-                        Scaffold(
-                            floatingActionButton = {
-                                FloatingActionButton(onClick = { notes = notes + "New Note" }) {
-                                    Icon(Icons.Default.Add, contentDescription = null)
-                                }
+                class MainActivity : ComponentActivity() {
+                    override fun onCreate(savedInstanceState: Bundle?) {
+                        super.onCreate(savedInstanceState)
+                        setContent {
+                            Column(modifier = Modifier.padding(16.dp).fillMaxSize(), verticalArrangement = Arrangement.Center) {
+                                Text("Login to $projectName", style = MaterialTheme.typography.headlineMedium)
+                                Spacer(Modifier.height(16.dp))
+                                OutlinedTextField(value = "", onValueChange = {}, label = { Text("Username") }, modifier = Modifier.fillMaxWidth())
+                                OutlinedTextField(value = "", onValueChange = {}, label = { Text("Password") }, modifier = Modifier.fillMaxWidth())
+                                Spacer(Modifier.height(24.dp))
+                                Button(onClick = {}, modifier = Modifier.fillMaxWidth()) { Text("Sign In") }
                             }
-                        ) { padding ->
-                            LazyColumn(modifier = Modifier.padding(padding).fillMaxSize()) {
-                                items(notes) { note ->
-                                    ListItem(
-                                        headlineContent = { Text(note) },
-                                        modifier = Modifier.padding(8.dp)
-                                    )
-                                    Divider()
+                        }
+                    }
+                }
+                """.trimIndent()
+            } else "// Java Login Template"
+        )
+    }
+
+    private fun createCounterApp(appDir: File, packageName: String, projectName: String, language: ProjectLanguage) {
+        val ext = language.extension
+        File(appDir, "MainActivity.$ext").writeText(
+            if (language == ProjectLanguage.Kotlin) {
+                """
+                package $packageName
+
+                import android.os.Bundle
+                import androidx.activity.ComponentActivity
+                import androidx.activity.compose.setContent
+                import androidx.compose.foundation.layout.*
+                import androidx.compose.material3.*
+                import androidx.compose.runtime.*
+                import androidx.compose.ui.Alignment
+                import androidx.compose.ui.Modifier
+                import androidx.compose.ui.unit.dp
+
+                class MainActivity : ComponentActivity() {
+                    override fun onCreate(savedInstanceState: Bundle?) {
+                        super.onCreate(savedInstanceState)
+                        setContent {
+                            var count by remember { mutableIntStateOf(0) }
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text("Counter: ${'$'}count", style = MaterialTheme.typography.headlineLarge)
+                                Spacer(Modifier.height(24.dp))
+                                Button(onClick = { count++ }) {
+                                    Text("Increment")
                                 }
                             }
                         }
                     }
                 }
-            }
-        """.trimIndent())
+                """.trimIndent()
+            } else "// Java Counter Template"
+        )
     }
 
-    private fun createWeatherApp(appDir: File, packageName: String, projectName: String) {
-        File(appDir, "MainActivity.kt").writeText("""
-            package $packageName
+    private fun createNotesApp(appDir: File, packageName: String, projectName: String, language: ProjectLanguage) {
+        val ext = language.extension
+        File(appDir, "MainActivity.$ext").writeText(
+            if (language == ProjectLanguage.Kotlin) {
+                """
+                package $packageName
 
-            import android.os.Bundle
-            import androidx.activity.ComponentActivity
-            import androidx.activity.compose.setContent
-            import androidx.compose.foundation.layout.*
-            import androidx.compose.material.icons.Icons
-            import androidx.compose.material.icons.filled.WbSunny
-            import androidx.compose.material3.*
-            import androidx.compose.runtime.Composable
-            import androidx.compose.ui.Alignment
-            import androidx.compose.ui.Modifier
-            import androidx.compose.ui.unit.dp
+                import android.os.Bundle
+                import androidx.activity.ComponentActivity
+                import androidx.activity.compose.setContent
+                import androidx.compose.foundation.layout.*
+                import androidx.compose.foundation.lazy.LazyColumn
+                import androidx.compose.foundation.lazy.items
+                import androidx.compose.material.icons.Icons
+                import androidx.compose.material.icons.filled.Add
+                import androidx.compose.material3.*
+                import androidx.compose.runtime.*
+                import androidx.compose.ui.Modifier
+                import androidx.compose.ui.unit.dp
 
-            class MainActivity : ComponentActivity() {
-                override fun onCreate(savedInstanceState: Bundle?) {
-                    super.onCreate(savedInstanceState)
-                    setContent {
-                        Column(
-                            modifier = Modifier.fillMaxSize().padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(Icons.Default.WbSunny, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
-                            Text("Sunny", style = MaterialTheme.typography.headlineMedium)
-                            Text("24°C", style = MaterialTheme.typography.displayLarge)
-                            Spacer(Modifier.height(16.dp))
-                            Text("New York, USA", style = MaterialTheme.typography.titleMedium)
+                class MainActivity : ComponentActivity() {
+                    override fun onCreate(savedInstanceState: Bundle?) {
+                        super.onCreate(savedInstanceState)
+                        setContent {
+                            var notes by remember { mutableStateOf(listOf("Buy groceries", "Finish project", "Call mom")) }
+                            Scaffold(
+                                floatingActionButton = {
+                                    FloatingActionButton(onClick = { notes = notes + "New Note" }) {
+                                        Icon(Icons.Default.Add, contentDescription = null)
+                                    }
+                                }
+                            ) { padding ->
+                                LazyColumn(modifier = Modifier.padding(padding).fillMaxSize()) {
+                                    items(notes) { note ->
+                                        ListItem(
+                                            headlineContent = { Text(note) },
+                                            modifier = Modifier.padding(8.dp)
+                                        )
+                                        Divider()
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-            }
-        """.trimIndent())
+                """.trimIndent()
+            } else "// Java Notes Template"
+        )
     }
 
-    private fun createSocialApp(appDir: File, packageName: String, projectName: String) {
-        File(appDir, "MainActivity.kt").writeText("""
-            package $packageName
+    private fun createWeatherApp(appDir: File, packageName: String, projectName: String, language: ProjectLanguage) {
+        val ext = language.extension
+        File(appDir, "MainActivity.$ext").writeText(
+            if (language == ProjectLanguage.Kotlin) {
+                """
+                package $packageName
 
-            import android.os.Bundle
-            import androidx.activity.ComponentActivity
-            import androidx.activity.compose.setContent
-            import androidx.compose.foundation.layout.*
-            import androidx.compose.foundation.lazy.LazyColumn
-            import androidx.compose.material.icons.Icons
-            import androidx.compose.material.icons.filled.*
-            import androidx.compose.material3.*
-            import androidx.compose.runtime.Composable
-            import androidx.compose.ui.Modifier
-            import androidx.compose.ui.unit.dp
+                import android.os.Bundle
+                import androidx.activity.ComponentActivity
+                import androidx.activity.compose.setContent
+                import androidx.compose.foundation.layout.*
+                import androidx.compose.material.icons.Icons
+                import androidx.compose.material.icons.filled.WbSunny
+                import androidx.compose.material3.*
+                import androidx.compose.runtime.Composable
+                import androidx.compose.ui.Alignment
+                import androidx.compose.ui.Modifier
+                import androidx.compose.ui.unit.dp
 
-            class MainActivity : ComponentActivity() {
-                override fun onCreate(savedInstanceState: Bundle?) {
-                    super.onCreate(savedInstanceState)
-                    setContent {
-                        Scaffold(
-                            topBar = { CenterAlignedTopAppBar(title = { Text("$projectName") }) }
-                        ) { padding ->
-                            LazyColumn(modifier = Modifier.padding(padding)) {
-                                items(10) {
-                                    Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-                                        Column(modifier = Modifier.padding(16.dp)) {
-                                            Text("Post # ${'$'}it", style = MaterialTheme.typography.titleMedium)
-                                            Text("This is a social media post generated by Gemini AI.")
-                                            Row {
-                                                IconButton(onClick = {}) { Icon(Icons.Default.FavoriteBorder, null) }
-                                                IconButton(onClick = {}) { Icon(Icons.Default.Share, null) }
+                class MainActivity : ComponentActivity() {
+                    override fun onCreate(savedInstanceState: Bundle?) {
+                        super.onCreate(savedInstanceState)
+                        setContent {
+                            Column(
+                                modifier = Modifier.fillMaxSize().padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(Icons.Default.WbSunny, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+                                Text("Sunny", style = MaterialTheme.typography.headlineMedium)
+                                Text("24°C", style = MaterialTheme.typography.displayLarge)
+                                Spacer(Modifier.height(16.dp))
+                                Text("New York, USA", style = MaterialTheme.typography.titleMedium)
+                            }
+                        }
+                    }
+                }
+                """.trimIndent()
+            } else "// Java Weather Template"
+        )
+    }
+
+    private fun createSocialApp(appDir: File, packageName: String, projectName: String, language: ProjectLanguage) {
+        val ext = language.extension
+        File(appDir, "MainActivity.$ext").writeText(
+            if (language == ProjectLanguage.Kotlin) {
+                """
+                package $packageName
+
+                import android.os.Bundle
+                import androidx.activity.ComponentActivity
+                import androidx.activity.compose.setContent
+                import androidx.compose.foundation.layout.*
+                import androidx.compose.foundation.lazy.LazyColumn
+                import androidx.compose.material.icons.Icons
+                import androidx.compose.material.icons.filled.*
+                import androidx.compose.material3.*
+                import androidx.compose.runtime.Composable
+                import androidx.compose.ui.Modifier
+                import androidx.compose.ui.unit.dp
+
+                class MainActivity : ComponentActivity() {
+                    override fun onCreate(savedInstanceState: Bundle?) {
+                        super.onCreate(savedInstanceState)
+                        setContent {
+                            Scaffold(
+                                topBar = { CenterAlignedTopAppBar(title = { Text("$projectName") }) }
+                            ) { padding ->
+                                LazyColumn(modifier = Modifier.padding(padding)) {
+                                    items(10) {
+                                        Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+                                            Column(modifier = Modifier.padding(16.dp)) {
+                                                Text("Post # ${'$'}it", style = MaterialTheme.typography.titleMedium)
+                                                Text("This is a social media post generated by Gemini AI.")
+                                                Row {
+                                                    IconButton(onClick = {}) { Icon(Icons.Default.FavoriteBorder, null) }
+                                                    IconButton(onClick = {}) { Icon(Icons.Default.Share, null) }
+                                                }
                                             }
                                         }
                                     }
@@ -326,41 +379,46 @@ object ProjectManager {
                         }
                     }
                 }
-            }
-        """.trimIndent())
+                """.trimIndent()
+            } else "// Java Social Template"
+        )
     }
 
-    private fun createECommerceApp(appDir: File, packageName: String, projectName: String) {
-        File(appDir, "MainActivity.kt").writeText("""
-            package $packageName
+    private fun createECommerceApp(appDir: File, packageName: String, projectName: String, language: ProjectLanguage) {
+        val ext = language.extension
+        File(appDir, "MainActivity.$ext").writeText(
+            if (language == ProjectLanguage.Kotlin) {
+                """
+                package $packageName
 
-            import android.os.Bundle
-            import androidx.activity.ComponentActivity
-            import androidx.activity.compose.setContent
-            import androidx.compose.foundation.layout.*
-            import androidx.compose.foundation.lazy.grid.*
-            import androidx.compose.material.icons.Icons
-            import androidx.compose.material.icons.filled.*
-            import androidx.compose.material3.*
-            import androidx.compose.runtime.Composable
-            import androidx.compose.ui.Modifier
-            import androidx.compose.ui.unit.dp
+                import android.os.Bundle
+                import androidx.activity.ComponentActivity
+                import androidx.activity.compose.setContent
+                import androidx.compose.foundation.layout.*
+                import androidx.compose.foundation.lazy.grid.*
+                import androidx.compose.material.icons.Icons
+                import androidx.compose.material.icons.filled.*
+                import androidx.compose.material3.*
+                import androidx.compose.runtime.Composable
+                import androidx.compose.ui.Modifier
+                import androidx.compose.ui.unit.dp
 
-            class MainActivity : ComponentActivity() {
-                override fun onCreate(savedInstanceState: Bundle?) {
-                    super.onCreate(savedInstanceState)
-                    setContent {
-                        Scaffold(
-                            topBar = { SmallTopAppBar(title = { Text("Shop $projectName") }, actions = { IconButton(onClick = {}) { Icon(Icons.Default.ShoppingCart, null) } }) }
-                        ) { padding ->
-                            LazyVerticalGrid(columns = GridCells.Fixed(2), modifier = Modifier.padding(padding)) {
-                                items(20) {
-                                    Card(modifier = Modifier.padding(8.dp)) {
-                                        Column(modifier = Modifier.padding(16.dp)) {
-                                            Box(modifier = Modifier.size(100.dp).background(MaterialTheme.colorScheme.surfaceVariant))
-                                            Text("Product # ${'$'}it", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-                                            Text("${'$'} 99.99", color = MaterialTheme.colorScheme.primary)
-                                            Button(onClick = {}, modifier = Modifier.fillMaxWidth()) { Text("Add to Cart") }
+                class MainActivity : ComponentActivity() {
+                    override fun onCreate(savedInstanceState: Bundle?) {
+                        super.onCreate(savedInstanceState)
+                        setContent {
+                            Scaffold(
+                                topBar = { SmallTopAppBar(title = { Text("Shop $projectName") }, actions = { IconButton(onClick = {}) { Icon(Icons.Default.ShoppingCart, null) } }) }
+                            ) { padding ->
+                                LazyVerticalGrid(columns = GridCells.Fixed(2), modifier = Modifier.padding(padding)) {
+                                    items(20) {
+                                        Card(modifier = Modifier.padding(8.dp)) {
+                                            Column(modifier = Modifier.padding(16.dp)) {
+                                                Box(modifier = Modifier.size(100.dp).background(MaterialTheme.colorScheme.surfaceVariant))
+                                                Text("Product # ${'$'}it", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                                                Text("${'$'} 99.99", color = MaterialTheme.colorScheme.primary)
+                                                Button(onClick = {}, modifier = Modifier.fillMaxWidth()) { Text("Add to Cart") }
+                                            }
                                         }
                                     }
                                 }
@@ -368,8 +426,9 @@ object ProjectManager {
                         }
                     }
                 }
-            }
-        """.trimIndent())
+                """.trimIndent()
+            } else "// Java E-Commerce Template"
+        )
     }
 }
 

@@ -4,24 +4,69 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import java.io.File
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
 
-data class DeviceModel(val name: String, val api: String, val isRunning: Boolean)
+@Serializable
+data class DeviceModel(val name: String, val api: String, val isRunning: Boolean = false)
 
 class DeviceViewModel : ViewModel() {
-    private val _devices = mutableStateListOf(
-        DeviceModel("Pixel 8 Pro", "API 34", true),
-        DeviceModel("Pixel Fold", "API 33", false),
-        DeviceModel("Nexus 5X", "API 28", false)
-    )
+    private val _devices = mutableStateListOf<DeviceModel>()
     val devices: List<DeviceModel> get() = _devices
+    
+    private var storageFile: File? = null
+
+    fun initStorage(rootDir: File) {
+        storageFile = File(rootDir, "devices.json")
+        loadDevices()
+    }
+
+    private fun loadDevices() {
+        try {
+            if (storageFile?.exists() == true) {
+                val json = storageFile!!.readText()
+                if (json.isNotBlank()) {
+                    val list = Json.decodeFromString<List<DeviceModel>>(json)
+                    _devices.clear()
+                    _devices.addAll(list)
+                } else {
+                    storageFile!!.delete()
+                    loadDevices()
+                }
+            } else {
+                // Default devices
+                _devices.addAll(listOf(
+                    DeviceModel("Pixel 8 Pro", "API 34", true),
+                    DeviceModel("Pixel Fold", "API 33", false),
+                    DeviceModel("Nexus 5X", "API 28", false)
+                ))
+                saveDevices()
+            }
+        } catch (e: Exception) {
+            _devices.clear()
+        }
+    }
+
+    private fun saveDevices() {
+        viewModelScope.launch {
+            try {
+                val json = Json.encodeToString(_devices.toList())
+                storageFile?.writeText(json)
+            } catch (e: Exception) {}
+        }
+    }
 
     fun addDevice(name: String, api: String) {
         _devices.add(DeviceModel(name, api, false))
+        saveDevices()
     }
 
     fun toggleDevice(index: Int) {
         val device = _devices[index]
         _devices[index] = device.copy(isRunning = !device.isRunning)
+        saveDevices()
     }
 }
 

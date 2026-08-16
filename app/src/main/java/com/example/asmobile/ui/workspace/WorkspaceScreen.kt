@@ -76,6 +76,11 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
     val projectViewModel: ProjectViewModel = viewModel()
     val buildToolsViewModel: BuildToolsViewModel = viewModel()
     
+    // Initialize persistence
+    LaunchedEffect(rootDir) {
+        deviceViewModel.initStorage(rootDir)
+    }
+    
     // UI State
     var showExport by remember { mutableStateOf(false) }
     
@@ -158,7 +163,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                 }
                 
                 Spacer(Modifier.weight(1f))
-                Text("v2.5-PRO", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("v2.7-PRO", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     ) {
@@ -179,7 +184,11 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
             floatingActionButton = {
                 if (selectedDestination == MobileDestination.Editor) {
                     ExtendedFloatingActionButton(
-                        onClick = { buildViewModel.startBuild() },
+                        onClick = { 
+                            selectedDestination = MobileDestination.Tools
+                            projectViewModel.selectedToolTab = 0
+                            buildViewModel.startBuild() 
+                        },
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
                         shape = RoundedCornerShape(16.dp),
@@ -192,15 +201,25 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
             modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
         ) { padding ->
             Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+                val status by buildViewModel.buildStatus.collectAsState()
+                val progress by buildViewModel.buildProgress.collectAsState()
+                val isBuilding by buildViewModel.isBuilding.collectAsState()
+
                 key(projectViewModel.refreshTrigger) {
                     when (selectedDestination) {
-                        MobileDestination.Dashboard -> Dashboard(
-                            rootDir = rootDir,
-                            onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) },
-                            onNewProjectClick = { showProjectWizard = true },
-                            onSyncClick = { buildViewModel.startSync() },
-                            onCleanClick = { buildViewModel.startClean() }
-                        )
+                        MobileDestination.Dashboard -> {
+                            Dashboard(
+                                rootDir = rootDir,
+                                onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) },
+                                onNewProjectClick = { showProjectWizard = true },
+                                onSyncClick = { buildViewModel.startSync() },
+                                onCleanClick = { buildViewModel.startClean() },
+                                onAccountClick = { showAccount = true },
+                                buildStatus = status,
+                                buildProgress = progress,
+                                isBuilding = isBuilding
+                            )
+                        }
                         MobileDestination.Project -> FileTree(
                             rootDir = rootDir,
                             onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) }
@@ -223,7 +242,15 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                             onProjectCreated = { projectViewModel.notifyProjectCreated("AI") },
                             modifier = Modifier.fillMaxSize()
                         )
-                        MobileDestination.Devices -> VirtualDeviceScreen(viewModel = deviceViewModel, modifier = Modifier.fillMaxSize())
+                        MobileDestination.Devices -> VirtualDeviceScreen(
+                            viewModel = deviceViewModel, 
+                            onRunProject = { 
+                                selectedDestination = MobileDestination.Tools
+                                projectViewModel.selectedToolTab = 0
+                                buildViewModel.startBuild()
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
                         MobileDestination.Tools -> MobileToolsTabs(buildViewModel = buildViewModel, projectViewModel = projectViewModel)
                     }
                 }

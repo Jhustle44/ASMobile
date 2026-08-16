@@ -30,6 +30,10 @@ fun Dashboard(
     onNewProjectClick: () -> Unit,
     onSyncClick: () -> Unit = {},
     onCleanClick: () -> Unit = {},
+    onAccountClick: () -> Unit = {},
+    buildStatus: String = "Idle",
+    buildProgress: Float = 0f,
+    isBuilding: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -60,14 +64,45 @@ fun Dashboard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
+                IconButton(onClick = onAccountClick) {
+                    Surface(
+                        modifier = Modifier.size(44.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Rounded.AccountCircle, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                        }
+                    }
+                }
+            }
+        }
+
+        // Active Build Progress
+        if (isBuilding) {
+            item {
                 Surface(
-                    modifier = Modifier.size(44.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Rounded.Notifications, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(
+                            progress = { buildProgress },
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(Modifier.width(16.dp))
+                        Column {
+                            Text(buildStatus, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                            Text("Elite Build Engine active", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                     }
                 }
             }
@@ -105,8 +140,8 @@ fun Dashboard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 12.dp, start = 4.dp)
                 )
-                val projectsCount = rootDir.listFiles { f -> f.isDirectory }?.size ?: 0
-                val filesCount = rootDir.walkTopDown().filter { it.isFile }.count()
+                val projectsCount = try { rootDir.listFiles { f -> f.isDirectory }?.size ?: 0 } catch(e: Exception) { 0 }
+                val filesCount = try { rootDir.walkTopDown().filter { it.isFile }.count() } catch(e: Exception) { 0 }
                 
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
