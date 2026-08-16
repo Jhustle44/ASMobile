@@ -104,30 +104,30 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                 Spacer(Modifier.height(12.dp))
                 
                 NavigationDrawerItem(
-                    label = { Text("Dashboard") },
+                    label = { Text("IDE Dashboard", style = MaterialTheme.typography.labelLarge) },
                     selected = selectedDestination == MobileDestination.Dashboard,
                     onClick = { selectedDestination = MobileDestination.Dashboard; scope.launch { drawerState.close() } },
-                    icon = { Icon(Icons.Rounded.Dashboard, null) },
+                    icon = { Icon(Icons.Rounded.Dashboard, null, modifier = Modifier.size(20.dp)) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(
-                    label = { Text("Virtual Devices") },
+                    label = { Text("Virtual Device Lab", style = MaterialTheme.typography.labelLarge) },
                     selected = selectedDestination == MobileDestination.Devices,
                     onClick = { selectedDestination = MobileDestination.Devices; scope.launch { drawerState.close() } },
-                    icon = { Icon(Icons.Rounded.Smartphone, null) },
+                    icon = { Icon(Icons.Rounded.Smartphone, null, modifier = Modifier.size(20.dp)) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(
-                    label = { Text("Settings") },
+                    label = { Text("Global Settings", style = MaterialTheme.typography.labelLarge) },
                     selected = false,
                     onClick = { showSettings = true; scope.launch { drawerState.close() } },
-                    icon = { Icon(Icons.Rounded.Settings, null) },
+                    icon = { Icon(Icons.Rounded.Settings, null, modifier = Modifier.size(20.dp)) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 
-                HorizontalDivider(modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
                 
-                Text("Project Tools", modifier = Modifier.padding(start = 28.dp, bottom = 12.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                Text("ADVANCED TOOLING", modifier = Modifier.padding(start = 28.dp, bottom = 8.dp, top = 8.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
                 
                 DrawerToolItem("Resource Explorer", Icons.Rounded.Category) { 
                     selectedDestination = MobileDestination.Project
@@ -163,7 +163,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                 }
                 
                 Spacer(Modifier.weight(1f))
-                Text("v2.7-PRO", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("ASMobile v2.8-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
             }
         }
     ) {
@@ -312,31 +312,33 @@ private fun openFile(
 private fun WorkspaceTopBar(onMenuClick: () -> Unit, onSearchClick: () -> Unit, onAccountClick: () -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.background,
-        tonalElevation = 2.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        tonalElevation = 1.dp
     ) {
         CenterAlignedTopAppBar(
             title = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                        .padding(horizontal = 16.dp, vertical = 6.dp)
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 ) {
-                    Icon(Icons.Rounded.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("ASMobile Pro", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Icon(Icons.Rounded.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("ASMobile Elite", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold)
+                    }
                 }
             },
             navigationIcon = {
                 IconButton(onClick = onMenuClick) {
-                    Icon(Icons.Rounded.Menu, null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(Icons.Rounded.Menu, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
             actions = {
                 IconButton(onClick = onSearchClick) {
-                    Icon(Icons.Rounded.Search, null, modifier = Modifier.size(24.dp))
+                    Icon(Icons.Rounded.Search, null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 IconButton(
                     onClick = onAccountClick,
@@ -344,9 +346,9 @@ private fun WorkspaceTopBar(onMenuClick: () -> Unit, onSearchClick: () -> Unit, 
                 ) {
                     Surface(
                         modifier = Modifier.size(32.dp),
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                     ) {
                         Icon(
                             Icons.Rounded.Person, 
@@ -369,75 +371,75 @@ private fun WorkspaceBottomBar(
 ) {
     Surface(
         modifier = Modifier
-            .padding(horizontal = 12.dp, vertical = 12.dp)
-            .shadow(16.dp, RoundedCornerShape(28.dp)),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
-        shape = RoundedCornerShape(28.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            .padding(horizontal = 24.dp, vertical = 12.dp)
+            .shadow(24.dp, RoundedCornerShape(32.dp)),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+        shape = RoundedCornerShape(32.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
-            NavigationBar(
-                containerColor = Color.Transparent,
-                tonalElevation = 0.dp,
-                modifier = Modifier.height(60.dp)
-            ) {
-                MobileDestination.entries.forEach { destination ->
-                    val isSelected = selectedDestination == destination
-                    NavigationBarItem(
-                        selected = isSelected,
-                        onClick = { onDestinationSelected(destination) },
-                        icon = { 
-                            Icon(
-                                destination.icon, 
-                                null,
-                                modifier = Modifier.size(if (isSelected) 20.dp else 18.dp)
-                            ) 
-                        },
-                        label = { 
-                            Text(
-                                destination.label, 
-                                style = TextStyle(fontSize = 8.sp),
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                            ) 
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                        )
+        NavigationBar(
+            containerColor = Color.Transparent,
+            tonalElevation = 0.dp,
+            modifier = Modifier.height(64.dp)
+        ) {
+            MobileDestination.entries.forEach { destination ->
+                val isSelected = selectedDestination == destination
+                NavigationBarItem(
+                    selected = isSelected,
+                    onClick = { onDestinationSelected(destination) },
+                    icon = { 
+                        Icon(
+                            destination.icon, 
+                            null,
+                            modifier = Modifier.size(if (isSelected) 22.dp else 20.dp)
+                        ) 
+                    },
+                    label = { 
+                        Text(
+                            destination.label, 
+                            style = TextStyle(fontSize = 9.sp),
+                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium
+                        ) 
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        indicatorColor = Color.Transparent
                     )
-                }
+                )
             }
+        }
     }
 }
 
 @Composable
 private fun DrawerHeader() {
-    Column(modifier = Modifier.padding(24.dp)) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(
-                    Brush.linearGradient(colors = listOf(GlowPurple, GlowBlue)),
-                    CircleShape
-                ),
-            contentAlignment = Alignment.Center
+    Column(modifier = Modifier.padding(28.dp)) {
+        Surface(
+            modifier = Modifier.size(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
         ) {
-            Icon(Icons.Rounded.Source, null, tint = Color.White, modifier = Modifier.size(20.dp))
+            Box(contentAlignment = Alignment.Center) {
+                Icon(Icons.Rounded.Terminal, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+            }
         }
-        Spacer(Modifier.height(12.dp))
-        Text("jhustle44", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
-        Text("Premium Developer", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(16.dp))
+        Text("jhustle44", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.5).sp)
+        Text("ELITE DEVELOPER", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
     }
 }
 
 @Composable
 private fun DrawerToolItem(label: String, icon: Vector, onClick: () -> Unit) {
     NavigationDrawerItem(
-        label = { Text(label, style = MaterialTheme.typography.labelMedium) },
+        label = { Text(label, style = MaterialTheme.typography.labelLarge) },
         selected = false,
         onClick = onClick,
-        icon = { Icon(icon, null, modifier = Modifier.size(18.dp)) },
-        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+        icon = { Icon(icon, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)) },
+        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+        colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
     )
 }
 

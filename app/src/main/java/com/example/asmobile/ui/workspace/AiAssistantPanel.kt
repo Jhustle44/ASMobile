@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import java.io.File
 import com.example.asmobile.project.ProjectManager
 import com.example.asmobile.project.ProjectTemplate
@@ -95,15 +96,34 @@ fun AiAssistantPanel(
                 modifier = Modifier.padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                OutlinedTextField(
-                    value = message,
-                    onValueChange = { message = it },
+                Surface(
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Command Gemini...") },
-                    shape = RoundedCornerShape(24.dp),
-                    maxLines = 5,
-                    enabled = !isGenerating
-                )
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(28.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { showSystemPromptDialog = true }) {
+                            Icon(Icons.Rounded.Psychology, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+                        }
+                        androidx.compose.foundation.text.BasicTextField(
+                            value = message,
+                            onValueChange = { message = it },
+                            modifier = Modifier.weight(1f).padding(8.dp),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
+                            cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
+                            decorationBox = { innerTextField ->
+                                if (message.isEmpty()) {
+                                    Text("Describe your feature...", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                                }
+                                innerTextField()
+                            }
+                        )
+                    }
+                }
                 Spacer(Modifier.width(8.dp))
                 IconButton(
                     onClick = {
@@ -130,11 +150,12 @@ fun AiAssistantPanel(
                     },
                     enabled = !isGenerating,
                     colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
+                        containerColor = if (message.isBlank()) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary,
+                        contentColor = if (message.isBlank()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onPrimary
+                    ),
+                    modifier = Modifier.size(48.dp)
                 ) {
-                    Icon(Icons.AutoMirrored.Rounded.Send, null)
+                    Icon(Icons.AutoMirrored.Rounded.Send, null, modifier = Modifier.size(20.dp))
                 }
             }
         }
@@ -156,25 +177,51 @@ private fun SystemPromptDialog(
     onSave: (String) -> Unit
 ) {
     var text by remember { mutableStateOf(currentPrompt) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("AI Custom Instructions") },
-        text = {
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Tell Gemini how to behave...") },
-                minLines = 3
-            )
-        },
-        confirmButton = {
-            Button(onClick = { onSave(text); onDismiss() }) { Text("Save") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+    
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp,
+            modifier = Modifier.width(340.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(Icons.Rounded.Psychology, null, modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.height(16.dp))
+                Text("AI Behavior", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+                Text("Instruct Gemini how to code for you", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                
+                Spacer(Modifier.height(24.dp))
+                
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("e.g. 'Always use Material 3 and clean architecture'") },
+                    minLines = 4,
+                    shape = RoundedCornerShape(16.dp),
+                    textStyle = MaterialTheme.typography.bodyMedium
+                )
+                
+                Spacer(Modifier.height(24.dp))
+                
+                Button(
+                    onClick = { onSave(text); onDismiss() },
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Apply Instructions", fontWeight = FontWeight.Bold)
+                }
+                
+                TextButton(onClick = onDismiss, modifier = Modifier.padding(top = 8.dp)) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
         }
-    )
+    }
 }
 
 @Composable
@@ -412,24 +459,44 @@ data class ChatMessage(val content: String, val isUser: Boolean)
 @Composable
 private fun ChatBubble(message: ChatMessage) {
     val alignment = if (message.isUser) Alignment.End else Alignment.Start
-    val color = if (message.isUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-    val textColor = if (message.isUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+    val color = if (message.isUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+    val textColor = if (message.isUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+    val shape = RoundedCornerShape(
+        topStart = 20.dp,
+        topEnd = 20.dp,
+        bottomStart = if (message.isUser) 20.dp else 4.dp,
+        bottomEnd = if (message.isUser) 4.dp else 20.dp
+    )
 
-    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = alignment) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp), 
+        horizontalAlignment = alignment
+    ) {
+        if (!message.isUser) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = 12.dp, bottom = 4.dp)
+            ) {
+                Icon(Icons.Rounded.AutoAwesome, null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(6.dp))
+                Text("GEMINI ELITE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.5.sp)
+            }
+        }
+        
         Surface(
             color = color,
-            shape = RoundedCornerShape(
-                topStart = 16.dp,
-                topEnd = 16.dp,
-                bottomStart = if (message.isUser) 16.dp else 2.dp,
-                bottomEnd = if (message.isUser) 2.dp else 16.dp
-            )
+            shape = shape,
+            border = if (!message.isUser) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)) else null,
+            tonalElevation = if (message.isUser) 4.dp else 0.dp
         ) {
             Text(
                 text = message.content,
-                modifier = Modifier.padding(12.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                 style = MaterialTheme.typography.bodyMedium,
-                color = textColor
+                color = textColor,
+                lineHeight = 22.sp
             )
         }
     }

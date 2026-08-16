@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import java.io.File
 
 @Composable
@@ -42,38 +43,39 @@ fun Dashboard(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // Welcome Header
+        // User Greeting & Account
         item {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
+                    .padding(vertical = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
                     Text(
-                        text = "Build Something Great,",
+                        text = "Elite Workspace",
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Developer",
+                        text = "Ready to code?",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        letterSpacing = (-1).sp
                     )
                 }
-                IconButton(onClick = onAccountClick) {
-                    Surface(
-                        modifier = Modifier.size(44.dp),
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Rounded.AccountCircle, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
-                        }
+                
+                Surface(
+                    onClick = onAccountClick,
+                    modifier = Modifier.size(52.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Rounded.AccountCircle, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(28.dp))
                     }
                 }
             }
@@ -84,9 +86,9 @@ fun Dashboard(
             item {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(20.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
                 ) {
                     Row(
                         modifier = Modifier.padding(16.dp),
@@ -94,68 +96,42 @@ fun Dashboard(
                     ) {
                         CircularProgressIndicator(
                             progress = { buildProgress },
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.primary
+                            modifier = Modifier.size(28.dp),
+                            strokeWidth = 3.dp,
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                         )
-                        Spacer(Modifier.width(16.dp))
+                        Spacer(Modifier.width(20.dp))
                         Column {
-                            Text(buildStatus, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                            Text("Elite Build Engine active", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(buildStatus, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
+                            Text("Engine: Optimized Build v2", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
             }
         }
 
-        // Project Status Grid
+        // Compact Stats Grid
         item {
-            Row(
+            val projectsCount = try { rootDir.listFiles { f -> f.isDirectory }?.size ?: 0 } catch(e: Exception) { 0 }
+            val filesCount = try { rootDir.walkTopDown().filter { it.isFile }.count() } catch(e: Exception) { 0 }
+            
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                color = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(24.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             ) {
-                StatusCard(
-                    title = "Successful Builds",
-                    value = "12",
-                    icon = Icons.Rounded.CheckCircle,
-                    color = Color(0xFF10B981),
-                    modifier = Modifier.weight(1f)
-                )
-                StatusCard(
-                    title = "Issues Found",
-                    value = "0",
-                    icon = Icons.Rounded.Error,
-                    color = Color(0xFFEF4444),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-
-        // Quick Actions
-        item {
-            Column {
-                Text(
-                    "Project Overview",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 12.dp, start = 4.dp)
-                )
-                val projectsCount = try { rootDir.listFiles { f -> f.isDirectory }?.size ?: 0 } catch(e: Exception) { 0 }
-                val filesCount = try { rootDir.walkTopDown().filter { it.isFile }.count() } catch(e: Exception) { 0 }
-                
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(20.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                Row(
+                    modifier = Modifier.padding(vertical = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(modifier = Modifier.padding(20.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                        ProjectInfoItem(Icons.Rounded.Folder, "Projects", projectsCount.toString())
-                        VerticalDivider(modifier = Modifier.height(40.dp))
-                        ProjectInfoItem(Icons.Rounded.History, "Files", filesCount.toString())
-                        VerticalDivider(modifier = Modifier.height(40.dp))
-                        ProjectInfoItem(Icons.Rounded.Schedule, "Uptime", "14h")
-                    }
+                    DashboardStat("Projects", projectsCount.toString(), Icons.Rounded.Folder)
+                    VerticalDivider(modifier = Modifier.height(32.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                    DashboardStat("Files", filesCount.toString(), Icons.Rounded.Description)
+                    VerticalDivider(modifier = Modifier.height(32.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                    DashboardStat("Builds", "12", Icons.Rounded.CheckCircle)
                 }
             }
         }
@@ -256,8 +232,8 @@ fun Dashboard(
         // Community & Learning
         item {
             Column {
-                Text("Developer Resources", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.height(12.dp))
+                Text("Developer Resources", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold)
+                Spacer(Modifier.height(16.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     QuickActionChip(Icons.Rounded.Description, "Docs", onClick = {})
                     QuickActionChip(Icons.Rounded.BugReport, "Samples", onClick = {})
@@ -271,11 +247,15 @@ fun Dashboard(
                 onClick = onSyncClick,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.surface, 
+                    contentColor = MaterialTheme.colorScheme.primary
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
             ) {
-                Icon(Icons.Rounded.Terminal, null)
+                Icon(Icons.Rounded.Terminal, null, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(12.dp))
-                Text("Open Build Terminal", fontWeight = FontWeight.Bold)
+                Text("Launch Developer Terminal", fontWeight = FontWeight.ExtraBold)
             }
         }
         
@@ -287,7 +267,7 @@ fun Dashboard(
 private fun QuickActionChip(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
-    backgroundColor: Color = MaterialTheme.colorScheme.surface,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     onClick: () -> Unit
 ) {
@@ -295,16 +275,17 @@ private fun QuickActionChip(
         onClick = onClick,
         color = backgroundColor,
         contentColor = contentColor,
-        shape = RoundedCornerShape(16.dp),
-        border = if (backgroundColor == MaterialTheme.colorScheme.surface) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp).width(IntrinsicSize.Max),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Icon(icon, null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            Icon(icon, null, modifier = Modifier.size(20.dp), tint = if (backgroundColor == MaterialTheme.colorScheme.primary) contentColor else MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(8.dp))
+            Text(label, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, maxLines = 1)
         }
     }
 }
@@ -327,24 +308,12 @@ private fun ResourceProgress(label: String, progress: Float, color: Color) {
 }
 
 @Composable
-private fun StatusCard(title: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: Color, modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Box(
-                modifier = Modifier.size(32.dp).background(color.copy(alpha = 0.1f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(icon, null, tint = color, modifier = Modifier.size(16.dp))
-            }
-            Spacer(Modifier.height(16.dp))
-            Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
-            Text(title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
+private fun DashboardStat(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(icon, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.height(8.dp))
+        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -376,12 +345,3 @@ private fun RecentFileCard(fileName: String, onClick: () -> Unit) {
     }
 }
 
-@Composable
-private fun ProjectInfoItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(icon, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
-        Spacer(Modifier.height(4.dp))
-        Text(value, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
-    }
-}

@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.asmobile.ui.theme.GlowBlue
 import com.example.asmobile.ui.theme.GlowPurple
@@ -24,73 +25,76 @@ fun AccountDialog(onDismiss: () -> Unit) {
     
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(32.dp),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp,
-            modifier = Modifier.width(340.dp)
+            modifier = Modifier.width(360.dp)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier.padding(28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Header Avatar
+                // Elite Branding Icon
                 Box(
                     modifier = Modifier
-                        .size(80.dp)
+                        .size(72.dp)
                         .background(
                             Brush.linearGradient(listOf(GlowPurple, GlowBlue)),
-                            CircleShape
+                            RoundedCornerShape(20.dp)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Rounded.AccountCircle, null, modifier = Modifier.size(48.dp), tint = Color.White)
+                    Icon(Icons.Rounded.AutoAwesome, null, modifier = Modifier.size(36.dp), tint = Color.White)
                 }
                 
                 Spacer(Modifier.height(24.dp))
                 
                 Text(
-                    if (isLoginMode) "Welcome Back" else "Create Developer Account",
+                    if (isLoginMode) "Account Login" else "Create Profile",
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.5).sp
                 )
                 
                 Text(
-                    if (isLoginMode) "Sign in to sync your projects" else "Join the ASMobile community",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    if (isLoginMode) "Access your projects everywhere" else "Join the Elite developer network",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp)
                 )
                 
                 Spacer(Modifier.height(32.dp))
                 
-                OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
-                    label = { Text("Email Address") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    leadingIcon = { Icon(Icons.Rounded.Email, null) }
-                )
-                
-                Spacer(Modifier.height(16.dp))
-                
-                OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
-                    label = { Text("Password") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    leadingIcon = { Icon(Icons.Rounded.Lock, null) }
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    OutlinedTextField(
+                        value = "",
+                        onValueChange = {},
+                        label = { Text("Developer ID (Email)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        leadingIcon = { Icon(Icons.Rounded.AlternateEmail, null, modifier = Modifier.size(20.dp)) }
+                    )
+                    
+                    OutlinedTextField(
+                        value = "",
+                        onValueChange = {},
+                        label = { Text("Access Key (Password)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        leadingIcon = { Icon(Icons.Rounded.VpnKey, null, modifier = Modifier.size(20.dp)) },
+                        visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation()
+                    )
+                }
                 
                 if (!isLoginMode) {
                     Spacer(Modifier.height(16.dp))
                     OutlinedTextField(
                         value = "",
                         onValueChange = {},
-                        label = { Text("GitHub Username") },
+                        label = { Text("GitHub/GitLab Profile") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        leadingIcon = { Icon(Icons.Rounded.Link, null) }
+                        leadingIcon = { Icon(Icons.Rounded.DataObject, null, modifier = Modifier.size(20.dp)) }
                     )
                 }
                 
@@ -99,17 +103,19 @@ fun AccountDialog(onDismiss: () -> Unit) {
                 Button(
                     onClick = { onDismiss() },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                 ) {
-                    Text(if (isLoginMode) "Sign In" else "Create Account", fontWeight = FontWeight.Bold)
+                    Text(if (isLoginMode) "Sign In to Workspace" else "Launch My Account", fontWeight = FontWeight.Bold)
                 }
                 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(20.dp))
                 
                 TextButton(onClick = { isLoginMode = !isLoginMode }) {
                     Text(
-                        if (isLoginMode) "Don't have an account? Sign Up" else "Already have an account? Sign In",
-                        style = MaterialTheme.typography.labelLarge
+                        if (isLoginMode) "New here? Build your profile" else "Existing developer? Sign in",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
