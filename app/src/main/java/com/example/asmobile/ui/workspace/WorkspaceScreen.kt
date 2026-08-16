@@ -137,6 +137,13 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                             scope.launch { drawerState.close() }
                         }
                     }
+
+                    item {
+                        DrawerToolItem("Resource Explorer", Icons.Rounded.Source) { 
+                            selectedDestination = MobileDestination.Project
+                            scope.launch { drawerState.close() }
+                        }
+                    }
                     
                     item {
                         DrawerToolItem("Git History", Icons.Rounded.History) { 
@@ -156,6 +163,22 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                     item {
                         DrawerToolItem("Database Inspector", Icons.Rounded.Storage) { 
                             projectViewModel.selectedToolTab = 4
+                            selectedDestination = MobileDestination.Tools
+                            scope.launch { drawerState.close() }
+                        }
+                    }
+
+                    item {
+                        DrawerToolItem("Network Monitor", Icons.Rounded.Wifi) { 
+                            projectViewModel.selectedToolTab = 7
+                            selectedDestination = MobileDestination.Tools
+                            scope.launch { drawerState.close() }
+                        }
+                    }
+
+                    item {
+                        DrawerToolItem("App Inspection", Icons.Rounded.Search) { 
+                            projectViewModel.selectedToolTab = 8
                             selectedDestination = MobileDestination.Tools
                             scope.launch { drawerState.close() }
                         }
@@ -187,7 +210,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
 
                     item {
                         Spacer(Modifier.height(40.dp))
-                        Text("ASMobile v3.0-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
+                        Text("ASMobile v3.1-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -198,7 +221,8 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                 WorkspaceTopBar(
                     onMenuClick = { scope.launch { drawerState.open() } },
                     onSearchClick = { showSearchEverywhere = true },
-                    onAccountClick = { showAccount = true }
+                    onAccountClick = { showAccount = true },
+                    themeViewModel = themeViewModel
                 )
             },
             bottomBar = {
@@ -335,7 +359,12 @@ private fun openFile(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun WorkspaceTopBar(onMenuClick: () -> Unit, onSearchClick: () -> Unit, onAccountClick: () -> Unit) {
+private fun WorkspaceTopBar(
+    onMenuClick: () -> Unit, 
+    onSearchClick: () -> Unit, 
+    onAccountClick: () -> Unit,
+    themeViewModel: ThemeViewModel
+) {
     Surface(
         color = MaterialTheme.colorScheme.background,
         tonalElevation = 0.dp
@@ -366,6 +395,26 @@ private fun WorkspaceTopBar(onMenuClick: () -> Unit, onSearchClick: () -> Unit, 
                 }
             },
             actions = {
+                // Theme Toggle Quick Action
+                IconButton(onClick = { 
+                    val nextTheme = when(themeViewModel.currentTheme) {
+                        ThemeMode.Obsidian -> ThemeMode.Arctic
+                        ThemeMode.Arctic -> ThemeMode.Solar
+                        ThemeMode.Solar -> ThemeMode.Obsidian
+                    }
+                    themeViewModel.setTheme(nextTheme)
+                }) {
+                    Icon(
+                        when(themeViewModel.currentTheme) {
+                            ThemeMode.Obsidian -> Icons.Rounded.DarkMode
+                            ThemeMode.Arctic -> Icons.Rounded.LightMode
+                            ThemeMode.Solar -> Icons.Rounded.WbSunny
+                        }, 
+                        null, 
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+
                 IconButton(
                     onClick = onAccountClick,
                     modifier = Modifier.padding(end = 8.dp)
@@ -503,7 +552,7 @@ private fun MobileToolsTabs(
                 }
             }
         ) {
-            val tabs = listOf("Build", "Logcat", "Terminal", "Layout", "Database", "Assets", "Colors")
+            val tabs = listOf("Build", "Logcat", "Terminal", "Layout", "Database", "Assets", "Colors", "Network", "Inspection")
             tabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
@@ -528,7 +577,27 @@ private fun MobileToolsTabs(
                 4 -> DatabaseInspectorPanel(modifier = Modifier.fillMaxSize())
                 5 -> AssetStudioPanel(modifier = Modifier.fillMaxSize())
                 6 -> ColorPickerPanel(modifier = Modifier.fillMaxSize())
+                7 -> NetworkInspectorPanel(modifier = Modifier.fillMaxSize())
                 else -> AppInspectionPanel(modifier = Modifier.fillMaxSize())
+            }
+        }
+    }
+}
+
+@Composable
+private fun NetworkInspectorPanel(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(16.dp)) {
+        Text("Network Inspector", style = MaterialTheme.typography.titleSmall)
+        Spacer(Modifier.height(16.dp))
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color.Black,
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            LazyColumn(modifier = Modifier.padding(12.dp)) {
+                item { Text("GET https://api.gemini.ai/v1/generate - 200 OK", color = Color(0xFF10B981), fontSize = 11.sp, fontFamily = FontFamily.Monospace) }
+                item { Text("POST https://github.com/login/oauth - 302 Found", color = Color.Yellow, fontSize = 11.sp, fontFamily = FontFamily.Monospace) }
+                item { Text("GET https://maven.google.com/androidx/compose - 200 OK", color = Color(0xFF10B981), fontSize = 11.sp, fontFamily = FontFamily.Monospace) }
             }
         }
     }
