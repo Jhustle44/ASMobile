@@ -17,7 +17,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun PluginMarketplace(modifier: Modifier = Modifier) {
+fun PluginMarketplace(
+    viewModel: PluginViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    modifier: Modifier = Modifier
+) {
     val plugins = listOf(
         PluginItem("Rainbow Syntax", "High-contrast syntax highlighting for Elite Pro.", "1.2MB", 4.8f),
         PluginItem("Gemini Visualizer", "Advanced AI architecture graphing and flowcharts.", "5.6MB", 4.9f),
@@ -43,7 +46,11 @@ fun PluginMarketplace(modifier: Modifier = Modifier) {
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             items(plugins) { plugin ->
-                PluginCard(plugin)
+                PluginCard(
+                    plugin = plugin,
+                    isInstalled = viewModel.installedPlugins.contains(plugin.name),
+                    onInstall = { viewModel.installPlugin(plugin.name) }
+                )
             }
         }
     }
@@ -52,7 +59,7 @@ fun PluginMarketplace(modifier: Modifier = Modifier) {
 data class PluginItem(val name: String, val desc: String, val size: String, val rating: Float)
 
 @Composable
-private fun PluginCard(plugin: PluginItem) {
+private fun PluginCard(plugin: PluginItem, isInstalled: Boolean, onInstall: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -84,11 +91,21 @@ private fun PluginCard(plugin: PluginItem) {
             }
             
             Button(
-                onClick = { },
+                onClick = onInstall,
+                enabled = !isInstalled,
                 shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp)
+                contentPadding = PaddingValues(horizontal = 12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isInstalled) Color(0xFF10B981) else MaterialTheme.colorScheme.primary
+                )
             ) {
-                Text("Install", style = MaterialTheme.typography.labelLarge)
+                if (isInstalled) {
+                    Icon(Icons.Rounded.Check, null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Ready", style = MaterialTheme.typography.labelLarge)
+                } else {
+                    Text("Install", style = MaterialTheme.typography.labelLarge)
+                }
             }
         }
     }

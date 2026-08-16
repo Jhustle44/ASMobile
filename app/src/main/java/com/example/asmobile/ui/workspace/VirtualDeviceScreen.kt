@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,6 +28,7 @@ import androidx.compose.foundation.shape.CircleShape
 @Composable
 fun VirtualDeviceScreen(
     viewModel: DeviceViewModel,
+    projectViewModel: ProjectViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     onRunProject: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -112,14 +114,25 @@ private fun VirtualDisplayView(
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, null) }
-            Text(device.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, null) }
+            Column {
+                Text(device.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(device.api, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             Spacer(Modifier.weight(1f))
-            AssistChip(
-                onClick = onRun,
-                label = { Text("Deploy App") },
-                leadingIcon = { Icon(Icons.Rounded.PlayArrow, null, modifier = Modifier.size(16.dp), tint = Color(0xFF4CAF50)) }
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                IconButton(onClick = { /* Screenshot */ }) { Icon(Icons.Rounded.Screenshot, null) }
+                IconButton(onClick = { /* Debug Toggle */ }) { Icon(Icons.Rounded.BugReport, null, tint = MaterialTheme.colorScheme.secondary) }
+                Button(
+                    onClick = onRun,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
+                ) {
+                    Icon(Icons.Rounded.PlayArrow, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Deploy Build")
+                }
+            }
         }
 
         Spacer(Modifier.height(16.dp))

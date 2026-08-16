@@ -46,12 +46,12 @@ class DeviceViewModel : ViewModel() {
 
     private fun seedDefaultDevices() {
         _devices.addAll(listOf(
-            DeviceModel("Pixel 9 Pro", "API 35", false),
-            DeviceModel("Pixel Fold 2", "API 34", false),
-            DeviceModel("Pixel Tablet", "API 34", false),
-            DeviceModel("Nexus 6P (Legacy)", "API 23", false),
-            DeviceModel("Samsung Galaxy S24 (Sim)", "API 34", false),
-            DeviceModel("Generic Desktop", "API 33", false)
+            DeviceModel("Pixel 9 Pro XL", "API 35", false),
+            DeviceModel("Pixel 9 Fold", "API 35", false),
+            DeviceModel("Samsung S24 Ultra", "API 34", false),
+            DeviceModel("Pixel Tablet 2", "API 34", false),
+            DeviceModel("Generic 10-inch Tablet", "API 33", false),
+            DeviceModel("Nexus 6P (Elite Legacy)", "API 23", false)
         ))
         saveDevices()
     }
@@ -85,6 +85,31 @@ class ProjectViewModel : ViewModel() {
     fun notifyProjectCreated(name: String) {
         lastCreatedProject = name
         refreshTrigger++
+    }
+}
+
+class ThemeViewModel : ViewModel() {
+    var currentTheme by mutableStateOf(ThemeMode.Obsidian)
+
+    fun setTheme(theme: ThemeMode) {
+        currentTheme = theme
+    }
+}
+
+enum class ThemeMode(val label: String) {
+    Obsidian("Obsidian (Elite)"),
+    Arctic("Arctic White"),
+    Solar("Solarized Pro")
+}
+
+class PluginViewModel : ViewModel() {
+    private val _installedPlugins = mutableStateListOf<String>()
+    val installedPlugins: List<String> get() = _installedPlugins
+
+    fun installPlugin(name: String) {
+        if (!_installedPlugins.contains(name)) {
+            _installedPlugins.add(name)
+        }
     }
 }
 

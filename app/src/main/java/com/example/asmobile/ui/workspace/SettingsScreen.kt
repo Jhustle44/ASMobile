@@ -1,9 +1,7 @@
 package com.example.asmobile.ui.workspace
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,10 +18,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {
-    var darkMode by remember { mutableStateOf(true) }
+    val themeViewModel: ThemeViewModel = viewModel()
     var autoSave by remember { mutableStateOf(true) }
     var aiSuggestions by remember { mutableStateOf(true) }
     var experimentalTools by remember { mutableStateOf(false) }
@@ -37,7 +36,7 @@ fun SettingsScreen(onBack: () -> Unit) {
             color = MaterialTheme.colorScheme.background
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // Professional Header
+                // Header
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.surface,
@@ -67,34 +66,42 @@ fun SettingsScreen(onBack: () -> Unit) {
                     contentPadding = PaddingValues(20.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    item { SettingCategory("Appearance", Icons.Rounded.Palette) }
+                    item { SettingCategory("Theme Engine", Icons.Rounded.Palette) }
                     item {
                         SettingCard {
-                            SettingToggle(
-                                title = "Obsidian Dark Mode",
-                                description = "OLED-optimized deep black theme",
-                                checked = darkMode,
-                                icon = Icons.Rounded.DarkMode,
-                                onCheckedChange = { darkMode = it }
-                            )
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                ThemeMode.entries.forEach { mode ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { themeViewModel.setTheme(mode) }
+                                            .padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        RadioButton(selected = themeViewModel.currentTheme == mode, onClick = { themeViewModel.setTheme(mode) })
+                                        Spacer(Modifier.width(12.dp))
+                                        Text(mode.label, style = MaterialTheme.typography.bodyLarge)
+                                    }
+                                }
+                            }
                         }
                     }
-                    
+
                     item { SettingCategory("Development", Icons.Rounded.Code) }
                     item {
                         SettingCard {
                             Column {
                                 SettingToggle(
-                                    title = "Auto-save on keystroke",
-                                    description = "Never lose a line of code",
+                                    title = "Auto-save",
+                                    description = "Commit changes automatically",
                                     checked = autoSave,
                                     icon = Icons.Rounded.Save,
                                     onCheckedChange = { autoSave = it }
                                 )
                                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
                                 SettingToggle(
-                                    title = "AI Code Completions",
-                                    description = "Real-time Gemini suggestions",
+                                    title = "AI Suggestions",
+                                    description = "Gemini real-time coding",
                                     checked = aiSuggestions,
                                     icon = Icons.Rounded.AutoAwesome,
                                     onCheckedChange = { aiSuggestions = it }
@@ -116,18 +123,11 @@ fun SettingsScreen(onBack: () -> Unit) {
                         }
                     }
 
-                    item { Spacer(Modifier.height(24.dp)) }
+                    item { Spacer(Modifier.height(40.dp)) }
                     item {
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            color = Color.Transparent
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("ASMobile Elite Pro", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                                Text("Version 2.8-ELITE (Build 2026.08.16)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Spacer(Modifier.height(8.dp))
-                                Text("Developed for Professionals", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
-                            }
+                        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("ASMobile Elite Pro", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                            Text("Version 2.9.0 (Build 2026.08.16)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }

@@ -45,19 +45,22 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun ASMobileTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    themeMode: com.example.asmobile.ui.workspace.ThemeMode = com.example.asmobile.ui.workspace.ThemeMode.Obsidian,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    val colorScheme = when (themeMode) {
+        com.example.asmobile.ui.workspace.ThemeMode.Obsidian -> DarkColorScheme
+        com.example.asmobile.ui.workspace.ThemeMode.Arctic -> LightColorScheme
+        com.example.asmobile.ui.workspace.ThemeMode.Solar -> darkColorScheme(
+            primary = GlowGold,
+            secondary = GlowBlue,
+            tertiary = GlowEmerald,
+            background = Color(0xFF002B36),
+            surface = Color(0xFF073642),
+            onPrimary = Color.White,
+            onBackground = Color(0xFF93A1A1),
+            onSurface = Color(0xFF93A1A1)
+        )
     }
 
     MaterialTheme(

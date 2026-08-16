@@ -1,6 +1,7 @@
 package com.example.asmobile.ui.workspace
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -75,9 +76,11 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
     val deviceViewModel: DeviceViewModel = viewModel()
     val projectViewModel: ProjectViewModel = viewModel()
     val buildToolsViewModel: BuildToolsViewModel = viewModel()
+    val themeViewModel: ThemeViewModel = viewModel()
+    val pluginViewModel: PluginViewModel = viewModel()
     
     // Initialize persistence
-    LaunchedEffect(rootDir) {
+    LaunchedEffect(rootDir, themeViewModel, pluginViewModel, buildToolsViewModel, showAccount) {
         deviceViewModel.initStorage(rootDir)
     }
     
@@ -100,85 +103,93 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                 drawerContainerColor = MaterialTheme.colorScheme.surface,
                 drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
             ) {
-                DrawerHeader()
-                Spacer(Modifier.height(12.dp))
-                
-                NavigationDrawerItem(
-                    label = { Text("IDE Dashboard", style = MaterialTheme.typography.labelLarge) },
-                    selected = selectedDestination == MobileDestination.Dashboard,
-                    onClick = { selectedDestination = MobileDestination.Dashboard; scope.launch { drawerState.close() } },
-                    icon = { Icon(Icons.Rounded.Dashboard, null, modifier = Modifier.size(20.dp)) },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                NavigationDrawerItem(
-                    label = { Text("Virtual Device Lab", style = MaterialTheme.typography.labelLarge) },
-                    selected = selectedDestination == MobileDestination.Devices,
-                    onClick = { selectedDestination = MobileDestination.Devices; scope.launch { drawerState.close() } },
-                    icon = { Icon(Icons.Rounded.Smartphone, null, modifier = Modifier.size(20.dp)) },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                NavigationDrawerItem(
-                    label = { Text("Global Settings", style = MaterialTheme.typography.labelLarge) },
-                    selected = false,
-                    onClick = { showSettings = true; scope.launch { drawerState.close() } },
-                    icon = { Icon(Icons.Rounded.Settings, null, modifier = Modifier.size(20.dp)) },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                
-                Text("ADVANCED TOOLING", modifier = Modifier.padding(start = 28.dp, bottom = 8.dp, top = 8.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
-                
-                DrawerToolItem("Resource Explorer", Icons.Rounded.Category) { 
-                    selectedDestination = MobileDestination.Project
-                    scope.launch { drawerState.close() }
-                }
-                DrawerToolItem("Layout Inspector", Icons.Rounded.Layers) { 
-                    projectViewModel.selectedToolTab = 3
-                    selectedDestination = MobileDestination.Tools
-                    scope.launch { drawerState.close() }
-                }
-                DrawerToolItem("Database Inspector", Icons.Rounded.Storage) { 
-                    projectViewModel.selectedToolTab = 4
-                    selectedDestination = MobileDestination.Tools
-                    scope.launch { drawerState.close() }
-                }
-                DrawerToolItem("App Inspection", Icons.Rounded.Search) { 
-                    projectViewModel.selectedToolTab = 5
-                    selectedDestination = MobileDestination.Tools
-                    scope.launch { drawerState.close() }
-                }
-                DrawerToolItem("Dependency Manager", Icons.Rounded.Layers) { 
-                    projectViewModel.selectedToolTab = 0 
-                    selectedDestination = MobileDestination.Tools
-                    scope.launch { drawerState.close() }
-                }
-                DrawerToolItem("Cloud Sync (Beta)", Icons.Rounded.CloudSync) { 
-                    showAccount = true
-                    scope.launch { drawerState.close() }
-                }
-                DrawerToolItem("Export & Sign", Icons.Rounded.IosShare) { 
-                    showExport = true
-                    scope.launch { drawerState.close() }
-                }
-                DrawerToolItem("Plugin Marketplace", Icons.Rounded.Extension) { 
-                    selectedDestination = MobileDestination.Plugins
-                    scope.launch { drawerState.close() }
-                }
-                
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    item { DrawerHeader() }
+                    
+                    item {
+                        NavigationDrawerItem(
+                            label = { Text("IDE Dashboard") },
+                            selected = selectedDestination == MobileDestination.Dashboard,
+                            onClick = { selectedDestination = MobileDestination.Dashboard; scope.launch { drawerState.close() } },
+                            icon = { Icon(Icons.Rounded.Dashboard, null) },
+                            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                        )
+                    }
+                    
+                    item {
+                        NavigationDrawerItem(
+                            label = { Text("Virtual Device Lab") },
+                            selected = selectedDestination == MobileDestination.Devices,
+                            onClick = { selectedDestination = MobileDestination.Devices; scope.launch { drawerState.close() } },
+                            icon = { Icon(Icons.Rounded.Smartphone, null) },
+                            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                        )
+                    }
 
-                NavigationDrawerItem(
-                    label = { Text("My Developer Profile", style = MaterialTheme.typography.labelLarge) },
-                    selected = false,
-                    onClick = { showAccount = true; scope.launch { drawerState.close() } },
-                    icon = { Icon(Icons.Rounded.Face, null, modifier = Modifier.size(20.dp)) },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
-                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
-                )
+                    item {
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                        Text("ADVANCED TOOLING", modifier = Modifier.padding(start = 28.dp, bottom = 8.dp, top = 8.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
+                    }
 
-                Spacer(Modifier.weight(1f))
-                Text("ASMobile v2.8.5-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
+                    item {
+                        DrawerToolItem("Plugin Marketplace", Icons.Rounded.Extension) { 
+                            selectedDestination = MobileDestination.Plugins
+                            scope.launch { drawerState.close() }
+                        }
+                    }
+                    
+                    item {
+                        DrawerToolItem("Git History", Icons.Rounded.History) { 
+                            selectedDestination = MobileDestination.Git
+                            scope.launch { drawerState.close() }
+                        }
+                    }
+
+                    item {
+                        DrawerToolItem("Layout Inspector", Icons.Rounded.Layers) { 
+                            projectViewModel.selectedToolTab = 3
+                            selectedDestination = MobileDestination.Tools
+                            scope.launch { drawerState.close() }
+                        }
+                    }
+                    
+                    item {
+                        DrawerToolItem("Database Inspector", Icons.Rounded.Storage) { 
+                            projectViewModel.selectedToolTab = 4
+                            selectedDestination = MobileDestination.Tools
+                            scope.launch { drawerState.close() }
+                        }
+                    }
+
+                    item {
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                    }
+
+                    item {
+                        NavigationDrawerItem(
+                            label = { Text("Global Settings") },
+                            selected = false,
+                            onClick = { showSettings = true; scope.launch { drawerState.close() } },
+                            icon = { Icon(Icons.Rounded.Settings, null) },
+                            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                        )
+                    }
+
+                    item {
+                        NavigationDrawerItem(
+                            label = { Text("Developer Profile") },
+                            selected = false,
+                            onClick = { showAccount = true; scope.launch { drawerState.close() } },
+                            icon = { Icon(Icons.Rounded.Face, null) },
+                            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                        )
+                    }
+
+                    item {
+                        Spacer(Modifier.height(40.dp))
+                        Text("ASMobile v2.9-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         }
     ) {
@@ -266,7 +277,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                             modifier = Modifier.fillMaxSize()
                         )
                         MobileDestination.Tools -> MobileToolsTabs(buildViewModel = buildViewModel, projectViewModel = projectViewModel)
-                        MobileDestination.Plugins -> PluginMarketplace(modifier = Modifier.fillMaxSize())
+                        MobileDestination.Plugins -> PluginMarketplace(viewModel = pluginViewModel, modifier = Modifier.fillMaxSize())
                     }
                 }
             }
@@ -327,22 +338,25 @@ private fun openFile(
 private fun WorkspaceTopBar(onMenuClick: () -> Unit, onSearchClick: () -> Unit, onAccountClick: () -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.background,
-        tonalElevation = 1.dp
+        tonalElevation = 0.dp
     ) {
         CenterAlignedTopAppBar(
             title = {
                 Surface(
+                    onClick = onSearchClick,
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
-                        Icon(Icons.Rounded.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("ASMobile Elite", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold)
+                        Icon(Icons.Rounded.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Text("Search Everything...", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                        Spacer(Modifier.width(40.dp))
+                        Text("⌘K", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                     }
                 }
             },
@@ -352,25 +366,24 @@ private fun WorkspaceTopBar(onMenuClick: () -> Unit, onSearchClick: () -> Unit, 
                 }
             },
             actions = {
-                IconButton(onClick = onSearchClick) {
-                    Icon(Icons.Rounded.Search, null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
                 IconButton(
                     onClick = onAccountClick,
-                    modifier = Modifier.padding(end = 4.dp)
+                    modifier = Modifier.padding(end = 8.dp)
                 ) {
                     Surface(
-                        modifier = Modifier.size(32.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                        modifier = Modifier.size(36.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
                     ) {
-                        Icon(
-                            Icons.Rounded.Person, 
-                            null, 
-                            modifier = Modifier.padding(4.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Rounded.Person, 
+                                null, 
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
             },
@@ -463,9 +476,9 @@ enum class MobileDestination(val label: String, val icon: Vector) {
     Project("Project", Icons.Rounded.Folder),
     Ai("AI", Icons.Rounded.AutoAwesome),
     Editor("Editor", Icons.Rounded.Code),
+    Tools("Tools", Icons.Rounded.Build),
     Git("Git", Icons.Rounded.History),
     Devices("Devices", Icons.Rounded.Smartphone),
-    Tools("Tools", Icons.Rounded.Build),
     Plugins("Plugins", Icons.Rounded.Extension)
 }
 
@@ -490,7 +503,7 @@ private fun MobileToolsTabs(
                 }
             }
         ) {
-            val tabs = listOf("Build", "Logcat", "Terminal", "Layout", "Database", "Inspection")
+            val tabs = listOf("Build", "Logcat", "Terminal", "Layout", "Database", "Assets", "Colors")
             tabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
@@ -513,7 +526,9 @@ private fun MobileToolsTabs(
                 2 -> BuildLogPanel(selectedTab = 2, modifier = Modifier.fillMaxSize())
                 3 -> LayoutInspectorPanel(modifier = Modifier.fillMaxSize())
                 4 -> DatabaseInspectorPanel(modifier = Modifier.fillMaxSize())
-                5 -> AppInspectionPanel(modifier = Modifier.fillMaxSize())
+                5 -> AssetStudioPanel(modifier = Modifier.fillMaxSize())
+                6 -> ColorPickerPanel(modifier = Modifier.fillMaxSize())
+                else -> AppInspectionPanel(modifier = Modifier.fillMaxSize())
             }
         }
     }
@@ -760,6 +775,46 @@ private fun DatabaseInspectorPanel(modifier: Modifier = Modifier) {
                 Text("Run an app with Room to inspect data.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
             }
         }
+    }
+}
+
+@Composable
+private fun AssetStudioPanel(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(16.dp)) {
+        Text("Asset Studio", style = MaterialTheme.typography.titleSmall)
+        Spacer(Modifier.height(16.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Surface(modifier = Modifier.size(100.dp), shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)) {
+                Box(contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Face, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary) }
+            }
+            Column {
+                Button(onClick = {}) { Text("Generate Icon") }
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(onClick = {}) { Text("Import SVG") }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ColorPickerPanel(modifier: Modifier = Modifier) {
+    var selectedColor by remember { mutableStateOf(GlowPurple) }
+    Column(modifier = modifier.padding(16.dp)) {
+        Text("Color Picker", style = MaterialTheme.typography.titleSmall)
+        Spacer(Modifier.height(16.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            listOf(GlowPurple, GlowBlue, GlowEmerald, GlowGold, Color.Red, Color.Cyan).forEach { color ->
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(color, CircleShape)
+                        .clickable { selectedColor = color }
+                        .border(if (selectedColor == color) 2.dp else 0.dp, Color.White, CircleShape)
+                )
+            }
+        }
+        Spacer(Modifier.height(24.dp))
+        Text("HEX: #${selectedColor.value.toString(16).substring(2).uppercase()}", style = MaterialTheme.typography.labelLarge)
     }
 }
 

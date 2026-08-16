@@ -15,6 +15,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.example.asmobile.ui.theme.ASMobileTheme
 import com.example.asmobile.ui.workspace.WorkspaceScreen
+import com.example.asmobile.ui.workspace.ThemeViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import java.io.File
 
 class MainActivity : ComponentActivity() {
@@ -46,7 +48,8 @@ class MainActivity : ComponentActivity() {
         seedSampleFiles(this)
         enableEdgeToEdge()
         setContent {
-            ASMobileTheme {
+            val themeViewModel: ThemeViewModel = viewModel()
+            ASMobileTheme(themeMode = themeViewModel.currentTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
