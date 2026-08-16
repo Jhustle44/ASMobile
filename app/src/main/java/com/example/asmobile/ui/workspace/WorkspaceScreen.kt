@@ -80,8 +80,9 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
     val pluginViewModel: PluginViewModel = viewModel()
     
     // Initialize persistence
-    LaunchedEffect(rootDir, themeViewModel, pluginViewModel, buildToolsViewModel, showAccount) {
+    LaunchedEffect(rootDir) {
         deviceViewModel.initStorage(rootDir)
+        pluginViewModel.initStorage(rootDir)
     }
     
     // UI State
@@ -210,7 +211,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
 
                     item {
                         Spacer(Modifier.height(40.dp))
-                        Text("ASMobile v3.4-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
+                        Text("ASMobile v3.5-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -298,6 +299,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                             activeFilePath = activeFilePath,
                             onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) },
                             onProjectCreated = { projectViewModel.notifyProjectCreated("AI") },
+                            projectViewModel = projectViewModel,
                             modifier = Modifier.fillMaxSize()
                         )
                         MobileDestination.Devices -> VirtualDeviceScreen(

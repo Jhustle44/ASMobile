@@ -28,9 +28,10 @@ fun ProjectExplorer(
     onFileSelected: (File) -> Unit,
     onNewProjectClick: () -> Unit,
     onRunProject: (File) -> Unit = {},
+    projectViewModel: ProjectViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     modifier: Modifier = Modifier
 ) {
-    var activeProject by remember { mutableStateOf<File?>(null) }
+    val activeProject = projectViewModel.activeProject
     val projects = remember(rootDir) {
         rootDir.listFiles { file -> file.isDirectory && !file.name.startsWith(".") }?.toList() ?: emptyList()
     }
@@ -102,7 +103,7 @@ fun ProjectExplorer(
                     items(filteredProjects) { project ->
                         ProjectCard(
                             project = project,
-                            onClick = { activeProject = project },
+                            onClick = { projectViewModel.selectProject(project) },
                             onRun = { onRunProject(project) }
                         )
                     }
@@ -111,7 +112,7 @@ fun ProjectExplorer(
         } else {
             // Project Detail / File Tree for specific project
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { activeProject = null }) {
+                IconButton(onClick = { projectViewModel.selectProject(null) }) {
                     Icon(Icons.AutoMirrored.Rounded.ArrowBack, null)
                 }
                 Column {

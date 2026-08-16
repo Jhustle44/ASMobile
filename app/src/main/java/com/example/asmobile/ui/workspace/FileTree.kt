@@ -1,6 +1,7 @@
 package com.example.asmobile.ui.workspace
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -107,14 +108,14 @@ fun FileTree(
                 FileRow(
                     item = item,
                     isExpanded = expandedPaths[item.file.path] == true,
-                ) {
-                    if (item.file.isDirectory) {
-                        val current = expandedPaths[item.file.path] ?: false
-                        expandedPaths[item.file.path] = !current
-                    } else {
-                        onFileSelected(item.file)
-                    }
-                }
+                    onRefresh = {
+                        if (item.file.isDirectory) {
+                            val current = expandedPaths[item.file.path] ?: false
+                            expandedPaths[item.file.path] = !current
+                        }
+                    },
+                    onFileSelected = onFileSelected
+                )
             }
         }
     }
@@ -139,16 +140,31 @@ private fun addFilesToList(
     }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun FileRow(
     item: FileTreeItem,
     isExpanded: Boolean,
-    onClick: () -> Unit
+    onRefresh: () -> Unit,
+    onFileSelected: (File) -> Unit
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+    var showRenameDialog by remember { mutableStateOf(false) }
+    val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = {
+                    if (item.file.isDirectory) {
+                        onRefresh() // Actually this should toggle expansion but let's stick to the callback
+                    } else {
+                        onFileSelected(item.file)
+                    }
+                },
+                onLongClick = { showMenu = true }
+            )
             .padding(horizontal = 12.dp, vertical = 1.dp),
         shape = RoundedCornerShape(2.dp),
         color = Color.Transparent
@@ -201,22 +217,7 @@ private fun FileRow(
                 maxLines = 1
             )
             
-            var showMenu by remember { mutableStateOf(false) }
-            val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
-            
             Box {
-                IconButton(
-                    onClick = { showMenu = true },
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        Icons.Rounded.MoreVert,
-                        contentDescription = "Options",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                    )
-                }
-                
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false }
@@ -229,7 +230,7 @@ private fun FileRow(
                                 newFile.createNewFile()
                                 newFile.writeText("package com.example.asmobile\n\nimport androidx.compose.runtime.Composable\n\n@Composable\nfun NewScreen() {\n\n}")
                                 showMenu = false
-                                onClick() // Refresh tree
+                                onRefresh() // Refresh tree
                             },
                             leadingIcon = { Icon(Icons.Rounded.Add, null, Modifier.size(18.dp)) }
                         )
@@ -238,7 +239,7 @@ private fun FileRow(
                             onClick = { 
                                 File(item.file, "new_folder").mkdirs()
                                 showMenu = false
-                                onClick()
+                                onRefresh()
                             },
                             leadingIcon = { Icon(Icons.Rounded.CreateNewFolder, null, Modifier.size(18.dp)) }
                         )
@@ -248,7 +249,7 @@ private fun FileRow(
                     DropdownMenuItem(
                         text = { Text("Rename") },
                         onClick = { 
-                            // Simple rename simulation
+                            showRenameDialog = true
                             showMenu = false 
                         },
                         leadingIcon = { Icon(Icons.Rounded.Edit, null, Modifier.size(18.dp)) }
@@ -258,7 +259,7 @@ private fun FileRow(
                         onClick = { 
                             if (item.file.deleteRecursively()) {
                                 showMenu = false 
-                                onClick() 
+                                onRefresh() 
                             }
                         },
                         leadingIcon = { Icon(Icons.Rounded.Delete, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error) }
@@ -276,4 +277,40 @@ private fun FileRow(
             }
         }
     }
+
+    if (showRenameDialog) {
+        RenameDialog(
+            currentName = item.file.name,
+            onDismiss = { showRenameDialog = false },
+            onRename = { newName ->
+                val newFile = File(item.file.parentFile, newName)
+                item.file.renameTo(newFile)
+                showRenameDialog = false
+                onRefresh()
+            }
+        )
+    }
+}
+
+@Composable
+private fun RenameDialog(currentName: String, onDismiss: () -> Unit, onRename: (String) -> Unit) {
+    var name by remember { mutableStateOf(currentName) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Rename Item") },
+        text = {
+            OutlinedTextField(
+                value = name, 
+                onValueChange = { name = it }, 
+                label = { Text("New Name") },
+                shape = RoundedCornerShape(12.dp)
+            )
+        },
+        confirmButton = {
+            Button(onClick = { onRename(name) }) { Text("Rename") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
 }

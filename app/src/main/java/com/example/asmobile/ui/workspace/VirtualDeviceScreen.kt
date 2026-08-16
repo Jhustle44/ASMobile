@@ -18,12 +18,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.BorderStroke
 
 @Composable
 fun VirtualDeviceScreen(
@@ -165,46 +168,65 @@ private fun VirtualDisplayView(
             // Simulated Phone Display
             Surface(
                 modifier = Modifier
-                    .weight(0.6f)
+                    .weight(0.65f)
                     .fillMaxHeight()
-                    .padding(24.dp)
-                    .aspectRatio(9f / 19f)
-                    .border(8.dp, Color.DarkGray, RoundedCornerShape(32.dp))
-                    .clip(RoundedCornerShape(32.dp)),
+                    .padding(16.dp)
+                    .aspectRatio(9f / 19.5f)
+                    .shadow(24.dp, RoundedCornerShape(36.dp), ambientColor = Color.White.copy(alpha = 0.1f))
+                    .border(8.dp, Color(0xFF2C2C2C), RoundedCornerShape(36.dp))
+                    .border(10.dp, Color.Black.copy(alpha = 0.5f), RoundedCornerShape(36.dp))
+                    .clip(RoundedCornerShape(36.dp)),
                 color = Color.Black
             ) {
                 if (device.isRunning) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(Modifier.fillMaxSize()) {
+                        // Glossy screen reflection
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(Color.White.copy(alpha = 0.05f), Color.Transparent, Color.Black.copy(alpha = 0.2f))
+                                    )
+                                )
+                        )
+                        
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
                             if (isAppLaunching) {
-                                CircularProgressIndicator(color = Color.White)
-                                Spacer(Modifier.height(16.dp))
-                                Text("Launching $projectName...", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, strokeWidth = 3.dp)
+                                Spacer(Modifier.height(20.dp))
+                                Text("Starting process...", color = Color.White, style = MaterialTheme.typography.labelSmall)
                             } else if (projectName != null) {
-                                Icon(Icons.Rounded.AutoAwesome, null, tint = Color.Green, modifier = Modifier.size(48.dp))
-                                Text(projectName, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                Text("Running Live", color = Color.Green, style = MaterialTheme.typography.labelSmall)
+                                Icon(Icons.Rounded.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(56.dp))
+                                Spacer(Modifier.height(12.dp))
+                                Text(projectName, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+                                Text("LIVE PREVIEW", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                             } else {
-                                Icon(Icons.Rounded.Android, null, tint = Color.Green, modifier = Modifier.size(48.dp))
-                                Text("System Booted", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                                Icon(Icons.Rounded.Android, null, tint = Color(0xFF3DDC84), modifier = Modifier.size(56.dp))
+                                Text("OS v15.0", color = Color.White, style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
                 } else {
                     Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
-                        Text("Powered Off", color = Color.Gray)
+                        Text("POWERED OFF", color = Color.DarkGray, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                     }
                 }
             }
 
             // Debug Console
-            Column(modifier = Modifier.weight(0.4f).fillMaxHeight()) {
-                Text("Debug Console", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.height(8.dp))
+            Column(modifier = Modifier.weight(0.35f).fillMaxHeight()) {
+                Text("VIRTUAL LOGCAT", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
+                Spacer(Modifier.height(12.dp))
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color(0xFF1E1E1E),
-                    shape = RoundedCornerShape(12.dp)
+                    color = Color(0xFF0A0A0A),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 ) {
                     LazyColumn(modifier = Modifier.padding(12.dp)) {
                         item { Text("I/System: Initializing hardware...", color = Color.Gray, fontSize = 10.sp) }

@@ -29,8 +29,10 @@ fun AiAssistantPanel(
     activeFilePath: String?,
     onFileSelected: (File) -> Unit,
     onProjectCreated: () -> Unit = {},
+    projectViewModel: ProjectViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     modifier: Modifier = Modifier
 ) {
+    val activeProject = projectViewModel.activeProject
     var message by remember { mutableStateOf("") }
     val chatHistory = remember { mutableStateListOf<ChatMessage>() }
     var isGenerating by remember { mutableStateOf(false) }
@@ -140,15 +142,15 @@ fun AiAssistantPanel(
                 IconButton(
                     onClick = {
                         if (message.isNotBlank()) {
-                            chatHistory.add(ChatMessage(message, true))
-                            val input = message
+                            val userMsg = message
+                            chatHistory.add(ChatMessage(userMsg, true))
                             message = ""
                             
-                            // Start generation simulation
                             isGenerating = true
                             executeAiLogic(
-                                input = input, 
+                                input = userMsg, 
                                 rootDir = rootDir, 
+                                activeProject = activeProject,
                                 activeFilePath = activeFilePath, 
                                 onFileSelected = onFileSelected,
                                 onStatusUpdate = { generationTask = it },
@@ -269,6 +271,7 @@ private fun GeneratingIndicator() {
 private fun executeAiLogic(
     input: String,
     rootDir: File,
+    activeProject: File?,
     activeFilePath: String?,
     onFileSelected: (File) -> Unit,
     onStatusUpdate: (String) -> Unit,
@@ -276,9 +279,10 @@ private fun executeAiLogic(
     onResponse: (String) -> Unit
 ) {
     val lowInput = input.lowercase()
+    val scopeDir = activeProject ?: rootDir
     
     when {
-        // App Building Logic
+        // App Building Logic (Still root based for new projects)
         lowInput.contains("build") || lowInput.contains("create") || lowInput.contains("make") || lowInput.contains("new app") -> {
             onStatusUpdate("Interpreting requirements...")
             
@@ -328,7 +332,7 @@ private fun executeAiLogic(
             }
         }
 
-        // Feature Injection (Deep listening)
+        // Feature Injection (Project/File scoped)
         lowInput.contains("add") || lowInput.contains("implement") || lowInput.contains("inject") || lowInput.contains("put") -> {
             if (activeFilePath != null) {
                 val file = File(activeFilePath)
@@ -351,14 +355,14 @@ private fun executeAiLogic(
             }
         }
 
-        // File Creation Logic
+        // File Creation Logic (Project scoped)
         lowInput.contains("file") || lowInput.contains("create") -> {
             val fileName = input.split(" ").last()
             if (fileName.contains(".")) {
-                val file = File(rootDir, fileName)
+                val file = File(scopeDir, fileName)
                 try {
                     if (file.exists()) {
-                        onResponse("File '$fileName' already exists in the root.")
+                        onResponse("File '$fileName' already exists in ${scopeDir.name}.")
                     } else {
                         file.createNewFile()
                         val content = if (fileName.endsWith(".kt")) {
@@ -367,7 +371,7 @@ private fun executeAiLogic(
                         file.writeText(content)
                         onFileSelected(file)
                         onProjectCreated()
-                        onResponse("📄 Created and opened '$fileName' for you.")
+                        onResponse("📄 Created and opened '$fileName' in ${scopeDir.name} for you.")
                     }
                 } catch (e: Exception) {
                     onResponse("❌ File error: ${e.message}")
@@ -399,12 +403,12 @@ private fun executeAiLogic(
 
         // Feature: Icons
         lowInput.contains("icon") || lowInput.contains("logo") -> {
-            onResponse("🎨 To add icons, you can use the 'Asset Studio' tool in the bottom tab. I can also generate a Material 3 Icon component for you. Try saying 'Add an icon button'.")
+            onResponse("🎨 I can help you with branding. You can use the 'Asset Studio' (under the Tools tab) to generate professional icons, or I can inject a Material 3 Icon component into your code. Just say 'Add a home icon'!")
         }
 
         // Feature: Packaging / APK
-        lowInput.contains("apk") || lowInput.contains("package") || lowInput.contains("export") -> {
-            onResponse("📦 To package a release APK, open the sidebar and select 'Export & Sign'. I've configured your build.gradle.kts to support zipalign and V2 signing once you provide a keystore.")
+        lowInput.contains("apk") || lowInput.contains("package") || lowInput.contains("export") || lowInput.contains("distribute") -> {
+            onResponse("📦 To build a release-ready APK, use the 'Export & Sign' tool in the sidebar. I've already configured your project for ProGuard optimization and V2 signing. Once you generate a keystore there, you can download the signed APK directly to your device!")
         }
 
         // Export & Signing

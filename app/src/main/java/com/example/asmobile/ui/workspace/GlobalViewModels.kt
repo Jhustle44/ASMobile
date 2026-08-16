@@ -82,6 +82,7 @@ class ProjectViewModel : ViewModel() {
     var refreshTrigger by mutableIntStateOf(0)
     var selectedToolTab by mutableIntStateOf(0)
     var activeRunProject: File? by mutableStateOf(null)
+    var activeProject: File? by mutableStateOf(null)
 
     fun notifyProjectCreated(name: String) {
         lastCreatedProject = name
@@ -90,6 +91,10 @@ class ProjectViewModel : ViewModel() {
 
     fun startRun(project: File) {
         activeRunProject = project
+    }
+    
+    fun selectProject(project: File?) {
+        activeProject = project
     }
 }
 
