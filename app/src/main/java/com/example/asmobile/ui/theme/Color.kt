@@ -2,18 +2,24 @@ package com.example.asmobile.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Glossy Elite Palette
-val ObsidianBlack = Color(0xFF020408)
-val ObsidianDeep = Color(0xFF080C12)
-val ObsidianSurface = Color(0xFF121820).copy(alpha = 0.8f)
-val ObsidianBorder = Color(0xFF30363D).copy(alpha = 0.4f)
+// Glossy Elite Palette (Ultra Modern)
+val ObsidianBlack = Color(0xFF010204)
+val ObsidianDeep = Color(0xFF05070A)
+val ObsidianSurface = Color(0xFF0D1117).copy(alpha = 0.7f)
+val ObsidianBorder = Color(0xFF30363D).copy(alpha = 0.3f)
 
-// Vibrant Glossy Accents
-val GlowPurple = Color(0xFFA855F7)
-val GlowBlue = Color(0xFF3B82F6)
-val GlowEmerald = Color(0xFF10B981)
+// Glossy "Glass" Colors
+val GlassWhite = Color(0x1AFFFFFF)
+val GlassBlack = Color(0x33000000)
+val GlassBorder = Color(0x33FFFFFF)
+
+// Vibrant Glow Accents
+val GlowPurple = Color(0xFFC084FC)
+val GlowBlue = Color(0xFF60A5FA)
+val GlowEmerald = Color(0xFF34D399)
 val GlowGold = Color(0xFFFBBF24)
-val GlossyGlass = Color(0xFFFFFFFF).copy(alpha = 0.05f)
+val GlowRose = Color(0xFFFB7185)
+val GlowSky = Color(0xFF22D3EE)
 
 // Text
 val TextWhite = Color(0xFFF0F6FC)

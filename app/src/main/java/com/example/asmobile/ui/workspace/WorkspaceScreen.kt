@@ -211,7 +211,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
 
                     item {
                         Spacer(Modifier.height(40.dp))
-                        Text("ASMobile v3.6-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
+                        Text("ASMobile v3.7-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -631,21 +631,35 @@ private fun MobileToolsTabs(
 }
 
 @Composable
-private fun NetworkInspectorPanel(modifier: Modifier = Modifier) {
+private fun DatabaseInspectorPanel(modifier: Modifier = Modifier) {
     Column(modifier = modifier.padding(16.dp)) {
-        Text("Network Inspector", style = MaterialTheme.typography.titleSmall)
-        Spacer(Modifier.height(16.dp))
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = Color.Black,
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            LazyColumn(modifier = Modifier.padding(12.dp)) {
-                item { Text("GET https://api.gemini.ai/v1/generate - 200 OK", color = Color(0xFF10B981), fontSize = 11.sp, fontFamily = FontFamily.Monospace) }
-                item { Text("POST https://github.com/login/oauth - 302 Found", color = Color.Yellow, fontSize = 11.sp, fontFamily = FontFamily.Monospace) }
-                item { Text("GET https://maven.google.com/androidx/compose - 200 OK", color = Color(0xFF10B981), fontSize = 11.sp, fontFamily = FontFamily.Monospace) }
+        Text("Database Inspector", style = MaterialTheme.typography.titleSmall)
+        Spacer(Modifier.height(24.dp))
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(Icons.Rounded.Storage, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.surfaceVariant)
+                Spacer(Modifier.height(16.dp))
+                Text("No active databases found.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Run an app with Room to inspect data.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
             }
         }
+    }
+}
+
+@Composable
+private fun TreeItem(label: String, level: Int, isSelected: Boolean) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = (level * 12).dp)
+            .padding(vertical = 4.dp)
+            .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Icon(Icons.Rounded.Category, null, modifier = Modifier.size(14.dp), tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.width(8.dp))
+        Text(label, style = MaterialTheme.typography.bodySmall, color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
     }
 }
 
@@ -824,36 +838,56 @@ private fun LayoutInspectorPanel(modifier: Modifier = Modifier) {
     
     Column(modifier = modifier.padding(16.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("Layout Inspector: $selectedView", style = MaterialTheme.typography.titleSmall)
-            AssistChip(onClick = {}, label = { Text("Live Updates") }, leadingIcon = { Icon(Icons.Rounded.Bolt, null, Modifier.size(14.dp)) })
+            Column {
+                Text("Layout Inspector", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("Live process: com.example.asmobile", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            AssistChip(
+                onClick = {}, 
+                label = { Text("Live Updates", fontWeight = FontWeight.Bold) }, 
+                leadingIcon = { Icon(Icons.Rounded.Bolt, null, Modifier.size(14.dp), tint = GlowEmerald) },
+                colors = AssistChipDefaults.assistChipColors(labelColor = GlowEmerald)
+            )
         }
         Spacer(Modifier.height(16.dp))
         
         Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Surface(
-                modifier = Modifier.weight(0.4f).fillMaxHeight(),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                modifier = Modifier.weight(0.35f).fillMaxHeight(),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Component Tree", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text("COMPONENT TREE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold)
                     Spacer(Modifier.height(12.dp))
-                    TreeItem("Scaffold", 0, true)
-                    TreeItem("Box", 1, false)
-                    TreeItem("Column", 2, true)
-                    TreeItem("Text (\"Hello World\")", 3, false)
-                    TreeItem("Button", 2, false)
+                    LazyColumn {
+                        item { TreeItem("Scaffold", 0, true) }
+                        item { TreeItem("Box (Root)", 1, false) }
+                        item { TreeItem("WorkspaceBottomBar", 2, false) }
+                        item { TreeItem("Box (Content)", 2, true) }
+                        item { TreeItem("Dashboard", 3, false) }
+                        item { TreeItem("LazyColumn", 4, false) }
+                    }
                 }
             }
             
             Surface(
-                modifier = Modifier.weight(0.6f).fillMaxHeight(),
+                modifier = Modifier.weight(0.65f).fillMaxHeight(),
                 color = Color.Black,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("Live View Mirror", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                Box(Modifier.fillMaxSize()) {
+                    // Glossy Reflection
+                    Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.02f), Color.Transparent))))
+                    
+                    Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                        Icon(Icons.Rounded.Visibility, null, tint = Color.Gray, modifier = Modifier.size(48.dp))
+                        Spacer(Modifier.height(16.dp))
+                        Text("Interactive Layout Preview", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                        Text("Tapping components highlights them in code", color = Color.DarkGray, style = TextStyle(fontSize = 10.sp))
+                    }
                 }
             }
         }
@@ -861,51 +895,85 @@ private fun LayoutInspectorPanel(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun TreeItem(label: String, level: Int, isSelected: Boolean) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = (level * 12).dp)
-            .padding(vertical = 4.dp)
-            .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent)
-            .padding(horizontal = 8.dp, vertical = 4.dp)
-    ) {
-        Icon(Icons.Rounded.Category, null, modifier = Modifier.size(14.dp), tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.width(8.dp))
-        Text(label, style = MaterialTheme.typography.bodySmall, color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+private fun NetworkInspectorPanel(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Network Monitor", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            IconButton(onClick = {}) { Icon(Icons.Rounded.FilterList, null, modifier = Modifier.size(20.dp)) }
+        }
+        Spacer(Modifier.height(16.dp))
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color(0xFF050505),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+        ) {
+            LazyColumn(modifier = Modifier.padding(12.dp)) {
+                item { NetworkLogItem("GET", "https://api.gemini.ai/v1/models", 200, "1.2s") }
+                item { NetworkLogItem("POST", "https://github.com/login", 302, "450ms") }
+                item { NetworkLogItem("GET", "https://maven.google.com/search", 200, "890ms") }
+                item { NetworkLogItem("GET", "https://android.googleapis.com/gcm", 401, "120ms") }
+            }
+        }
     }
 }
 
 @Composable
-private fun DatabaseInspectorPanel(modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(16.dp)) {
-        Text("Database Inspector", style = MaterialTheme.typography.titleSmall)
-        Spacer(Modifier.height(24.dp))
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(Icons.Rounded.Storage, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.surfaceVariant)
-                Spacer(Modifier.height(16.dp))
-                Text("No active databases found.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("Run an app with Room to inspect data.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
-            }
+private fun NetworkLogItem(method: String, url: String, code: Int, time: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Surface(
+            color = if (code < 300) GlowEmerald.copy(alpha = 0.1f) else if (code < 400) GlowGold.copy(alpha = 0.1f) else ErrorRed.copy(alpha = 0.1f),
+            shape = RoundedCornerShape(4.dp),
+            border = BorderStroke(0.5.dp, if (code < 300) GlowEmerald else if (code < 400) GlowGold else ErrorRed)
+        ) {
+            Text(method, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), style = TextStyle(fontSize = 9.sp, fontWeight = FontWeight.Bold, color = if (code < 300) GlowEmerald else if (code < 400) GlowGold else ErrorRed))
         }
+        Spacer(Modifier.width(12.dp))
+        Text(url, style = TextStyle(fontSize = 11.sp, fontFamily = FontFamily.Monospace), color = Color.LightGray, maxLines = 1, modifier = Modifier.weight(1f))
+        Spacer(Modifier.width(12.dp))
+        Text(code.toString(), style = TextStyle(fontSize = 10.sp), color = if (code < 400) Color.Gray else ErrorRed)
+        Spacer(Modifier.width(8.dp))
+        Text(time, style = TextStyle(fontSize = 10.sp), color = Color.DarkGray)
     }
 }
 
 @Composable
 private fun AssetStudioPanel(modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(16.dp)) {
-        Text("Asset Studio", style = MaterialTheme.typography.titleSmall)
-        Spacer(Modifier.height(16.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Surface(modifier = Modifier.size(100.dp), shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)) {
-                Box(contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Face, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary) }
+    Column(modifier = modifier.padding(24.dp)) {
+        Text("Asset Studio", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text("Generate adaptive icons and vector drawables", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        
+        Spacer(Modifier.height(24.dp))
+        
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+            Surface(
+                modifier = Modifier.size(120.dp), 
+                shape = RoundedCornerShape(24.dp), 
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+            ) {
+                Box(contentAlignment = Alignment.Center) { 
+                    Icon(Icons.Rounded.AutoAwesome, null, modifier = Modifier.size(56.dp), tint = MaterialTheme.colorScheme.primary) 
+                }
             }
-            Column {
-                Button(onClick = {}) { Text("Generate Icon") }
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Icon Configurator", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
-                OutlinedButton(onClick = {}) { Text("Import SVG") }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = GlowPurple) {}
+                    Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = GlowBlue) {}
+                    Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = GlowEmerald) {}
+                }
+                Spacer(Modifier.height(16.dp))
+                Button(onClick = {}, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Rounded.CloudDownload, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Export All Sizes")
+                }
             }
         }
     }

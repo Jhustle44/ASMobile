@@ -118,10 +118,14 @@ enum class ThemeMode(val label: String) {
 class PluginViewModel : ViewModel() {
     private val _installedPlugins = mutableStateListOf<String>()
     val installedPlugins: List<String> get() = _installedPlugins
+    
+    private val _pluginUpdates = mutableStateListOf<String>()
+    val pluginUpdates: List<String> get() = _pluginUpdates
+
     private var storageFile: File? = null
 
     fun initStorage(rootDir: File) {
-        storageFile = File(rootDir, "plugins.json")
+        storageFile = File(rootDir, "plugins_v2.json")
         loadPlugins()
     }
 
@@ -129,9 +133,11 @@ class PluginViewModel : ViewModel() {
         try {
             if (storageFile?.exists() == true) {
                 val json = storageFile!!.readText()
-                val list = Json.decodeFromString<List<String>>(json)
-                _installedPlugins.clear()
-                _installedPlugins.addAll(list)
+                if (json.isNotBlank()) {
+                    val list = Json.decodeFromString<List<String>>(json)
+                    _installedPlugins.clear()
+                    _installedPlugins.addAll(list)
+                }
             }
         } catch (e: Exception) {}
     }
@@ -149,6 +155,21 @@ class PluginViewModel : ViewModel() {
         if (!_installedPlugins.contains(name)) {
             _installedPlugins.add(name)
             savePlugins()
+        }
+    }
+
+    fun uninstallPlugin(name: String) {
+        _installedPlugins.remove(name)
+        savePlugins()
+    }
+
+    fun checkUpdates() {
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(1000)
+            _pluginUpdates.clear()
+            if (_installedPlugins.isNotEmpty()) {
+                _pluginUpdates.add(_installedPlugins.first())
+            }
         }
     }
 }
