@@ -87,6 +87,22 @@ fun ASMobileTheme(
             surface = Color(0xFF0A0A0A),
             onPrimary = Color.Black
         )
+        com.example.asmobile.ui.workspace.ThemeMode.Vaporwave -> darkColorScheme(
+            primary = Color(0xFFFF71CE),
+            secondary = Color(0xFF01CDFE),
+            tertiary = Color(0xFF05FFA1),
+            background = Color(0xFF2D1B4E),
+            surface = Color(0xFF3B2A6B),
+            onPrimary = Color.White
+        )
+        com.example.asmobile.ui.workspace.ThemeMode.Cyberpunk -> darkColorScheme(
+            primary = Color(0xFFF3E600),
+            secondary = Color(0xFF00E6F3),
+            tertiary = Color(0xFFF300E6),
+            background = Color(0xFF0D0D0D),
+            surface = Color(0xFF1A1A1D),
+            onPrimary = Color.Black
+        )
     }
 
     MaterialTheme(

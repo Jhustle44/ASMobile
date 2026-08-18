@@ -113,7 +113,9 @@ enum class ThemeMode(val label: String) {
     Midnight("Midnight Blue"),
     Forest("Deep Forest"),
     Rose("Rose Gold"),
-    Neon("Neon Elite 3D")
+    Neon("Neon Elite 3D"),
+    Vaporwave("Vaporwave Elite"),
+    Cyberpunk("Cyberpunk 2077")
 }
 
 class PluginViewModel : ViewModel() {

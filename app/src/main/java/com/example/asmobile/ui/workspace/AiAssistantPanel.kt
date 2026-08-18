@@ -72,8 +72,10 @@ fun AiAssistantPanel(
         ) {
             item { AISuggestionChip("🛠️ Fix Bugs") { message = "Analyze my active file and fix any potential bugs or crashes." } }
             item { AISuggestionChip("⚡ Optimize") { message = "Refactor my code for better performance and Material 3 best practices." } }
+            item { AISuggestionChip("✨ Generate Unit Test") { message = "Write a comprehensive unit test for the main logic in this file." } }
             item { AISuggestionChip("📝 Document") { message = "Add KDoc comments and explanation to all functions in this file." } }
             item { AISuggestionChip("🎨 Style UI") { message = "Modernize the UI layout of this screen using Glassmorphism 2.0." } }
+            item { AISuggestionChip("📦 Package App") { message = "Guide me through the steps to build and sign a production APK." } }
         }
 
         // Chat Messages

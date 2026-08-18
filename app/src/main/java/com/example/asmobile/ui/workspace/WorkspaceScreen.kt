@@ -148,6 +148,13 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                             }
 
                             item {
+                                DrawerToolItem("Theme Engine", Icons.Rounded.Palette) { 
+                                    selectedDestination = MobileDestination.Themes
+                                    scope.launch { drawerState.close() }
+                                }
+                            }
+
+                            item {
                                 DrawerToolItem("Plugin Marketplace", Icons.Rounded.Extension) { 
                                     selectedDestination = MobileDestination.Plugins
                                     scope.launch { drawerState.close() }
@@ -226,7 +233,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
 
                             item {
                                 Spacer(Modifier.height(40.dp))
-                                Text("ASMobile v3.8-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
+                                Text("ASMobile v3.9-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -253,6 +260,20 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                 if (selectedDestination == MobileDestination.Editor) {
                     ExtendedFloatingActionButton(
                         onClick = { 
+                            // Try to infer active project from activeFilePath
+                            activeFilePath?.let { path ->
+                                val file = File(path)
+                                // Find parent directory in Projects folder
+                                val projectsDir = rootDir
+                                var parent = file.parentFile
+                                while (parent != null && parent.parentFile?.absolutePath != projectsDir.absolutePath) {
+                                    parent = parent.parentFile
+                                }
+                                if (parent != null) {
+                                    projectViewModel.startRun(parent)
+                                }
+                            }
+                            
                             selectedDestination = MobileDestination.Tools
                             projectViewModel.selectedToolTab = 0
                             buildViewModel.startBuild() 
@@ -329,6 +350,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                         )
                         MobileDestination.Tools -> MobileToolsTabs(buildViewModel = buildViewModel, projectViewModel = projectViewModel)
                         MobileDestination.Plugins -> PluginMarketplace(viewModel = pluginViewModel, modifier = Modifier.fillMaxSize())
+                        MobileDestination.Themes -> ThemeEngineScreen(viewModel = themeViewModel, modifier = Modifier.fillMaxSize())
                     }
                 }
             }
@@ -428,7 +450,9 @@ private fun WorkspaceTopBar(
                         ThemeMode.Midnight -> ThemeMode.Forest
                         ThemeMode.Forest -> ThemeMode.Rose
                         ThemeMode.Rose -> ThemeMode.Neon
-                        ThemeMode.Neon -> ThemeMode.Obsidian
+                        ThemeMode.Neon -> ThemeMode.Vaporwave
+                        ThemeMode.Vaporwave -> ThemeMode.Cyberpunk
+                        ThemeMode.Cyberpunk -> ThemeMode.Obsidian
                     }
                     themeViewModel.setTheme(nextTheme)
                 }) {
@@ -449,6 +473,8 @@ private fun WorkspaceTopBar(
                                 ThemeMode.Forest -> Icons.Rounded.Park
                                 ThemeMode.Rose -> Icons.Rounded.AutoFixHigh
                                 ThemeMode.Neon -> Icons.Rounded.ElectricBolt
+                                ThemeMode.Vaporwave -> Icons.Rounded.MusicNote
+                                ThemeMode.Cyberpunk -> Icons.Rounded.Token
                             }, 
                             null, 
                             modifier = Modifier.size(16.dp),
@@ -570,7 +596,8 @@ enum class MobileDestination(val label: String, val icon: Vector) {
     Tools("Tools", Icons.Rounded.Build),
     Git("Git", Icons.Rounded.History),
     Devices("Devices", Icons.Rounded.Smartphone),
-    Plugins("Plugins", Icons.Rounded.Extension)
+    Plugins("Plugins", Icons.Rounded.Extension),
+    Themes("Themes", Icons.Rounded.Palette)
 }
 
 @Composable
