@@ -2,7 +2,7 @@ package com.example.asmobile.ui.workspace
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.automirrored.rounded.List
@@ -26,8 +26,6 @@ import com.example.asmobile.navigation.FileDetailKey
 import com.example.asmobile.navigation.FileListKey
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.asmobile.ui.theme.ASMobileTheme
-import androidx.compose.material3.*
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
@@ -58,12 +56,17 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import kotlinx.coroutines.launch
 import java.io.File
 import com.example.asmobile.ui.theme.*
+import androidx.compose.material3.*
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun WorkspaceScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val rootDir = remember { context.filesDir }
+    val rootDir = remember { 
+        val dir = File(context.filesDir, "Projects")
+        if (!dir.exists()) dir.mkdirs()
+        dir
+    }
     
     // UI State
     var selectedDestination by remember { mutableStateOf(MobileDestination.Dashboard) }
@@ -71,6 +74,7 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
     var showSearchEverywhere by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
     var showAccount by remember { mutableStateOf(false) }
+    var showExport by remember { mutableStateOf(false) }
     
     // Global State
     val deviceViewModel: DeviceViewModel = viewModel()
@@ -85,9 +89,6 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
         pluginViewModel.initStorage(rootDir)
     }
     
-    // UI State
-    var showExport by remember { mutableStateOf(false) }
-    
     // Project State
     val openFiles = remember { mutableStateListOf<String>() }
     var activeFilePath by remember { mutableStateOf<String?>(null) }
@@ -101,117 +102,133 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
         gesturesEnabled = selectedDestination == MobileDestination.Dashboard,
         drawerContent = {
             ModalDrawerSheet(
-                drawerContainerColor = MaterialTheme.colorScheme.surface,
-                drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
+                drawerContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp),
+                modifier = Modifier.width(320.dp).border(BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)), RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp))
             ) {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    item { DrawerHeader() }
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.02f), Color.Transparent, Color.Black.copy(alpha = 0.05f)))))
                     
-                    item {
-                        NavigationDrawerItem(
-                            label = { Text("IDE Dashboard") },
-                            selected = selectedDestination == MobileDestination.Dashboard,
-                            onClick = { selectedDestination = MobileDestination.Dashboard; scope.launch { drawerState.close() } },
-                            icon = { Icon(Icons.Rounded.Dashboard, null) },
-                            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                        )
-                    }
-                    
-                    item {
-                        NavigationDrawerItem(
-                            label = { Text("Virtual Device Lab") },
-                            selected = selectedDestination == MobileDestination.Devices,
-                            onClick = { selectedDestination = MobileDestination.Devices; scope.launch { drawerState.close() } },
-                            icon = { Icon(Icons.Rounded.Smartphone, null) },
-                            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                        )
-                    }
-
-                    item {
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                        Text("ADVANCED TOOLING", modifier = Modifier.padding(start = 28.dp, bottom = 8.dp, top = 8.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
-                    }
-
-                    item {
-                        DrawerToolItem("Plugin Marketplace", Icons.Rounded.Extension) { 
-                            selectedDestination = MobileDestination.Plugins
-                            scope.launch { drawerState.close() }
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            IconButton(onClick = { scope.launch { drawerState.close() } }) {
+                                Icon(Icons.Rounded.ArrowBackIosNew, "Close", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                            }
                         }
-                    }
+                        
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            item { DrawerHeader() }
+                            
+                            item {
+                                NavigationDrawerItem(
+                                    label = { Text("IDE Dashboard") },
+                                    selected = selectedDestination == MobileDestination.Dashboard,
+                                    onClick = { selectedDestination = MobileDestination.Dashboard; scope.launch { drawerState.close() } },
+                                    icon = { Icon(Icons.Rounded.Dashboard, null) },
+                                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                                )
+                            }
+                            
+                            item {
+                                NavigationDrawerItem(
+                                    label = { Text("Virtual Device Lab") },
+                                    selected = selectedDestination == MobileDestination.Devices,
+                                    onClick = { selectedDestination = MobileDestination.Devices; scope.launch { drawerState.close() } },
+                                    icon = { Icon(Icons.Rounded.Smartphone, null) },
+                                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                                )
+                            }
 
-                    item {
-                        DrawerToolItem("Resource Explorer", Icons.Rounded.Source) { 
-                            selectedDestination = MobileDestination.Project
-                            scope.launch { drawerState.close() }
+                            item {
+                                HorizontalDivider(modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                                Text("ADVANCED TOOLING", modifier = Modifier.padding(start = 28.dp, bottom = 8.dp, top = 8.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
+                            }
+
+                            item {
+                                DrawerToolItem("Plugin Marketplace", Icons.Rounded.Extension) { 
+                                    selectedDestination = MobileDestination.Plugins
+                                    scope.launch { drawerState.close() }
+                                }
+                            }
+
+                            item {
+                                DrawerToolItem("Resource Explorer", Icons.Rounded.Source) { 
+                                    selectedDestination = MobileDestination.Project
+                                    scope.launch { drawerState.close() }
+                                }
+                            }
+                            
+                            item {
+                                DrawerToolItem("Git History", Icons.Rounded.History) { 
+                                    selectedDestination = MobileDestination.Git
+                                    scope.launch { drawerState.close() }
+                                }
+                            }
+
+                            item {
+                                DrawerToolItem("Layout Inspector", Icons.Rounded.Layers) { 
+                                    projectViewModel.selectedToolTab = 3
+                                    selectedDestination = MobileDestination.Tools
+                                    scope.launch { drawerState.close() }
+                                }
+                            }
+                            
+                            item {
+                                DrawerToolItem("Database Inspector", Icons.Rounded.Storage) { 
+                                    projectViewModel.selectedToolTab = 4
+                                    selectedDestination = MobileDestination.Tools
+                                    scope.launch { drawerState.close() }
+                                }
+                            }
+
+                            item {
+                                DrawerToolItem("Network Monitor", Icons.Rounded.Wifi) { 
+                                    projectViewModel.selectedToolTab = 7
+                                    selectedDestination = MobileDestination.Tools
+                                    scope.launch { drawerState.close() }
+                                }
+                            }
+
+                            item {
+                                DrawerToolItem("App Inspection", Icons.Rounded.Search) { 
+                                    projectViewModel.selectedToolTab = 8
+                                    selectedDestination = MobileDestination.Tools
+                                    scope.launch { drawerState.close() }
+                                }
+                            }
+
+                            item {
+                                HorizontalDivider(modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                            }
+
+                            item {
+                                NavigationDrawerItem(
+                                    label = { Text("Global Settings") },
+                                    selected = false,
+                                    onClick = { showSettings = true; scope.launch { drawerState.close() } },
+                                    icon = { Icon(Icons.Rounded.Settings, null) },
+                                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                                )
+                            }
+
+                            item {
+                                NavigationDrawerItem(
+                                    label = { Text("Developer Profile") },
+                                    selected = false,
+                                    onClick = { showAccount = true; scope.launch { drawerState.close() } },
+                                    icon = { Icon(Icons.Rounded.Face, null) },
+                                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                                )
+                            }
+
+                            item {
+                                Spacer(Modifier.height(40.dp))
+                                Text("ASMobile v3.8-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
+                            }
                         }
-                    }
-                    
-                    item {
-                        DrawerToolItem("Git History", Icons.Rounded.History) { 
-                            selectedDestination = MobileDestination.Git
-                            scope.launch { drawerState.close() }
-                        }
-                    }
-
-                    item {
-                        DrawerToolItem("Layout Inspector", Icons.Rounded.Layers) { 
-                            projectViewModel.selectedToolTab = 3
-                            selectedDestination = MobileDestination.Tools
-                            scope.launch { drawerState.close() }
-                        }
-                    }
-                    
-                    item {
-                        DrawerToolItem("Database Inspector", Icons.Rounded.Storage) { 
-                            projectViewModel.selectedToolTab = 4
-                            selectedDestination = MobileDestination.Tools
-                            scope.launch { drawerState.close() }
-                        }
-                    }
-
-                    item {
-                        DrawerToolItem("Network Monitor", Icons.Rounded.Wifi) { 
-                            projectViewModel.selectedToolTab = 7
-                            selectedDestination = MobileDestination.Tools
-                            scope.launch { drawerState.close() }
-                        }
-                    }
-
-                    item {
-                        DrawerToolItem("App Inspection", Icons.Rounded.Search) { 
-                            projectViewModel.selectedToolTab = 8
-                            selectedDestination = MobileDestination.Tools
-                            scope.launch { drawerState.close() }
-                        }
-                    }
-
-                    item {
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                    }
-
-                    item {
-                        NavigationDrawerItem(
-                            label = { Text("Global Settings") },
-                            selected = false,
-                            onClick = { showSettings = true; scope.launch { drawerState.close() } },
-                            icon = { Icon(Icons.Rounded.Settings, null) },
-                            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                        )
-                    }
-
-                    item {
-                        NavigationDrawerItem(
-                            label = { Text("Developer Profile") },
-                            selected = false,
-                            onClick = { showAccount = true; scope.launch { drawerState.close() } },
-                            icon = { Icon(Icons.Rounded.Face, null) },
-                            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                        )
-                    }
-
-                    item {
-                        Spacer(Modifier.height(40.dp))
-                        Text("ASMobile v3.7-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -277,7 +294,6 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                             onRunProject = { project ->
                                 projectViewModel.startRun(project)
                                 selectedDestination = MobileDestination.Devices
-                                // Ensure at least one device is running for the simulation
                                 if (deviceViewModel.devices.none { it.isRunning }) {
                                     deviceViewModel.toggleDevice(0)
                                 }
@@ -318,7 +334,6 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
             }
         }
 
-        // Overlay Dialogs
         if (showProjectWizard) {
             NewProjectWizard(
                 baseDir = rootDir,
@@ -329,7 +344,6 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                 }
             )
         }
-
         if (showSearchEverywhere) {
             SearchEverywhere(
                 rootDir = rootDir,
@@ -337,15 +351,8 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                 onFileSelected = { file -> openFile(file, openFiles, { activeFilePath = it }, { selectedDestination = it }) }
             )
         }
-
-        if (showSettings) {
-            SettingsScreen(onBack = { showSettings = false })
-        }
-
-        if (showAccount) {
-            AccountDialog(onDismiss = { showAccount = false })
-        }
-
+        if (showSettings) { SettingsScreen(onBack = { showSettings = false }) }
+        if (showAccount) { AccountDialog(onDismiss = { showAccount = false }) }
         if (showExport) {
             ExportScreen(
                 viewModel = buildToolsViewModel,
@@ -413,7 +420,6 @@ private fun WorkspaceTopBar(
                 }
             },
             actions = {
-                // Theme Toggle Quick Action
                 IconButton(onClick = { 
                     val nextTheme = when(themeViewModel.currentTheme) {
                         ThemeMode.Obsidian -> ThemeMode.Arctic
@@ -421,15 +427,17 @@ private fun WorkspaceTopBar(
                         ThemeMode.Solar -> ThemeMode.Midnight
                         ThemeMode.Midnight -> ThemeMode.Forest
                         ThemeMode.Forest -> ThemeMode.Rose
-                        ThemeMode.Rose -> ThemeMode.Obsidian
+                        ThemeMode.Rose -> ThemeMode.Neon
+                        ThemeMode.Neon -> ThemeMode.Obsidian
                     }
                     themeViewModel.setTheme(nextTheme)
                 }) {
                     Box(
                         modifier = Modifier
                             .size(32.dp)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
-                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), CircleShape),
+                            .shadow(8.dp, CircleShape, ambientColor = MaterialTheme.colorScheme.primary)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), CircleShape)
+                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -440,6 +448,7 @@ private fun WorkspaceTopBar(
                                 ThemeMode.Midnight -> Icons.Rounded.Bedtime
                                 ThemeMode.Forest -> Icons.Rounded.Park
                                 ThemeMode.Rose -> Icons.Rounded.AutoFixHigh
+                                ThemeMode.Neon -> Icons.Rounded.ElectricBolt
                             }, 
                             null, 
                             modifier = Modifier.size(16.dp),
@@ -459,12 +468,7 @@ private fun WorkspaceTopBar(
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Rounded.Person, 
-                                null, 
-                                modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                            Icon(Icons.Rounded.Person, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -510,19 +514,11 @@ private fun WorkspaceBottomBar(
                                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
                                 .padding(8.dp) else Modifier
                         ) {
-                            Icon(
-                                destination.icon, 
-                                null,
-                                modifier = Modifier.size(if (isSelected) 22.dp else 20.dp)
-                            ) 
+                            Icon(destination.icon, null, modifier = Modifier.size(if (isSelected) 22.dp else 20.dp)) 
                         }
                     },
                     label = { 
-                        Text(
-                            destination.label, 
-                            style = TextStyle(fontSize = 9.sp),
-                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium
-                        ) 
+                        Text(destination.label, style = TextStyle(fontSize = 9.sp), fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium) 
                     },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = MaterialTheme.colorScheme.primary,
@@ -586,9 +582,9 @@ private fun MobileToolsTabs(
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         ScrollableTabRow(
             selectedTabIndex = selectedTab,
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
             edgePadding = 16.dp,
-            divider = { HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)) },
+            divider = { HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)) },
             indicator = { tabPositions ->
                 if (selectedTab < tabPositions.size) {
                     TabRowDefaults.SecondaryIndicator(
@@ -606,8 +602,8 @@ private fun MobileToolsTabs(
                     text = { 
                         Text(
                             title, 
-                            style = TextStyle(fontSize = 10.sp),
-                            fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium,
+                            style = TextStyle(fontSize = 11.sp),
+                            fontWeight = if (selectedTab == index) FontWeight.ExtraBold else FontWeight.Medium,
                             color = if (selectedTab == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         ) 
                     }
@@ -624,7 +620,155 @@ private fun MobileToolsTabs(
                 5 -> AssetStudioPanel(modifier = Modifier.fillMaxSize())
                 6 -> ColorPickerPanel(modifier = Modifier.fillMaxSize())
                 7 -> NetworkInspectorPanel(modifier = Modifier.fillMaxSize())
-                else -> AppInspectionPanel(modifier = Modifier.fillMaxSize())
+                8 -> AppInspectionPanel(modifier = Modifier.fillMaxSize())
+                else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Coming Soon") }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LayoutInspectorPanel(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Column {
+                Text("Layout Inspector", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("Live process: com.example.asmobile", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            AssistChip(
+                onClick = {}, 
+                label = { Text("Live Updates", fontWeight = FontWeight.Bold) }, 
+                leadingIcon = { Icon(Icons.Rounded.Bolt, null, Modifier.size(14.dp), tint = GlowEmerald) },
+                colors = AssistChipDefaults.assistChipColors(labelColor = GlowEmerald)
+            )
+        }
+        Spacer(Modifier.height(16.dp))
+        Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Surface(
+                modifier = Modifier.weight(0.35f).fillMaxHeight(),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text("COMPONENT TREE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold)
+                    Spacer(Modifier.height(12.dp))
+                    LazyColumn {
+                        item { TreeItem("Scaffold", 0, true) }
+                        item { TreeItem("Box (Root)", 1, false) }
+                        item { TreeItem("WorkspaceBottomBar", 2, false) }
+                        item { TreeItem("Box (Content)", 2, true) }
+                        item { TreeItem("Dashboard", 3, false) }
+                        item { TreeItem("LazyColumn", 4, false) }
+                    }
+                }
+            }
+            Surface(
+                modifier = Modifier.weight(0.65f).fillMaxHeight(),
+                color = Color.Black,
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+            ) {
+                Box(Modifier.fillMaxSize()) {
+                    Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.02f), Color.Transparent))))
+                    Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                        Icon(Icons.Rounded.Visibility, null, tint = Color.Gray, modifier = Modifier.size(48.dp))
+                        Spacer(Modifier.height(16.dp))
+                        Text("Interactive Layout Preview", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                        Text("Tapping components highlights them in code", color = Color.DarkGray, style = TextStyle(fontSize = 10.sp))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NetworkInspectorPanel(modifier: Modifier = Modifier) {
+    var isCapturing by remember { mutableStateOf(true) }
+    
+    Column(modifier = modifier.padding(16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Column {
+                Text("Network Monitor", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+                Text(if (isCapturing) "Intercepting traffic..." else "Paused", style = MaterialTheme.typography.labelSmall, color = if (isCapturing) GlowEmerald else Color.Gray)
+            }
+            Row {
+                IconButton(onClick = { isCapturing = !isCapturing }) {
+                    Icon(if (isCapturing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, null, tint = MaterialTheme.colorScheme.primary)
+                }
+                IconButton(onClick = {}) { Icon(Icons.Rounded.Block, null, tint = MaterialTheme.colorScheme.error) }
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color(0xFF020202),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+        ) {
+            LazyColumn(modifier = Modifier.padding(12.dp)) {
+                if (isCapturing) {
+                    item { NetworkLogItem("GET", "https://api.gemini.ai/v1/models", 200, "840ms") }
+                    item { NetworkLogItem("POST", "https://cloud.google.com/auth", 302, "1.1s") }
+                    item { NetworkLogItem("GET", "https://github.com/jhustle44/ASMobile", 200, "420ms") }
+                    item { NetworkLogItem("GET", "https://maven.google.com/ksp/compiler", 200, "2.4s") }
+                    item { NetworkLogItem("POST", "https://firebase.google.com/log", 204, "150ms") }
+                    item { NetworkLogItem("GET", "https://android.googleapis.com/v1/check", 401, "80ms") }
+                } else {
+                    item { Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) { Text("Capture Paused", color = Color.Gray) } }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NetworkLogItem(method: String, url: String, code: Int, time: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Surface(
+            color = if (code < 300) GlowEmerald.copy(alpha = 0.1f) else if (code < 400) GlowGold.copy(alpha = 0.1f) else ErrorRed.copy(alpha = 0.1f),
+            shape = RoundedCornerShape(4.dp),
+            border = BorderStroke(0.5.dp, if (code < 300) GlowEmerald else if (code < 400) GlowGold else ErrorRed)
+        ) {
+            Text(method, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), style = TextStyle(fontSize = 9.sp, fontWeight = FontWeight.Bold, color = if (code < 300) GlowEmerald else if (code < 400) GlowGold else ErrorRed))
+        }
+        Spacer(Modifier.width(12.dp))
+        Text(url, style = TextStyle(fontSize = 11.sp, fontFamily = FontFamily.Monospace), color = Color.LightGray, maxLines = 1, modifier = Modifier.weight(1f))
+        Spacer(Modifier.width(12.dp))
+        Text(code.toString(), style = TextStyle(fontSize = 10.sp), color = if (code < 400) Color.Gray else ErrorRed)
+        Spacer(Modifier.width(8.dp))
+        Text(time, style = TextStyle(fontSize = 10.sp), color = Color.DarkGray)
+    }
+}
+
+@Composable
+private fun AssetStudioPanel(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(24.dp)) {
+        Text("Asset Studio", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text("Generate adaptive icons and vector drawables", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(24.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+            Surface(modifier = Modifier.size(120.dp), shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f), border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))) {
+                Box(contentAlignment = Alignment.Center) { Icon(Icons.Rounded.AutoAwesome, null, modifier = Modifier.size(56.dp), tint = MaterialTheme.colorScheme.primary) }
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Icon Configurator", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = GlowPurple) {}
+                    Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = GlowBlue) {}
+                    Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = GlowEmerald) {}
+                }
+                Spacer(Modifier.height(16.dp))
+                Button(onClick = {}, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Rounded.CloudDownload, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Export All Sizes")
+                }
             }
         }
     }
@@ -664,129 +808,6 @@ private fun TreeItem(label: String, level: Int, isSelected: Boolean) {
 }
 
 @Composable
-private fun ToolbarButton(
-    icon: Vector,
-    contentDescription: String,
-    tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    onClick: () -> Unit = {}
-) {
-    Box(
-        modifier = Modifier
-            .size(34.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
-            .padding(8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            icon,
-            contentDescription = contentDescription,
-            modifier = Modifier.size(18.dp),
-            tint = tint.copy(alpha = 0.8f)
-        )
-    }
-}
-
-@Composable
-private fun ToolTab(
-    label: String,
-    icon: Vector,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val backgroundColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent
-    val contentColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent
-
-    Surface(
-        onClick = onClick,
-        color = backgroundColor,
-        contentColor = contentColor,
-        shape = RoundedCornerShape(4.dp),
-        border = BorderStroke(1.dp, borderColor),
-        modifier = Modifier.padding(vertical = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                icon, 
-                contentDescription = null, 
-                modifier = Modifier.size(16.dp),
-                tint = contentColor
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(
-                label, 
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-            )
-        }
-    }
-}
-
-@Composable
-private fun ResourceManager(modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(16.dp)) {
-        Text("Resource Manager", style = MaterialTheme.typography.titleSmall)
-        Spacer(Modifier.height(16.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AssistChip(onClick = {}, label = { Text("Drawable") }, leadingIcon = { Icon(Icons.Rounded.Image, null, Modifier.size(16.dp)) })
-            AssistChip(onClick = {}, label = { Text("Color") }, leadingIcon = { Icon(Icons.Rounded.Palette, null, Modifier.size(16.dp)) })
-            AssistChip(onClick = {}, label = { Text("Layout") }, leadingIcon = { Icon(Icons.Rounded.Dashboard, null, Modifier.size(16.dp)) })
-        }
-        Spacer(Modifier.height(16.dp))
-        AdaptiveGrid(columns = GridCells.Adaptive(80.dp), spacing = Arrangement.spacedBy(8.dp)) {
-            items(6) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = MaterialTheme.shapes.small,
-                    modifier = Modifier.aspectRatio(1f)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Rounded.Image, null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun StructureView(modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(16.dp)) {
-        Text("Structure", style = MaterialTheme.typography.titleSmall)
-        Spacer(Modifier.height(16.dp))
-        val structure = listOf("class MainActivity", "  fun onCreate()", "  fun seedSampleFiles()", "  fun CustomButton()")
-        LazyColumn {
-            items(structure) { item: String ->
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
-                    Icon(
-                        if (item.contains("class")) Icons.Rounded.Category else Icons.Rounded.Terminal,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = if (item.contains("class")) Color(0xFFE4BC5E) else Color(0xFF4EC9B0)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(item, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AdaptiveGrid(columns: GridCells, spacing: Arrangement.HorizontalOrVertical, content: LazyGridScope.() -> Unit) {
-    LazyVerticalGrid(
-        columns = columns,
-        horizontalArrangement = spacing,
-        verticalArrangement = spacing,
-        content = content
-    )
-}
-
-@Composable
 private fun AppInspectionPanel(modifier: Modifier = Modifier) {
     var selectedTab by remember { mutableIntStateOf(0) }
     Column(modifier = modifier.padding(16.dp)) {
@@ -797,9 +818,7 @@ private fun AppInspectionPanel(modifier: Modifier = Modifier) {
             Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) { Text("Devices", modifier = Modifier.padding(8.dp)) }
             Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }) { Text("Network", modifier = Modifier.padding(8.dp)) }
         }
-        
         Spacer(Modifier.height(16.dp))
-        
         when (selectedTab) {
             0 -> BuildLogPanel(selectedTab = 1, modifier = Modifier.fillMaxSize())
             1 -> DeviceManagerList()
@@ -813,168 +832,15 @@ private fun DeviceManagerList() {
     val devices = listOf("Pixel 8 Pro (API 34)", "Pixel Fold (API 33)", "Nexus 5X (API 28)")
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(devices) { device ->
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+            Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Rounded.Smartphone, null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(16.dp))
                     Text(device, style = MaterialTheme.typography.bodyLarge)
                 }
-                IconButton(onClick = { }) {
-                    Icon(Icons.Rounded.PlayArrow, null, tint = Color(0xFF4CAF50))
-                }
+                IconButton(onClick = { }) { Icon(Icons.Rounded.PlayArrow, null, tint = Color(0xFF4CAF50)) }
             }
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-        }
-    }
-}
-
-@Composable
-private fun LayoutInspectorPanel(modifier: Modifier = Modifier) {
-    var selectedView by remember { mutableStateOf("MainActivity") }
-    
-    Column(modifier = modifier.padding(16.dp)) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Column {
-                Text("Layout Inspector", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("Live process: com.example.asmobile", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            AssistChip(
-                onClick = {}, 
-                label = { Text("Live Updates", fontWeight = FontWeight.Bold) }, 
-                leadingIcon = { Icon(Icons.Rounded.Bolt, null, Modifier.size(14.dp), tint = GlowEmerald) },
-                colors = AssistChipDefaults.assistChipColors(labelColor = GlowEmerald)
-            )
-        }
-        Spacer(Modifier.height(16.dp))
-        
-        Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Surface(
-                modifier = Modifier.weight(0.35f).fillMaxHeight(),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text("COMPONENT TREE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold)
-                    Spacer(Modifier.height(12.dp))
-                    LazyColumn {
-                        item { TreeItem("Scaffold", 0, true) }
-                        item { TreeItem("Box (Root)", 1, false) }
-                        item { TreeItem("WorkspaceBottomBar", 2, false) }
-                        item { TreeItem("Box (Content)", 2, true) }
-                        item { TreeItem("Dashboard", 3, false) }
-                        item { TreeItem("LazyColumn", 4, false) }
-                    }
-                }
-            }
-            
-            Surface(
-                modifier = Modifier.weight(0.65f).fillMaxHeight(),
-                color = Color.Black,
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
-            ) {
-                Box(Modifier.fillMaxSize()) {
-                    // Glossy Reflection
-                    Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.02f), Color.Transparent))))
-                    
-                    Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                        Icon(Icons.Rounded.Visibility, null, tint = Color.Gray, modifier = Modifier.size(48.dp))
-                        Spacer(Modifier.height(16.dp))
-                        Text("Interactive Layout Preview", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
-                        Text("Tapping components highlights them in code", color = Color.DarkGray, style = TextStyle(fontSize = 10.sp))
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun NetworkInspectorPanel(modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(16.dp)) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Network Monitor", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            IconButton(onClick = {}) { Icon(Icons.Rounded.FilterList, null, modifier = Modifier.size(20.dp)) }
-        }
-        Spacer(Modifier.height(16.dp))
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = Color(0xFF050505),
-            shape = RoundedCornerShape(16.dp),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
-        ) {
-            LazyColumn(modifier = Modifier.padding(12.dp)) {
-                item { NetworkLogItem("GET", "https://api.gemini.ai/v1/models", 200, "1.2s") }
-                item { NetworkLogItem("POST", "https://github.com/login", 302, "450ms") }
-                item { NetworkLogItem("GET", "https://maven.google.com/search", 200, "890ms") }
-                item { NetworkLogItem("GET", "https://android.googleapis.com/gcm", 401, "120ms") }
-            }
-        }
-    }
-}
-
-@Composable
-private fun NetworkLogItem(method: String, url: String, code: Int, time: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            color = if (code < 300) GlowEmerald.copy(alpha = 0.1f) else if (code < 400) GlowGold.copy(alpha = 0.1f) else ErrorRed.copy(alpha = 0.1f),
-            shape = RoundedCornerShape(4.dp),
-            border = BorderStroke(0.5.dp, if (code < 300) GlowEmerald else if (code < 400) GlowGold else ErrorRed)
-        ) {
-            Text(method, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), style = TextStyle(fontSize = 9.sp, fontWeight = FontWeight.Bold, color = if (code < 300) GlowEmerald else if (code < 400) GlowGold else ErrorRed))
-        }
-        Spacer(Modifier.width(12.dp))
-        Text(url, style = TextStyle(fontSize = 11.sp, fontFamily = FontFamily.Monospace), color = Color.LightGray, maxLines = 1, modifier = Modifier.weight(1f))
-        Spacer(Modifier.width(12.dp))
-        Text(code.toString(), style = TextStyle(fontSize = 10.sp), color = if (code < 400) Color.Gray else ErrorRed)
-        Spacer(Modifier.width(8.dp))
-        Text(time, style = TextStyle(fontSize = 10.sp), color = Color.DarkGray)
-    }
-}
-
-@Composable
-private fun AssetStudioPanel(modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(24.dp)) {
-        Text("Asset Studio", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Text("Generate adaptive icons and vector drawables", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        
-        Spacer(Modifier.height(24.dp))
-        
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-            Surface(
-                modifier = Modifier.size(120.dp), 
-                shape = RoundedCornerShape(24.dp), 
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-            ) {
-                Box(contentAlignment = Alignment.Center) { 
-                    Icon(Icons.Rounded.AutoAwesome, null, modifier = Modifier.size(56.dp), tint = MaterialTheme.colorScheme.primary) 
-                }
-            }
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text("Icon Configurator", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = GlowPurple) {}
-                    Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = GlowBlue) {}
-                    Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = GlowEmerald) {}
-                }
-                Spacer(Modifier.height(16.dp))
-                Button(onClick = {}, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Rounded.CloudDownload, null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Export All Sizes")
-                }
-            }
         }
     }
 }
@@ -987,24 +853,10 @@ private fun ColorPickerPanel(modifier: Modifier = Modifier) {
         Spacer(Modifier.height(16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             listOf(GlowPurple, GlowBlue, GlowEmerald, GlowGold, Color.Red, Color.Cyan).forEach { color ->
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(color, CircleShape)
-                        .clickable { selectedColor = color }
-                        .border(if (selectedColor == color) 2.dp else 0.dp, Color.White, CircleShape)
-                )
+                Box(modifier = Modifier.size(40.dp).background(color, CircleShape).clickable { selectedColor = color }.border(if (selectedColor == color) 2.dp else 0.dp, Color.White, CircleShape))
             }
         }
         Spacer(Modifier.height(24.dp))
         Text("HEX: #${selectedColor.value.toString(16).substring(2).uppercase()}", style = MaterialTheme.typography.labelLarge)
-    }
-}
-
-@Preview(showBackground = true, widthDp = 1000, heightDp = 800)
-@Composable
-fun WorkspaceScreenPreview() {
-    ASMobileTheme {
-        WorkspaceScreen()
     }
 }

@@ -79,6 +79,14 @@ fun ASMobileTheme(
             surface = Color(0xFF2D1419),
             onPrimary = Color.White
         )
+        com.example.asmobile.ui.workspace.ThemeMode.Neon -> darkColorScheme(
+            primary = Color(0xFF00FF9F),
+            secondary = Color(0xFF00B8FF),
+            tertiary = Color(0xFFFF00E0),
+            background = Color(0xFF010101),
+            surface = Color(0xFF0A0A0A),
+            onPrimary = Color.Black
+        )
     }
 
     MaterialTheme(

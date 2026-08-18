@@ -15,8 +15,8 @@ android {
         applicationId = "com.example.asmobile"
         minSdk = 24
         targetSdk = 37
-        versionCode = 26
-        versionName = "3.7-ELITE"
+        versionCode = 27
+        versionName = "3.8-ELITE"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

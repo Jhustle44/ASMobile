@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.TextStyle
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.BorderStroke
@@ -180,13 +181,17 @@ private fun VirtualDisplayView(
             ) {
                 if (device.isRunning) {
                     Box(Modifier.fillMaxSize()) {
-                        // Glossy screen reflection
+                        // High Gloss Reflection
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(
                                     Brush.verticalGradient(
-                                        listOf(Color.White.copy(alpha = 0.05f), Color.Transparent, Color.Black.copy(alpha = 0.2f))
+                                        listOf(
+                                            Color.White.copy(alpha = 0.08f),
+                                            Color.Transparent,
+                                            Color.Black.copy(alpha = 0.1f)
+                                        )
                                     )
                                 )
                         )
@@ -198,16 +203,28 @@ private fun VirtualDisplayView(
                         ) {
                             if (isAppLaunching) {
                                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, strokeWidth = 3.dp)
-                                Spacer(Modifier.height(20.dp))
-                                Text("Starting process...", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                                Spacer(Modifier.height(24.dp))
+                                Text("Starting process...", color = Color.White, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                             } else if (projectName != null) {
-                                Icon(Icons.Rounded.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(56.dp))
-                                Spacer(Modifier.height(12.dp))
-                                Text(projectName, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
-                                Text("LIVE PREVIEW", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                                // 3D Card Simulation for App View
+                                Card(
+                                    modifier = Modifier.padding(16.dp).fillMaxWidth(0.85f).aspectRatio(1f).shadow(12.dp, RoundedCornerShape(16.dp)),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f))
+                                ) {
+                                    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                        Icon(Icons.Rounded.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
+                                        Spacer(Modifier.height(12.dp))
+                                        Text(projectName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+                                        Text("v1.0-DEBUG", style = MaterialTheme.typography.labelSmall)
+                                    }
+                                }
+                                Spacer(Modifier.height(24.dp))
+                                Text("LIVE PREVIEW", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.2.sp)
                             } else {
                                 Icon(Icons.Rounded.Android, null, tint = Color(0xFF3DDC84), modifier = Modifier.size(56.dp))
-                                Text("OS v15.0", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                                Text("System Booted", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                                Text("No app deployed", color = Color.Gray, style = TextStyle(fontSize = 10.sp))
                             }
                         }
                     }

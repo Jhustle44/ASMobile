@@ -250,13 +250,24 @@ private fun PluginCard(
                     DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                         DropdownMenuItem(
                             text = { Text("Uninstall") },
-                            onClick = { onUninstall(); showMenu = false },
+                            onClick = { 
+                                onUninstall()
+                                showMenu = false 
+                            },
                             leadingIcon = { Icon(Icons.Rounded.Delete, null, tint = MaterialTheme.colorScheme.error) }
                         )
                         if (hasUpdate) {
                             DropdownMenuItem(
                                 text = { Text("Update Plugin") },
-                                onClick = { /* Update logic */ showMenu = false },
+                                onClick = { 
+                                    isDownloading = true
+                                    scope.launch {
+                                        kotlinx.coroutines.delay(2000)
+                                        isDownloading = false
+                                        onInstall() // Re-install effectively updates
+                                    }
+                                    showMenu = false 
+                                },
                                 leadingIcon = { Icon(Icons.Rounded.SystemUpdate, null, tint = Color(0xFF10B981)) }
                             )
                         }
