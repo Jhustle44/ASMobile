@@ -22,6 +22,9 @@ import java.io.File
 import com.example.asmobile.project.ProjectManager
 import com.example.asmobile.project.ProjectTemplate
 import com.example.asmobile.project.ProjectLanguage
+import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.content
+import kotlinx.coroutines.launch
 
 @Composable
 fun AiAssistantPanel(
@@ -37,8 +40,17 @@ fun AiAssistantPanel(
     val chatHistory = remember { mutableStateListOf<ChatMessage>() }
     var isGenerating by remember { mutableStateOf(false) }
     var generationTask by remember { mutableStateOf("") }
-    var systemPrompt by remember { mutableStateOf("You are a professional Android Developer using ASMobile.") }
+    var systemPrompt by remember { mutableStateOf("""
+        You are Gemini Elite v15, the most advanced AI coding partner integrated into ASMobile. 
+        Your goal is to act exactly like Gemini in Android Studio. 
+        You have deep knowledge of Jetpack Compose, Material 3, and Kotlin. 
+        You can generate full project structures, fix complex structural errors, and optimize code for performance.
+        Always provide production-ready code snippets. 
+        You are helpful, precise, and professional.
+    """.trimIndent()) }
     var showSystemPromptDialog by remember { mutableStateOf(false) }
+    var showApiKeyDialog by remember { mutableStateOf(projectViewModel.geminiApiKey.isEmpty()) }
+    val scope = rememberCoroutineScope()
 
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).imePadding()) {
         // Chat Header
@@ -58,6 +70,9 @@ fun AiAssistantPanel(
                     if (isGenerating) {
                         Text(generationTask, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                     }
+                }
+                IconButton(onClick = { showApiKeyDialog = true }) {
+                    Icon(Icons.Rounded.Key, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 IconButton(onClick = { showSystemPromptDialog = true }) {
                     Icon(Icons.Rounded.Psychology, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -149,19 +164,34 @@ fun AiAssistantPanel(
                             message = ""
                             
                             isGenerating = true
-                            executeAiLogic(
-                                input = userMsg, 
-                                rootDir = rootDir, 
-                                activeProject = activeProject,
-                                activeFilePath = activeFilePath, 
-                                onFileSelected = onFileSelected,
-                                onStatusUpdate = { generationTask = it },
-                                onProjectCreated = onProjectCreated,
-                                onResponse = { response ->
-                                    chatHistory.add(ChatMessage(response, false))
-                                    isGenerating = false
+                            if (projectViewModel.geminiApiKey.isNotBlank()) {
+                                scope.launch {
+                                    executeRealGeminiAi(
+                                        apiKey = projectViewModel.geminiApiKey,
+                                        input = userMsg,
+                                        systemPrompt = systemPrompt,
+                                        onStatusUpdate = { generationTask = it },
+                                        onResponse = { response ->
+                                            chatHistory.add(ChatMessage(response, false))
+                                            isGenerating = false
+                                        }
+                                    )
                                 }
-                            )
+                            } else {
+                                executeAiLogic(
+                                    input = userMsg, 
+                                    rootDir = rootDir, 
+                                    activeProject = activeProject,
+                                    activeFilePath = activeFilePath, 
+                                    onFileSelected = onFileSelected,
+                                    onStatusUpdate = { generationTask = it },
+                                    onProjectCreated = onProjectCreated,
+                                    onResponse = { response ->
+                                        chatHistory.add(ChatMessage(response, false))
+                                        isGenerating = false
+                                    }
+                                )
+                            }
                         }
                     },
                     enabled = !isGenerating,
@@ -183,6 +213,63 @@ fun AiAssistantPanel(
             onDismiss = { showSystemPromptDialog = false },
             onSave = { systemPrompt = it }
         )
+    }
+
+    if (showApiKeyDialog) {
+        ApiKeyDialog(
+            currentKey = projectViewModel.geminiApiKey,
+            onDismiss = { showApiKeyDialog = false },
+            onSave = { projectViewModel.geminiApiKey = it }
+        )
+    }
+}
+
+@Composable
+private fun ApiKeyDialog(currentKey: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
+    var key by remember { mutableStateOf(currentKey) }
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surface, tonalElevation = 6.dp) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                Text("Gemini API Key", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                Text("Enter your Google AI Studio API key to enable full AI features.", style = MaterialTheme.typography.bodySmall)
+                Spacer(Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = key, 
+                    onValueChange = { key = it }, 
+                    label = { Text("API Key") }, 
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                Spacer(Modifier.height(24.dp))
+                Button(onClick = { onSave(key); onDismiss() }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Save Key")
+                }
+            }
+        }
+    }
+}
+
+private suspend fun executeRealGeminiAi(
+    apiKey: String,
+    input: String,
+    systemPrompt: String,
+    onStatusUpdate: (String) -> Unit,
+    onResponse: (String) -> Unit
+) {
+    onStatusUpdate("Connecting to Google AI Studio...")
+    val model = GenerativeModel(
+        modelName = "gemini-1.5-pro",
+        apiKey = apiKey
+    )
+    
+    try {
+        onStatusUpdate("Gemini is thinking...")
+        val fullPrompt = "$systemPrompt\n\nUser Request: $input"
+        val response = model.generateContent(fullPrompt)
+        onResponse(response.text ?: "Gemini returned an empty response.")
+    } catch (e: Exception) {
+        onResponse("❌ Gemini Error: ${e.message}")
     }
 }
 

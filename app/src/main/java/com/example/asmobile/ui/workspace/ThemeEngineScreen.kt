@@ -54,9 +54,29 @@ fun ThemeEngineScreen(
                         Spacer(Modifier.height(16.dp))
                         TuningSlider("Glow Intensity", 0.6f)
                         Spacer(Modifier.height(16.dp))
-                        TuningToggle("Dynamic 3D Reflections", true)
+                        TuningSlider("3D Depth (Shadows)", 0.5f)
+                        Spacer(Modifier.height(16.dp))
+                        TuningToggle("High-Gloss Reflections", true)
+                        Spacer(Modifier.height(16.dp))
+                        TuningToggle("Dynamic 3D Parallax", false)
                         Spacer(Modifier.height(16.dp))
                         TuningToggle("Vibrant Accents", true)
+                    }
+                }
+            }
+            
+            item {
+                SectionHeader("Glass Refraction (3D)", Icons.Rounded.Layers)
+            }
+            
+            item {
+                TuningCard {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        TuningSlider("Refraction Blur", 0.4f)
+                        Spacer(Modifier.height(16.dp))
+                        TuningSlider("Edge Sharpness", 0.7f)
+                        Spacer(Modifier.height(16.dp))
+                        TuningSlider("Light Reflection", 0.2f)
                     }
                 }
             }

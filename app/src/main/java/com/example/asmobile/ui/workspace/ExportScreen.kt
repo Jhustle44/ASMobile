@@ -171,10 +171,15 @@ fun ExportScreen(
                             SnackbarHost(hostState = snackbarHostState)
 
                             Button(
-                                onClick = { /* Simulated export/publish */ },
+                                onClick = { 
+                                    scope.launch {
+                                        viewModel.generateKeystore(alias, password)
+                                        snackbarHostState.showSnackbar("Release Build Signed & Published Successfully")
+                                    }
+                                },
                                 modifier = Modifier.fillMaxWidth().height(56.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
-                                enabled = !isProcessing,
+                                enabled = !isProcessing && password.length >= 6,
                                 shape = RoundedCornerShape(16.dp)
                             ) {
                                 Icon(Icons.Rounded.CloudUpload, null)

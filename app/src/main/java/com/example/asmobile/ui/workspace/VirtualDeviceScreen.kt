@@ -41,9 +41,14 @@ fun VirtualDeviceScreen(
 
     LaunchedEffect(projectViewModel.activeRunProject) {
         if (projectViewModel.activeRunProject != null) {
+            // Force select first running device if we just started a run
             val runningIndex = viewModel.devices.indexOfFirst { it.isRunning }
             if (runningIndex != -1) {
                 activeDeviceIndex = runningIndex
+            } else {
+                // Auto-boot first device if none running
+                viewModel.toggleDevice(0)
+                activeDeviceIndex = 0
             }
         }
     }

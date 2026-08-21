@@ -51,8 +51,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.draw.clip
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.Path
 import kotlinx.coroutines.launch
 import java.io.File
 import com.example.asmobile.ui.theme.*
@@ -112,16 +115,16 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                     Column(modifier = Modifier.fillMaxSize()) {
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(16.dp),
-                            horizontalArrangement = Arrangement.End
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            DrawerHeader()
                             IconButton(onClick = { scope.launch { drawerState.close() } }) {
-                                Icon(Icons.Rounded.ArrowBackIosNew, "Close", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                                Icon(Icons.Rounded.ArrowBackIosNew, "Close", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                             }
                         }
                         
                         LazyColumn(modifier = Modifier.fillMaxSize()) {
-                            item { DrawerHeader() }
-                            
                             item {
                                 NavigationDrawerItem(
                                     label = { Text("IDE Dashboard") },
@@ -232,8 +235,23 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                             }
 
                             item {
+                                NavigationDrawerItem(
+                                    label = { 
+                                        Column {
+                                            Text("System Environment", style = MaterialTheme.typography.labelLarge)
+                                            Text("${buildToolsViewModel.sdkVersion} / ${buildToolsViewModel.jdkVersion}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                                        }
+                                    },
+                                    selected = false,
+                                    onClick = { },
+                                    icon = { Icon(Icons.Rounded.Memory, null, tint = GlowSky) },
+                                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                                )
+                            }
+
+                            item {
                                 Spacer(Modifier.height(40.dp))
-                                Text("ASMobile v3.9-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
+                                Text("ASMobile v4.1-ELITE", modifier = Modifier.padding(28.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -260,10 +278,8 @@ fun WorkspaceScreen(modifier: Modifier = Modifier) {
                 if (selectedDestination == MobileDestination.Editor) {
                     ExtendedFloatingActionButton(
                         onClick = { 
-                            // Try to infer active project from activeFilePath
                             activeFilePath?.let { path ->
                                 val file = File(path)
-                                // Find parent directory in Projects folder
                                 val projectsDir = rootDir
                                 var parent = file.parentFile
                                 while (parent != null && parent.parentFile?.absolutePath != projectsDir.absolutePath) {
@@ -559,7 +575,7 @@ private fun WorkspaceBottomBar(
 
 @Composable
 private fun DrawerHeader() {
-    Column(modifier = Modifier.padding(28.dp)) {
+    Column {
         Surface(
             modifier = Modifier.size(48.dp),
             shape = RoundedCornerShape(12.dp),
@@ -607,49 +623,106 @@ private fun MobileToolsTabs(
 ) {
     val selectedTab = projectViewModel.selectedToolTab
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        ScrollableTabRow(
-            selectedTabIndex = selectedTab,
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-            edgePadding = 16.dp,
-            divider = { HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)) },
-            indicator = { tabPositions ->
-                if (selectedTab < tabPositions.size) {
-                    TabRowDefaults.SecondaryIndicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                        color = MaterialTheme.colorScheme.primary
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+            tonalElevation = 4.dp,
+            border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.05f))
+        ) {
+            ScrollableTabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = Color.Transparent,
+                edgePadding = 16.dp,
+                divider = {},
+                indicator = { tabPositions ->
+                    if (selectedTab < tabPositions.size) {
+                        TabRowDefaults.SecondaryIndicator(
+                            modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            ) {
+                val tabs = listOf("Build", "Logcat", "Terminal", "Layout", "Database", "Assets", "Colors", "Network", "Profiler", "Size", "Perms", "System")
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = { projectViewModel.selectedToolTab = index },
+                        text = { 
+                            Text(
+                                title.uppercase(), 
+                                style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp),
+                                maxLines = 1,
+                                color = if (selectedTab == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            ) 
+                        }
                     )
                 }
-            }
-        ) {
-            val tabs = listOf("Build", "Logcat", "Terminal", "Layout", "Database", "Assets", "Colors", "Network", "Inspection")
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { projectViewModel.selectedToolTab = index },
-                    text = { 
-                        Text(
-                            title, 
-                            style = TextStyle(fontSize = 11.sp),
-                            fontWeight = if (selectedTab == index) FontWeight.ExtraBold else FontWeight.Medium,
-                            color = if (selectedTab == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                        ) 
-                    }
-                )
             }
         }
         Box(modifier = Modifier.weight(1f)) {
             when (selectedTab) {
                 0 -> BuildLogPanel(selectedTab = 1, modifier = Modifier.fillMaxSize())
                 1 -> BuildLogPanel(selectedTab = 0, modifier = Modifier.fillMaxSize())
-                2 -> BuildLogPanel(selectedTab = 2, modifier = Modifier.fillMaxSize())
+                2 -> TerminalPanel(modifier = Modifier.fillMaxSize())
                 3 -> LayoutInspectorPanel(modifier = Modifier.fillMaxSize())
                 4 -> DatabaseInspectorPanel(modifier = Modifier.fillMaxSize())
                 5 -> AssetStudioPanel(modifier = Modifier.fillMaxSize())
                 6 -> ColorPickerPanel(modifier = Modifier.fillMaxSize())
                 7 -> NetworkInspectorPanel(modifier = Modifier.fillMaxSize())
-                8 -> AppInspectionPanel(modifier = Modifier.fillMaxSize())
-                else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Coming Soon") }
+                8 -> ProfilerPanel(modifier = Modifier.fillMaxSize())
+                9 -> AppSizePanel(modifier = Modifier.fillMaxSize())
+                10 -> PermissionsPanel(modifier = Modifier.fillMaxSize())
+                11 -> SystemInfoPanel(modifier = Modifier.fillMaxSize())
+                else -> AppInspectionPanel(modifier = Modifier.fillMaxSize())
             }
+        }
+    }
+}
+
+@Composable
+private fun TerminalPanel(modifier: Modifier = Modifier) {
+    var command by remember { mutableStateOf("") }
+    val history = remember { mutableStateListOf<String>("ASMobile Elite Terminal v4.0", "Type 'help' for commands", "") }
+    val listState = rememberLazyListState()
+
+    Column(modifier = modifier.background(Color(0xFF010101)).padding(12.dp)) {
+        LazyColumn(modifier = Modifier.weight(1f), state = listState) {
+            items(history) { line ->
+                Text(
+                    text = if (line.startsWith(">")) line else "  $line",
+                    color = if (line.startsWith(">")) GlowSky else Color.LightGray,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 11.sp,
+                    modifier = Modifier.padding(vertical = 1.dp)
+                )
+            }
+        }
+        
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
+            Text("> ", color = GlowSky, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+            androidx.compose.foundation.text.BasicTextField(
+                value = command,
+                onValueChange = { command = it },
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = TextStyle(color = Color.White, fontFamily = FontFamily.Monospace, fontSize = 11.sp),
+                cursorBrush = androidx.compose.ui.graphics.SolidColor(GlowSky),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Send),
+                keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSend = {
+                    if (command.isNotBlank()) {
+                        history.add("> $command")
+                        val response = when(command.lowercase().trim()) {
+                            "help" -> "Available: help, ls, build, clean, status, clear"
+                            "ls" -> "app/  build/  libs/  src/  AndroidManifest.xml  build.gradle.kts"
+                            "status" -> "All systems operational. Elite Engine v4.0"
+                            "clear" -> { history.clear(); "" }
+                            else -> "sh: command not found: $command"
+                        }
+                        if (response.isNotEmpty()) history.add(response)
+                        command = ""
+                    }
+                })
+            )
         }
     }
 }
@@ -774,27 +847,65 @@ private fun NetworkLogItem(method: String, url: String, code: Int, time: String)
 
 @Composable
 private fun AssetStudioPanel(modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(24.dp)) {
-        Text("Asset Studio", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Text("Generate adaptive icons and vector drawables", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(24.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-            Surface(modifier = Modifier.size(120.dp), shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f), border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))) {
-                Box(contentAlignment = Alignment.Center) { Icon(Icons.Rounded.AutoAwesome, null, modifier = Modifier.size(56.dp), tint = MaterialTheme.colorScheme.primary) }
-            }
-            Column(modifier = Modifier.weight(1f)) {
-                Text("Icon Configurator", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = GlowPurple) {}
-                    Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = GlowBlue) {}
-                    Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = GlowEmerald) {}
+    var iconScale by remember { mutableFloatStateOf(1f) }
+    
+    Column(modifier = modifier.padding(16.dp)) {
+        Text("Elite Asset Studio", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+        Text("Design professional app resources", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(16.dp))
+        
+        Surface(
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f),
+            shape = RoundedCornerShape(24.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .background(Color.Black.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+                        .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Glossy Reflection
+                    Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.03f), Color.Transparent))))
+                    
+                    Surface(
+                        modifier = Modifier.size(100.dp * iconScale).shadow(12.dp, CircleShape, ambientColor = MaterialTheme.colorScheme.primary),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                        shape = CircleShape,
+                        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Rounded.AutoAwesome, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
+                        }
+                    }
                 }
-                Spacer(Modifier.height(16.dp))
-                Button(onClick = {}, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Rounded.CloudDownload, null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Export All Sizes")
+                
+                Spacer(Modifier.height(24.dp))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                    Text("ICON SCALE", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text("${(iconScale * 100).toInt()}%", style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace)
+                }
+                Slider(
+                    value = iconScale, 
+                    onValueChange = { iconScale = it }, 
+                    valueRange = 0.5f..1.5f,
+                    colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary, activeTrackColor = MaterialTheme.colorScheme.primary)
+                )
+                
+                Spacer(Modifier.weight(1f))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Button(onClick = {}, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) {
+                        Icon(Icons.Rounded.Add, null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("New Asset")
+                    }
+                    OutlinedButton(onClick = {}, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) {
+                        Text("Export All")
+                    }
                 }
             }
         }
@@ -804,14 +915,21 @@ private fun AssetStudioPanel(modifier: Modifier = Modifier) {
 @Composable
 private fun DatabaseInspectorPanel(modifier: Modifier = Modifier) {
     Column(modifier = modifier.padding(16.dp)) {
-        Text("Database Inspector", style = MaterialTheme.typography.titleSmall)
-        Spacer(Modifier.height(24.dp))
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(Icons.Rounded.Storage, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.surfaceVariant)
-                Spacer(Modifier.height(16.dp))
-                Text("No active databases found.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("Run an app with Room to inspect data.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+        Text("Database Inspector", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+        Spacer(Modifier.height(16.dp))
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.3f),
+            shape = RoundedCornerShape(24.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+        ) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Rounded.Storage, null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                    Spacer(Modifier.height(16.dp))
+                    Text("No local databases detected", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Active Room sessions will appear here", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                }
             }
         }
     }
@@ -823,14 +941,125 @@ private fun TreeItem(label: String, level: Int, isSelected: Boolean) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = (level * 12).dp)
-            .padding(vertical = 4.dp)
+            .padding(start = (level * 8).dp)
+            .padding(vertical = 2.dp)
+            .clip(RoundedCornerShape(8.dp))
             .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent)
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .padding(horizontal = 8.dp, vertical = 6.dp)
     ) {
-        Icon(Icons.Rounded.Category, null, modifier = Modifier.size(14.dp), tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+        Icon(
+            imageVector = if (label.contains("(")) Icons.Rounded.Article else Icons.Rounded.Category, 
+            contentDescription = null, 
+            modifier = Modifier.size(14.dp), 
+            tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+        )
         Spacer(Modifier.width(8.dp))
-        Text(label, style = MaterialTheme.typography.bodySmall, color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+        Text(
+            text = label, 
+            style = MaterialTheme.typography.bodySmall, 
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            softWrap = false,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun ProfilerPanel(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(16.dp)) {
+        Text("Performance Profiler", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+        Spacer(Modifier.height(16.dp))
+        Surface(
+            modifier = Modifier.fillMaxWidth().height(200.dp),
+            color = Color(0xFF050505),
+            shape = RoundedCornerShape(24.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+        ) {
+            Box(Modifier.fillMaxSize()) {
+                Canvas(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+                    val canvasSize = this.size
+                    val p = Path()
+                    p.moveTo(0f, canvasSize.height * 0.8f)
+                    p.quadraticTo(canvasSize.width * 0.2f, canvasSize.height * 0.4f, canvasSize.width * 0.4f, canvasSize.height * 0.6f)
+                    p.quadraticTo(canvasSize.width * 0.6f, canvasSize.height * 0.2f, canvasSize.width * 0.8f, canvasSize.height * 0.5f)
+                    p.lineTo(canvasSize.width, canvasSize.height * 0.3f)
+                    drawPath(p, color = GlowSky, style = Stroke(width = 4f))
+                }
+                Text("REAL-TIME MEMORY (MB)", modifier = Modifier.padding(12.dp), style = TextStyle(fontSize = 9.sp, fontWeight = FontWeight.Bold, color = GlowSky.copy(alpha = 0.6f)))
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppSizePanel(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(16.dp)) {
+        Text("APK Analyzer", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+        Spacer(Modifier.height(16.dp))
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.3f),
+            shape = RoundedCornerShape(24.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text("Total Build Size", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("12.84 MB", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.height(16.dp))
+                AssetSizeRow("Dex Classes", "6.2 MB", 0.48f, GlowPurple)
+                AssetSizeRow("Resources", "4.1 MB", 0.32f, GlowBlue)
+                AssetSizeRow("Assets", "1.5 MB", 0.12f, GlowEmerald)
+                AssetSizeRow("Manifest", "0.04 MB", 0.08f, GlowGold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AssetSizeRow(label: String, size: String, weight: Float, color: Color) {
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(label, style = MaterialTheme.typography.bodySmall)
+            Text(size, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+        }
+        Spacer(Modifier.height(4.dp))
+        LinearProgressIndicator(
+            progress = { weight }, 
+            modifier = Modifier.fillMaxWidth().height(4.dp).clip(CircleShape), 
+            color = color, 
+            trackColor = color.copy(alpha = 0.1f)
+        )
+    }
+}
+
+@Composable
+private fun PermissionsPanel(modifier: Modifier = Modifier) {
+    val perms = listOf("INTERNET", "CAMERA", "ACCESS_FINE_LOCATION", "STORAGE")
+    Column(modifier = modifier.padding(16.dp)) {
+        Text("Manifest Permissions", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(16.dp))
+        LazyColumn {
+            items(perms) { perm ->
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.dp)) {
+                    Icon(Icons.Rounded.VerifiedUser, null, tint = GlowEmerald, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Text(perm, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SystemInfoPanel(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(16.dp)) {
+        Text("System Information", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(16.dp))
+        Text("Android Version: 15.0", style = MaterialTheme.typography.bodyMedium)
+        Text("SDK Level: 35", style = MaterialTheme.typography.bodyMedium)
+        Text("Architecture: arm64-v8a", style = MaterialTheme.typography.bodyMedium)
+        Text("Heap Limit: 512MB", style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -849,7 +1078,7 @@ private fun AppInspectionPanel(modifier: Modifier = Modifier) {
         when (selectedTab) {
             0 -> BuildLogPanel(selectedTab = 1, modifier = Modifier.fillMaxSize())
             1 -> DeviceManagerList()
-            else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Network Inspector") }
+            else -> NetworkInspectorPanel(modifier = Modifier.fillMaxSize())
         }
     }
 }

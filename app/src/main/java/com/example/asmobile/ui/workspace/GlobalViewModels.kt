@@ -19,6 +19,7 @@ class DeviceViewModel : ViewModel() {
     private var storageFile: File? = null
 
     fun initStorage(rootDir: File) {
+        android.util.Log.d("DeviceViewModel", "Initializing storage at: ${rootDir.absolutePath}")
         storageFile = File(rootDir, "devices.json")
         loadDevices()
     }
@@ -83,6 +84,7 @@ class ProjectViewModel : ViewModel() {
     var selectedToolTab by mutableIntStateOf(0)
     var activeRunProject: File? by mutableStateOf(null)
     var activeProject: File? by mutableStateOf(null)
+    var geminiApiKey by mutableStateOf("")
 
     fun notifyProjectCreated(name: String) {
         lastCreatedProject = name
@@ -180,6 +182,8 @@ class PluginViewModel : ViewModel() {
 class BuildToolsViewModel : ViewModel() {
     private val _isProcessing = mutableStateOf(false)
     val isProcessing: State<Boolean> = _isProcessing
+    var sdkVersion by mutableStateOf("Android SDK 35")
+    var jdkVersion by mutableStateOf("OpenJDK 17.0.10")
 
     fun generateKeystore(alias: String, pass: String) {
         viewModelScope.launch {
